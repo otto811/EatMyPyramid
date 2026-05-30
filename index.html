@@ -364,15 +364,36 @@
         return 'Other';
     }
 
-    function getMultiplier() {
+    // Helper to display the serving size in the UI
+    function getServingText(food) {
+        if (!food) return "100g";
+        if (food.householdServingFullText && food.servingSize && !food.householdServingFullText.includes(food.servingSize)) {
+            return `${food.householdServingFullText} (${food.servingSize}g)`;
+        }
+        if (food.householdServingFullText) return food.householdServingFullText;
+        if (food.servingSize) return `${food.servingSize}g`;
+        return "100g (Database Default)";
+    }
+
+    // Updated math engine to calculate based on exact serving weight
+    function getMultiplier(food) {
         const amount = parseFloat(document.getElementById('amountInput').value);
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
+        
+        // If user enters exact oz/g, override serving size
         if (amount > 0) {
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
-            return grams / 100; // Database values are strictly per 100g
+            return grams / 100; 
         }
-        return servings;
+        
+        // Calculate based on the product's suggested serving size
+        let servingSizeGrams = 100; // Fallback
+        if (food && food.servingSize) {
+            servingSizeGrams = parseFloat(food.servingSize);
+        }
+        
+        return (servingSizeGrams / 100) * servings;
     }
 
     function updatePreview() {
@@ -380,12 +401,15 @@
         if (!idx) return;
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
-        const multiplier = getMultiplier();
+        
+        // Pass the food item into the math engine
+        const multiplier = getMultiplier(food);
         const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
+        const servingText = getServingText(food);
 
         document.getElementById('nutritionPreview').innerHTML = `
             <strong>${food.description}</strong><br>
-            <em>Category: ${guessCategory(food)}</em><br><br>
+            <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong></em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Fiber: ${(nut.fiber * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
@@ -399,16 +423,22 @@
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
         const cat = guessCategory(food);
-        const multiplier = getMultiplier();
+        const multiplier = getMultiplier(food);
 
         const amountVal = parseFloat(document.getElementById('amountInput').value);
-        const amount = amountVal > 0 ? amountVal : (parseFloat(document.getElementById('servingInput').value) * 100);
-        const unit = document.getElementById('unitSelect').value;
+        let logAmount = amountVal;
+        let logUnit = document.getElementById('unitSelect').value;
+        
+        // Improve log readability: Show "servings" instead of forcing a gram conversion if exact amount is empty
+        if (!(amountVal > 0)) {
+            logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
+            logUnit = logAmount === 1 ? "serving" : "servings";
+        }
 
         const item = {
             name: food.description,
-            amount: amount,
-            unit: unit,
+            amount: logAmount,
+            unit: logUnit,
             category: cat,
             calories: nut.calories * multiplier,
             protein: nut.protein * multiplier,
@@ -513,7 +543,7 @@
             div.innerHTML = `
                 <div style="flex-grow:1">
                     <strong>${item.name}</strong><br>
-                    <small>${item.amount ? item.amount.toFixed(0) + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
+                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
                 </div>
                 <button onclick="deleteItem(${i})" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Remove</button>
             `;
@@ -601,7 +631,7 @@
 
             const p = data.product;
             
-            // Extract safely, defaulting to 0 if missing
+            // We strictly pull the 100g data here as the universal base for our math engine
             const nut = {
                 calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
                 protein: parseFloat(p.nutriments?.proteins_100g || 0),
@@ -612,11 +642,16 @@
             const name = p.product_name || `Scanned Item (${barcode})`;
             const brand = p.brands ? p.brands.split(',') : "Open Food Facts";
 
-            // Format perfectly into the USDA JSON structure your app expects
+            // Extract Serving Size info. Default to 100g if the manufacturer didn't provide one.
+            const sSize = p.serving_size || "100g";
+            const sQuantity = parseFloat(p.serving_quantity) || 100;
+
             const fakeFood = {
                 description: name,
                 brandOwner: brand,
                 foodCategory: p.categories ? p.categories.split(',') : 'Other',
+                servingSize: sQuantity,             // Gram weight of the serving for math
+                householdServingFullText: sSize,    // Text description of serving for UI
                 foodNutrients: [
                     {nutrientId: 1008, value: nut.calories},
                     {nutrientId: 1003, value: nut.protein},
@@ -625,12 +660,10 @@
                 ]
             };
 
-            // Set as the active target
             currentSearchResults = [fakeFood];
             const sel = document.getElementById('foodSelect');
             sel.innerHTML = `<option value="0" selected>${name} (${brand})</option>`;
 
-            // Reset amount inputs back to 100g default for scanned items
             document.getElementById('servingInput').value = 1; 
             document.getElementById('amountInput').value = '';
             
