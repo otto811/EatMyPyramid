@@ -61,12 +61,12 @@
             box-sizing: border-box;
             font-size: 1em;
         }
-        .search-row { display: flex; gap: 10px; }
+        .search-row { display: flex; gap: 8px; }
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 12px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
@@ -171,10 +171,10 @@
 <!-- Barcode Scanner Modal -->
 <div id="scannerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:white;padding:20px;border-radius:12px;width:90%;max-width:500px;">
-        <h3>Scan Barcode</h3>
-        <video id="video" autoplay playsinline style="width:100%;border-radius:8px;"></video>
-        <p id="scanStatus" style="text-align:center;margin:15px 0;font-weight:bold;">Point camera at barcode...</p>
-        <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;padding:12px;">Cancel</button>
+        <h3>Enter Barcode Manually</h3>
+        <input type="text" id="manualBarcode" placeholder="Enter barcode (e.g. 11110064974)" style="width:100%;padding:12px;font-size:1.1em;margin:10px 0;">
+        <button onclick="manualBarcodeSubmit()" style="width:100%;margin-bottom:8px;">Submit Barcode</button>
+        <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;">Cancel</button>
     </div>
 </div>
 
@@ -208,42 +208,244 @@
         document.getElementById('searchInput').addEventListener('keypress', e => e.key==='Enter' && searchUSDA());
     }
 
-    // ... (Keep all your other functions: changeDay, updateWWGoal, recalculateMacroTargets, searchUSDA, getAllNutrients, guessCategory, getMultiplier, updatePreview, logFood, deleteItem, resetDay, renderBarometers, renderLog, etc.)
+    function changeDay() {
+        const day = document.getElementById('daySelect').value;
+        if (!appData.history[day]) appData.history[day] = {current: {Calories:0,Protein:0,Fat:0,Fiber:0,Fruit:0,Vegetable:0,Meat:0,Dairy:0,Grain:0,exercisePoints:0}, log:[]};
+        state.current = appData.history[day].current;
+        state.log = appData.history[day].log;
+        document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+        renderLog(); renderBarometers();
+    }
 
-    // I'll assume you can copy them from your working version.
+    function updateWWGoal() { appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value)||32; saveData(); renderBarometers(); }
+    function updateExercisePoints() { state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value)||0; saveData(); renderBarometers(); }
 
-    // ==================== IMPROVED BARCODE SCANNER ====================
-    let videoStream = null;
+    function recalculateMacroTargets() {
+        appData.weight = parseFloat(document.getElementById('weightInput').value)||208;
+        appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value)||1500;
+        state.targets.Calories = appData.calorieGoal;
+        state.targets.Protein = Math.ceil(1.6 * (appData.weight / 4.8));
+        state.targets.Fat = Math.round((appData.calorieGoal * 0.10) / 9);
+        state.targets.Fiber = Math.round((appData.calorieGoal / 1000) * 40);
+        saveData(); renderBarometers();
+    }
 
-    async function startBarcodeScan() {
-        const modal = document.getElementById('scannerModal');
-        modal.style.display = 'flex';
+    function updateTarget(cat, val) {
+        const v = parseFloat(val);
+        if (v>0) { state.targets[cat] = v; saveData(); renderBarometers(); }
+    }
 
-        const status = document.getElementById('scanStatus');
+    async function searchUSDA() {
+        const q = document.getElementById('searchInput').value.trim();
+        if (!q) return;
+        const btn = document.getElementById('searchBtn');
+        btn.disabled = true; btn.textContent = 'Searching...';
+        try {
+            const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(q)}&pageSize=25`);
+            const data = await res.json();
+            currentSearchResults = data.foods || [];
+            const sel = document.getElementById('foodSelect');
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            currentSearchResults.forEach((f,i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = f.description + (f.brandOwner ? ` (${f.brandOwner})` : '');
+                sel.appendChild(opt);
+            });
+        } catch(e) { alert("Search failed."); }
+        finally { btn.disabled=false; btn.textContent='Search'; }
+    }
 
-        // Show manual entry immediately on iOS since BarcodeDetector is unreliable
-        status.innerHTML = `
-            <strong>Camera scanning is limited on iOS.</strong><br><br>
-            Enter barcode number manually:<br><br>
-            <input type="text" id="manualBarcode" placeholder="e.g. 012345678901" style="width:100%; padding:12px; font-size:1.1em;">
-            <button onclick="manualBarcodeSubmit()" style="width:100%; margin-top:10px;">Submit Barcode</button>
+    function getAllNutrients(food) {
+        let nut = {calories: 0, protein: 0, fat: 0, fiber: 0};
+        if (!food) return nut;
+        if (food.foodNutrients && Array.isArray(food.foodNutrients)) {
+            for (let n of food.foodNutrients) {
+                let id = n.nutrientId || (n.nutrient && n.nutrient.id);
+                let val = parseFloat(n.value !== undefined ? n.value : n.amount) || 0;
+                if (id === 1008 || id === 208) nut.calories = val;
+                if (id === 1003 || id === 203) nut.protein = val;
+                if (id === 1004 || id === 204) nut.fat = val;
+                if (id === 1079 || id === 291) nut.fiber = val;
+            }
+        }
+        return nut;
+    }
+
+    function guessCategory(food) {
+        if (!food) return 'Other';
+        let d = (food.description || '').toLowerCase();
+        let c = (food.foodCategory || '').toLowerCase();
+        if (c.includes('vegetable') || d.includes('broccoli') || d.includes('green bean')) return 'Vegetable';
+        if (c.includes('fruit') || d.includes('apple') || d.includes('banana')) return 'Fruit';
+        if (c.includes('meat') || d.includes('chicken') || d.includes('beef') || d.includes('big mac')) return 'Meat';
+        if (c.includes('dairy') || d.includes('milk') || d.includes('cheese')) return 'Dairy';
+        if (c.includes('grain') || d.includes('bread') || d.includes('rice')) return 'Grain';
+        return 'Other';
+    }
+
+    function getMultiplier() {
+        const amount = parseFloat(document.getElementById('amountInput').value);
+        const unit = document.getElementById('unitSelect').value;
+        const servings = parseFloat(document.getElementById('servingInput').value) || 1;
+        if (amount > 0) {
+            const grams = unit === 'oz' ? amount * 28.3495 : amount;
+            return grams / 100;
+        }
+        return servings;
+    }
+
+    function updatePreview() {
+        const idx = document.getElementById('foodSelect').value;
+        if (!idx) return;
+        const food = currentSearchResults[idx];
+        const nut = getAllNutrients(food);
+        const multiplier = getMultiplier();
+        const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
+
+        document.getElementById('nutritionPreview').innerHTML = `
+            <strong>${food.description}</strong><br>
+            <em>Category: ${guessCategory(food)}</em><br><br>
+            Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
+            Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Fiber: ${(nut.fiber * multiplier).toFixed(1)}g<br>
+            <span style="color:var(--purple);font-weight:bold;">Est. WW Points: ${ww.toFixed(1)}</span>
         `;
     }
 
-    function stopBarcodeScan() {
-        const modal = document.getElementById('scannerModal');
-        modal.style.display = 'none';
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
+    function logFood() {
+        const idx = document.getElementById('foodSelect').value;
+        if (!idx) return alert("Please select a food");
+
+        const food = currentSearchResults[idx];
+        const nut = getAllNutrients(food);
+        const cat = guessCategory(food);
+        const multiplier = getMultiplier();
+
+        const amountVal = parseFloat(document.getElementById('amountInput').value);
+        const amount = amountVal > 0 ? amountVal : (parseFloat(document.getElementById('servingInput').value) * 100);
+        const unit = document.getElementById('unitSelect').value;
+
+        const item = {
+            name: food.description,
+            amount: amount,
+            unit: unit,
+            category: cat,
+            calories: nut.calories * multiplier,
+            protein: nut.protein * multiplier,
+            fat: nut.fat * multiplier,
+            fiber: nut.fiber * multiplier,
+            wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier)
+        };
+
+        state.log.push(item);
+        state.current.Calories += item.calories;
+        state.current.Protein += item.protein;
+        state.current.Fat += item.fat;
+        state.current.Fiber += item.fiber;
+        if (state.current[cat] !== undefined) state.current[cat] += 1;
+
+        saveData();
+        renderLog();
+        renderBarometers();
+
+        document.getElementById('searchInput').value = '';
+        document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        document.getElementById('servingInput').value = 1;
+        document.getElementById('amountInput').value = '';
+        document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+    }
+
+    function deleteItem(i) {
+        const item = state.log[i];
+        state.current.Calories -= item.calories;
+        state.current.Protein -= item.protein;
+        state.current.Fat -= item.fat;
+        state.current.Fiber -= item.fiber;
+        if (state.current[item.category] !== undefined) state.current[item.category] -= 1;
+        state.log.splice(i, 1);
+        saveData();
+        renderLog();
+        renderBarometers();
+    }
+
+    function resetDay() {
+        if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nProfile settings will NOT be changed.")) {
+            const day = document.getElementById('daySelect').value;
+            appData.history[day] = {current: {Calories:0,Protein:0,Fat:0,Fiber:0,Fruit:0,Vegetable:0,Meat:0,Dairy:0,Grain:0,exercisePoints:0}, log: []};
+            state.current = appData.history[day].current;
+            state.log = appData.history[day].log;
+            document.getElementById('exerciseInput').value = 0;
+            saveData();
+            renderLog();
+            renderBarometers();
         }
     }
 
-    function manualBarcodeSubmit() {
-        const barcode = document.getElementById('manualBarcode').value.trim();
-        if (!barcode) return alert("Please enter a barcode");
-        stopBarcodeScan();
-        fetchOpenFoodFacts(barcode);
+    function renderBarometers() {
+        const foodPts = state.log.reduce((s, it) => s + (it.wwPoints||0), 0);
+        const exer = state.current.exercisePoints || 0;
+        const net = Math.max(0, foodPts - exer);
+        const goal = appData.wwGoal;
+
+        document.getElementById('wwBarometer').innerHTML = `
+            <div class="barometer-header"><strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min((net/goal)*100,100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
+            <div class="progress-text">${net.toFixed(1)} / ${goal}</div></div>
+        `;
+
+        const renderGroup = (keys, containerId, colors) => {
+            const cont = document.getElementById(containerId);
+            cont.innerHTML = '';
+            keys.forEach(cat => {
+                const target = state.targets[cat];
+                const curr = state.current[cat] || 0;
+                const perc = Math.min((curr / target) * 100, 100);
+                const div = document.createElement('div');
+                div.className = 'barometer-container';
+                div.innerHTML = `
+                    <div class="barometer-header"><strong>${cat}</strong>
+                    <input type="number" value="${target}" style="width:70px" onchange="updateTarget('${cat}',this.value)">
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat]||'#8b5cf6'}"></div>
+                        <div class="progress-text">${curr.toFixed(1)} / ${target}</div>
+                    </div>
+                `;
+                cont.appendChild(div);
+            });
+        };
+
+        renderGroup(['Calories','Protein','Fat','Fiber'], 'macroBarometersContainer', {Calories:'#3b82f6',Protein:'#ef4444',Fat:'#f59e0b',Fiber:'#14b8a6'});
+        renderGroup(['Fruit','Vegetable','Meat','Dairy','Grain'], 'groupBarometersContainer', {});
+    }
+
+    function renderLog() {
+        const cont = document.getElementById('logContainer');
+        if (state.log.length === 0) {
+            cont.innerHTML = '<p style="color:gray;font-size:0.9em;">No foods logged yet today.</p>';
+            return;
+        }
+        cont.innerHTML = '';
+        state.log.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.innerHTML = `
+                <div style="flex-grow:1">
+                    <strong>${item.name}</strong><br>
+                    <small>${item.amount ? item.amount.toFixed(0) + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
+                </div>
+                <button onclick="deleteItem(${i})" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Remove</button>
+            `;
+            cont.appendChild(div);
+        });
+    }
+
+    // ==================== BARCODE FUNCTIONALITY ====================
+    function startBarcodeScan() {
+        const barcode = prompt("Enter barcode number (e.g. 11110064974):");
+        if (barcode && barcode.trim() !== "") {
+            fetchOpenFoodFacts(barcode.trim());
+        }
     }
 
     async function fetchOpenFoodFacts(barcode) {
@@ -251,11 +453,11 @@
         preview.innerHTML = `<em>Looking up barcode ${barcode}...</em>`;
 
         try {
-            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
+            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
             const data = await res.json();
 
             if (data.status === 0 || !data.product) {
-                preview.innerHTML = `<strong>Product not found in database.</strong><br>Barcode: ${barcode}`;
+                preview.innerHTML = `<strong>Product not found.</strong><br>Barcode: ${barcode}`;
                 return;
             }
 
@@ -284,7 +486,6 @@
         }
     }
 
-    // Paste the rest of your original functions here (init, changeDay, etc.)
     init();
 </script>
 </body>
