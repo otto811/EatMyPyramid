@@ -79,6 +79,52 @@
             border: 1px dashed #d1d5db;
             min-height: 120px;
         }
+        .barometer-container { margin-bottom: 15px; }
+        .barometer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .progress-bar-bg {
+            background-color: var(--border-color);
+            border-radius: 10px;
+            height: 22px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            transition: width 0.4s ease;
+        }
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            font-size: 0.85em;
+            line-height: 22px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        .log-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exercise-box {
+            background-color: #fef3c7;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #f59e0b;
+            margin: 10px 0;
+        }
         .amount-row {
             display: flex;
             gap: 10px;
@@ -168,13 +214,13 @@
     </div>
 </div>
 
-<!-- Barcode Scanner Modal -->
-<div id="scannerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
-    <div style="background:white;padding:20px;border-radius:12px;width:90%;max-width:500px;">
-        <h3>Enter Barcode Manually</h3>
-        <input type="text" id="manualBarcode" placeholder="Enter barcode (e.g. 11110064974)" style="width:100%;padding:12px;font-size:1.1em;margin:10px 0;">
-        <button onclick="manualBarcodeSubmit()" style="width:100%;margin-bottom:8px;">Submit Barcode</button>
-        <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;">Cancel</button>
+<!-- Barcode Input Modal -->
+<div id="barcodeModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:white;padding:20px;border-radius:12px;width:90%;max-width:400px;">
+        <h3>Enter Barcode</h3>
+        <input type="text" id="barcodeInput" placeholder="Enter barcode number" style="width:100%;padding:12px;font-size:1.1em;">
+        <button onclick="submitBarcode()" style="width:100%;margin:10px 0;">Submit</button>
+        <button onclick="closeBarcodeModal()" style="width:100%;background:#ef4444;">Cancel</button>
     </div>
 </div>
 
@@ -440,9 +486,9 @@
         });
     }
 
-    // ==================== BARCODE FUNCTIONALITY ====================
+    // ==================== BARCODE FUNCTION ====================
     function startBarcodeScan() {
-        const barcode = prompt("Enter barcode number (e.g. 11110064974):");
+        const barcode = prompt("Enter the barcode number from the package:", "");
         if (barcode && barcode.trim() !== "") {
             fetchOpenFoodFacts(barcode.trim());
         }
@@ -466,7 +512,7 @@
 
             const fakeFood = {
                 description: p.product_name || `Product ${barcode}`,
-                brandOwner: p.brands || "Open Food Facts",
+                brandOwner: p.brands || "",
                 foodNutrients: [
                     {nutrientId: 1008, value: parseFloat(nut['energy-kcal_100g'] || nut.energy_kcal || 0)},
                     {nutrientId: 1003, value: parseFloat(nut.proteins_100g || 0)},
@@ -482,7 +528,7 @@
             updatePreview();
 
         } catch (e) {
-            preview.innerHTML = `<strong>Failed to fetch product data.</strong><br>Barcode: ${barcode}`;
+            preview.innerHTML = `<strong>Failed to fetch product.</strong><br>Barcode: ${barcode}`;
         }
     }
 
