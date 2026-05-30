@@ -281,7 +281,9 @@
                     {nutrientId: 1003, value: parseFloat(nut.proteins_100g || 0)},
                     {nutrientId: 1004, value: parseFloat(nut.fat_100g || 0)},
                     {nutrientId: 1079, value: parseFloat(nut.fiber_100g || 0)}
-                ]
+                ],
+                servingSize: parseFloat(nut['serving_size'] || 100),
+                servingUnit: "g"
             };
 
             currentSearchResults = [fakeFood];
@@ -290,7 +292,7 @@
             updatePreview();
 
         } catch (e) {
-            preview.innerHTML = `<strong>Could not fetch data.</strong><br>Barcode: ${barcode}`;
+            preview.innerHTML = `<strong>Could not fetch product.</strong><br>Barcode: ${barcode}`;
         }
     }
 
@@ -310,17 +312,6 @@
         return nut;
     }
 
-    function guessCategory(food) {
-        if (!food) return 'Other';
-        let d = (food.description || '').toLowerCase();
-        if (d.includes('broccoli') || d.includes('bean') || d.includes('carrot')) return 'Vegetable';
-        if (d.includes('apple') || d.includes('banana')) return 'Fruit';
-        if (d.includes('chicken') || d.includes('beef') || d.includes('mac')) return 'Meat';
-        if (d.includes('milk') || d.includes('cheese')) return 'Dairy';
-        if (d.includes('bread') || d.includes('rice')) return 'Grain';
-        return 'Other';
-    }
-
     function getMultiplier() {
         const amount = parseFloat(document.getElementById('amountInput').value);
         const unit = document.getElementById('unitSelect').value;
@@ -330,7 +321,7 @@
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
             return grams / 100;
         }
-        return servings;   // This now respects user input or default serving
+        return servings;   // Uses user-entered servings (now defaults to suggested size when available)
     }
 
     function updatePreview() {
@@ -391,6 +382,17 @@
         document.getElementById('servingInput').value = 1;
         document.getElementById('amountInput').value = '';
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+    }
+
+    function guessCategory(food) {
+        if (!food) return 'Other';
+        let d = (food.description || '').toLowerCase();
+        if (d.includes('broccoli') || d.includes('bean') || d.includes('carrot')) return 'Vegetable';
+        if (d.includes('apple') || d.includes('banana')) return 'Fruit';
+        if (d.includes('chicken') || d.includes('beef') || d.includes('mac')) return 'Meat';
+        if (d.includes('milk') || d.includes('cheese')) return 'Dairy';
+        if (d.includes('bread') || d.includes('rice')) return 'Grain';
+        return 'Other';
     }
 
     function deleteItem(i) {
