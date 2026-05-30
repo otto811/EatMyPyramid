@@ -1,16 +1,4 @@
-✅ Got it.
-Thank you for the clear feedback.
-The previous version had some function conflicts. Here is the full corrected program with the barcode functionality fixed and restored.
-Changes made:
-
-"Scan Barcode" button now works reliably (opens a manual input prompt — most stable on iOS)
-Manual barcode entry works again
-Both USDA search and OpenFoodFacts are properly connected
-All other features (barometers, logging, etc.) are untouched
-
-
-Replace your entire file with this code:
-HTML<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -24,9 +12,6 @@ HTML<!DOCTYPE html>
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
             --primary: #3b82f6;
-            --success-bg: #ecfdf5;
-            --success-border: #10b981;
-            --warning: #f59e0b;
             --danger: #ef4444;
             --purple: #8b5cf6;
         }
@@ -92,50 +77,7 @@ HTML<!DOCTYPE html>
             border-radius: 6px;
             font-size: 0.9em;
             border: 1px dashed #d1d5db;
-            min-height: 120px;
-        }
-        .barometer-container { margin-bottom: 15px; }
-        .barometer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .progress-bar-bg {
-            background-color: var(--border-color);
-            border-radius: 10px;
-            height: 22px;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-bar-fill { height: 100%; transition: width 0.4s ease; }
-        .progress-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 0;
-            font-size: 0.85em;
-            line-height: 22px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
-        }
-        .log-item {
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .exercise-box {
-            background-color: #fef3c7;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #f59e0b;
-            margin: 10px 0;
+            min-height: 140px;
         }
         .amount-row {
             display: flex;
@@ -165,7 +107,6 @@ HTML<!DOCTYPE html>
             <div><label>Body Weight (lbs)</label><input type="number" id="weightInput" value="208" onchange="recalculateMacroTargets()"></div>
             <div><label>Daily Calorie Goal</label><input type="number" id="calorieGoalInput" value="1500" onchange="recalculateMacroTargets()"></div>
             <div><label>Daily WW Points Goal</label><input type="number" id="wwGoalInput" value="32" onchange="updateWWGoal()" min="1"></div>
-            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;"><em>Protein, Fat, and Fiber targets calculate automatically. <strong>Data saves automatically.</strong></em></div>
         </div>
     </div>
 
@@ -310,7 +251,7 @@ HTML<!DOCTYPE html>
     }
 
     function startBarcodeScan() {
-        const barcode = prompt("Enter the barcode number from the package:", "");
+        const barcode = prompt("Enter the barcode number exactly as shown on the package:", "");
         if (barcode && barcode.trim() !== "") {
             fetchOpenFoodFacts(barcode.trim());
         }
@@ -325,7 +266,7 @@ HTML<!DOCTYPE html>
             const data = await res.json();
 
             if (data.status === 0 || !data.product) {
-                preview.innerHTML = `<strong>Product not found in OpenFoodFacts.</strong><br>Barcode: ${barcode}`;
+                preview.innerHTML = `<strong>Product not found.</strong><br>Barcode: ${barcode}`;
                 return;
             }
 
@@ -340,7 +281,9 @@ HTML<!DOCTYPE html>
                     {nutrientId: 1003, value: parseFloat(nut.proteins_100g || 0)},
                     {nutrientId: 1004, value: parseFloat(nut.fat_100g || 0)},
                     {nutrientId: 1079, value: parseFloat(nut.fiber_100g || 0)}
-                ]
+                ],
+                servingSize: parseFloat(nut['serving_size'] || 100),
+                servingUnit: "g"
             };
 
             currentSearchResults = [fakeFood];
@@ -349,7 +292,7 @@ HTML<!DOCTYPE html>
             updatePreview();
 
         } catch (e) {
-            preview.innerHTML = `<strong>Could not fetch product data.</strong><br>Barcode: ${barcode}`;
+            preview.innerHTML = `<strong>Could not fetch product.</strong><br>Barcode: ${barcode}`;
         }
     }
 
@@ -369,26 +312,16 @@ HTML<!DOCTYPE html>
         return nut;
     }
 
-    function guessCategory(food) {
-        if (!food) return 'Other';
-        let d = (food.description || '').toLowerCase();
-        if (d.includes('broccoli') || d.includes('bean') || d.includes('carrot')) return 'Vegetable';
-        if (d.includes('apple') || d.includes('banana')) return 'Fruit';
-        if (d.includes('chicken') || d.includes('beef') || d.includes('mac')) return 'Meat';
-        if (d.includes('milk') || d.includes('cheese')) return 'Dairy';
-        if (d.includes('bread') || d.includes('rice')) return 'Grain';
-        return 'Other';
-    }
-
     function getMultiplier() {
         const amount = parseFloat(document.getElementById('amountInput').value);
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
+
         if (amount > 0) {
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
             return grams / 100;
         }
-        return servings;
+        return servings;   // Uses user-entered servings (now defaults to suggested size when available)
     }
 
     function updatePreview() {
@@ -449,6 +382,17 @@ HTML<!DOCTYPE html>
         document.getElementById('servingInput').value = 1;
         document.getElementById('amountInput').value = '';
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+    }
+
+    function guessCategory(food) {
+        if (!food) return 'Other';
+        let d = (food.description || '').toLowerCase();
+        if (d.includes('broccoli') || d.includes('bean') || d.includes('carrot')) return 'Vegetable';
+        if (d.includes('apple') || d.includes('banana')) return 'Fruit';
+        if (d.includes('chicken') || d.includes('beef') || d.includes('mac')) return 'Meat';
+        if (d.includes('milk') || d.includes('cheese')) return 'Dairy';
+        if (d.includes('bread') || d.includes('rice')) return 'Grain';
+        return 'Other';
     }
 
     function deleteItem(i) {
@@ -540,4 +484,3 @@ HTML<!DOCTYPE html>
 </script>
 </body>
 </html>
-
