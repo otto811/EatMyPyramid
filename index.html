@@ -157,6 +157,7 @@
             font-size: 1.05em;
         }
         
+        /* Adjustments for the new scanner library */
         #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
         #reader video { border-radius: 8px; width: 100%; }
 
@@ -262,6 +263,8 @@
     let currentSearchResults = [];
     let appData = { weight: 208, calorieGoal: 1500, wwGoal: 32, targets: {Calories:1500,Protein:50,Fat:22,Fiber:80,Fruit:2,Vegetable:5,Meat:1,Dairy:3,Grain:2}, history: {} };
     let state = { targets: appData.targets, current: null, log: null };
+    
+    // Core variable for our software scanner
     let html5QrcodeScanner = null;
 
     function calculateWWPoints(cal, fat, fib) {
@@ -285,6 +288,9 @@
         daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
         daySelect.value = days[new Date().getDay()];
         changeDay();
+        
+        document.getElementById('searchInput').addEventListener('keypress', e => e.key==='Enter' && searchUSDA());
+        document.getElementById('manualBarcode').addEventListener('keypress', e => e.key==='Enter' && manualBarcodeSubmit());
     }
 
     function changeDay() {
@@ -331,7 +337,10 @@
                 opt.textContent = f.description + (f.brandOwner ? ` (${f.brandOwner})` : '');
                 sel.appendChild(opt);
             });
-        } catch(e) { alert("Search failed."); }
+            if(currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            }
+        } catch(e) { alert("Search failed. Please check your connection."); }
         finally { btn.disabled=false; btn.textContent='Search'; }
     }
 
@@ -355,6 +364,7 @@
         if (!food) return 'Other';
         let d = String(food.description || '').toLowerCase();
         let c = String(food.foodCategory || '').toLowerCase();
+        
         if (c.includes('vegetable') || d.includes('broccoli') || d.includes('green bean')) return 'Vegetable';
         if (c.includes('fruit') || d.includes('apple') || d.includes('banana')) return 'Fruit';
         if (c.includes('meat') || d.includes('chicken') || d.includes('beef') || d.includes('big mac')) return 'Meat';
@@ -363,12 +373,36 @@
         return 'Other';
     }
 
+    function getServingText(food) {
+        if (!food) return "100g";
+        
+        const householdText = String(food.householdServingFullText || "");
+        const servingSize = String(food.servingSize || "");
+
+        if (householdText && servingSize && householdText !== "100g" && !householdText.includes(servingSize)) {
+            return `${householdText} (${servingSize}g)`;
+        }
+        if (householdText && householdText !== "100g") return householdText;
+        if (servingSize && servingSize !== "100g") return `${servingSize}g`;
+        return "100g (Database Default)";
+    }
+
     function getMultiplier(food) {
         const amount = parseFloat(document.getElementById('amountInput').value);
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
-        if (amount > 0) return (unit === 'oz' ? amount * 28.3495 : amount) / 100;
-        return ((parseFloat(food.servingSize) || 100) / 100) * servings;
+        
+        if (amount > 0) {
+            const grams = unit === 'oz' ? amount * 28.3495 : amount;
+            return grams / 100; 
+        }
+        
+        let servingSizeGrams = 100; 
+        if (food && food.servingSize) {
+            servingSizeGrams = parseFloat(food.servingSize);
+        }
+        
+        return (servingSizeGrams / 100) * servings;
     }
 
     function updatePreview() {
@@ -376,33 +410,48 @@
         if (!idx) return;
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
-        const mult = getMultiplier(food);
-        document.getElementById('nutritionPreview').innerHTML = `<strong>${food.description}</strong><br>Calories: ${(nut.calories*mult).toFixed(0)} | Protein: ${(nut.protein*mult).toFixed(1)}g<br>Fat: ${(nut.fat*mult).toFixed(1)}g | Fiber: ${(nut.fiber*mult).toFixed(1)}g`;
+        
+        const multiplier = getMultiplier(food);
+        const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
+        const servingText = getServingText(food);
+
+        document.getElementById('nutritionPreview').innerHTML = `
+            <strong>${food.description}</strong><br>
+            <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong></em><br><br>
+            Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
+            Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Fiber: ${(nut.fiber * multiplier).toFixed(1)}g<br>
+            <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
+        `;
     }
 
     function logFood() {
         const idx = document.getElementById('foodSelect').value;
-        if (!idx) return;
+        if (!idx) return alert("Please select a food first.");
+
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
         const cat = guessCategory(food);
-        const mult = getMultiplier(food);
+        const multiplier = getMultiplier(food);
+
+        const amountVal = parseFloat(document.getElementById('amountInput').value);
+        let logAmount = amountVal;
+        let logUnit = document.getElementById('unitSelect').value;
+        
+        if (!(amountVal > 0)) {
+            logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
+            logUnit = logAmount === 1 ? "serving" : "servings";
+        }
 
         const item = {
             name: food.description,
-            amount: parseFloat(document.getElementById('amountInput').value) || (parseFloat(document.getElementById('servingInput').value)||1),
-            unit: document.getElementById('unitSelect').value || 'servings',
+            amount: logAmount,
+            unit: logUnit,
             category: cat,
-            calories: nut.calories * mult,
-            protein: nut.protein * mult,
-            fat: nut.fat * mult,
-            fiber: nut.fiber * mult,
-            wwPoints: calculateWWPoints(nut.calories * mult, nut.fat * mult, nut.fiber * mult),
-            // Save per-unit values for editing
-            calsPerUnit: nut.calories / (parseFloat(food.servingSize)||100),
-            protPerUnit: nut.protein / (parseFloat(food.servingSize)||100),
-            fatPerUnit: nut.fat / (parseFloat(food.servingSize)||100),
-            fibPerUnit: nut.fiber / (parseFloat(food.servingSize)||100)
+            calories: nut.calories * multiplier,
+            protein: nut.protein * multiplier,
+            fat: nut.fat * multiplier,
+            fiber: nut.fiber * multiplier,
+            wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier)
         };
 
         state.log.push(item);
@@ -411,36 +460,16 @@
         state.current.Fat += item.fat;
         state.current.Fiber += item.fiber;
         if (state.current[cat] !== undefined) state.current[cat] += 1;
-        saveData(); renderLog(); renderBarometers();
-    }
 
-    function editItem(i) {
-        const item = state.log[i];
-        const newAmt = prompt("Enter new amount (grams or servings):", item.amount);
-        if (!newAmt) return;
-        const val = parseFloat(newAmt);
-        
-        // Remove old totals
-        state.current.Calories -= item.calories;
-        state.current.Protein -= item.protein;
-        state.current.Fat -= item.fat;
-        state.current.Fiber -= item.fiber;
+        saveData();
+        renderLog();
+        renderBarometers();
 
-        // Update item
-        item.amount = val;
-        item.calories = val * item.calsPerUnit * 100; // *100 because base unit was 100g
-        item.protein = val * item.protPerUnit * 100;
-        item.fat = val * item.fatPerUnit * 100;
-        item.fiber = val * item.fibPerUnit * 100;
-        item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
-
-        // Add new totals
-        state.current.Calories += item.calories;
-        state.current.Protein += item.protein;
-        state.current.Fat += item.fat;
-        state.current.Fiber += item.fiber;
-
-        saveData(); renderLog(); renderBarometers();
+        document.getElementById('searchInput').value = '';
+        document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        document.getElementById('servingInput').value = 1;
+        document.getElementById('amountInput').value = '';
+        document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
     }
 
     function deleteItem(i) {
@@ -451,71 +480,197 @@
         state.current.Fiber -= item.fiber;
         if (state.current[item.category] !== undefined) state.current[item.category] -= 1;
         state.log.splice(i, 1);
-        saveData(); renderLog(); renderBarometers();
+        saveData();
+        renderLog();
+        renderBarometers();
+    }
+
+    function resetDay() {
+        if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nProfile settings will NOT be changed.")) {
+            const day = document.getElementById('daySelect').value;
+            appData.history[day] = {current: {Calories:0,Protein:0,Fat:0,Fiber:0,Fruit:0,Vegetable:0,Meat:0,Dairy:0,Grain:0,exercisePoints:0}, log: []};
+            state.current = appData.history[day].current;
+            state.log = appData.history[day].log;
+            document.getElementById('exerciseInput').value = 0;
+            saveData();
+            renderLog();
+            renderBarometers();
+        }
+    }
+
+    function renderBarometers() {
+        const foodPts = state.log.reduce((s, it) => s + (it.wwPoints||0), 0);
+        const exer = state.current.exercisePoints || 0;
+        const net = Math.max(0, foodPts - exer);
+        const goal = appData.wwGoal;
+
+        document.getElementById('wwBarometer').innerHTML = `
+            <div class="barometer-header"><strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min((net/goal)*100,100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
+            <div class="progress-text">${net.toFixed(1)} / ${goal}</div></div>
+        `;
+
+        const renderGroup = (keys, containerId, colors) => {
+            const cont = document.getElementById(containerId);
+            cont.innerHTML = '';
+            keys.forEach(cat => {
+                const target = state.targets[cat];
+                const curr = state.current[cat] || 0;
+                const perc = Math.min((curr / target) * 100, 100);
+                const div = document.createElement('div');
+                div.className = 'barometer-container';
+                div.innerHTML = `
+                    <div class="barometer-header"><strong>${cat}</strong>
+                    <input type="number" value="${target}" style="width:70px; padding:4px;" onchange="updateTarget('${cat}',this.value)">
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat]||'#8b5cf6'}"></div>
+                        <div class="progress-text">${curr.toFixed(1)} / ${target}</div>
+                    </div>
+                `;
+                cont.appendChild(div);
+            });
+        };
+
+        renderGroup(['Calories','Protein','Fat','Fiber'], 'macroBarometersContainer', {Calories:'#3b82f6',Protein:'#ef4444',Fat:'#f59e0b',Fiber:'#14b8a6'});
+        renderGroup(['Fruit','Vegetable','Meat','Dairy','Grain'], 'groupBarometersContainer', {});
     }
 
     function renderLog() {
         const cont = document.getElementById('logContainer');
-        cont.innerHTML = state.log.length === 0 ? '<p style="color:gray;">No logs today.</p>' : '';
+        if (state.log.length === 0) {
+            cont.innerHTML = '<p style="color:gray;font-size:0.9em;">No foods logged yet today.</p>';
+            return;
+        }
+        cont.innerHTML = '';
         state.log.forEach((item, i) => {
             const div = document.createElement('div');
             div.className = 'log-item';
-            div.innerHTML = `<div><strong>${item.name}</strong><br><small>${item.amount.toFixed(1)} ${item.unit} • ${item.calories.toFixed(0)} cal</small></div>
-            <div><button onclick="editItem(${i})" style="background:#f59e0b;padding:6px;margin-right:5px;">Edit</button>
-            <button onclick="deleteItem(${i})" style="background:#ef4444;padding:6px;">Remove</button></div>`;
+            div.innerHTML = `
+                <div style="flex-grow:1">
+                    <strong>${item.name}</strong><br>
+                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
+                </div>
+                <button onclick="deleteItem(${i})" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Remove</button>
+            `;
             cont.appendChild(div);
         });
     }
 
-    function startBarcodeScan() {
+    // ==================== UNIVERSAL SOFTWARE BARCODE SCANNER ====================
+    async function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
-        if (!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("reader");
+        document.getElementById('manualBarcode').value = '';
+        const status = document.getElementById('scanStatus');
+        status.innerHTML = "Initializing camera...";
 
-        // Simple, highly compatible config. No resolution constraints to avoid camera denial.
-        html5QrcodeScanner.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: 250 },
-            (text) => { stopBarcodeScan(); fetchOpenFoodFacts(text); }
-        ).catch(err => {
-            document.getElementById('scanStatus').innerHTML = "Camera access denied. Ensure page is HTTPS.";
-        });
+        // Initialize the library engine
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        }
+
+        try {
+            await html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 150 }
+                },
+                (decodedText, decodedResult) => {
+                    // Success callback! 
+                    stopBarcodeScan();
+                    fetchOpenFoodFacts(decodedText);
+                },
+                (errorMessage) => {
+                    // This fires constantly while searching for a code, so we safely ignore it
+                }
+            );
+            status.innerHTML = "Point camera at barcode...";
+        } catch (err) {
+            console.error("Camera access failed", err);
+            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
+        }
+        
+        setTimeout(() => document.getElementById('manualBarcode').focus(), 100);
     }
 
     function stopBarcodeScan() {
-        document.getElementById('scannerModal').style.display = 'none';
-        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) html5QrcodeScanner.stop();
+        const modal = document.getElementById('scannerModal');
+        modal.style.display = 'none';
+        
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+            html5QrcodeScanner.stop().catch(err => {
+                console.error("Failed to stop scanner", err);
+            });
+        }
     }
 
     function manualBarcodeSubmit() {
-        const b = document.getElementById('manualBarcode').value.trim();
-        if (b) { stopBarcodeScan(); fetchOpenFoodFacts(b); }
+        const barcode = document.getElementById('manualBarcode').value.trim();
+        if (barcode) {
+            stopBarcodeScan();
+            fetchOpenFoodFacts(barcode);
+        }
     }
 
-    async function fetchOpenFoodFacts(b) {
-        const prev = document.getElementById('nutritionPreview');
-        prev.innerHTML = `Looking up ${b}...`;
+    async function fetchOpenFoodFacts(barcode) {
+        const preview = document.getElementById('nutritionPreview');
+        preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+
         try {
-            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${b}`);
+            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
             const data = await res.json();
-            if (!data.product) return prev.innerHTML = "Not found.";
+
+            if (data.status === 0 || !data.product) {
+                preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
+                return;
+            }
+
             const p = data.product;
-            const nut = { 
-                cal: parseFloat(p.nutriments?.['energy-kcal_100g']||0), 
-                prot: parseFloat(p.nutriments?.proteins_100g||0),
-                fat: parseFloat(p.nutriments?.fat_100g||0), 
-                fib: parseFloat(p.nutriments?.fiber_100g||0) 
+            
+            const nut = {
+                calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
+                protein: parseFloat(p.nutriments?.proteins_100g || 0),
+                fat: parseFloat(p.nutriments?.fat_100g || 0),
+                fiber: parseFloat(p.nutriments?.fiber_100g || 0)
             };
+
+            const name = p.product_name || `Scanned Item (${barcode})`;
+            const brandText = String(p.brands || "Open Food Facts");
+            const brand = brandText.split(',');
+            const catText = String(p.categories || "Other");
+
+            const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
+            const sQuantity = parseFloat(p.serving_quantity) || 100;
+
             const fakeFood = {
-                description: p.product_name||'Scanned Item',
-                brandOwner: p.brands||'',
-                servingSize: p.serving_quantity||100,
-                foodNutrients: [{nutrientId:1008,value:nut.cal},{nutrientId:1003,value:nut.prot},{nutrientId:1004,value:nut.fat},{nutrientId:1079,value:nut.fib}]
+                description: name,
+                brandOwner: brand,
+                foodCategory: catText.split(','),
+                servingSize: sQuantity,             
+                householdServingFullText: sSizeText,    
+                foodNutrients: [
+                    {nutrientId: 1008, value: nut.calories},
+                    {nutrientId: 1003, value: nut.protein},
+                    {nutrientId: 1004, value: nut.fat},
+                    {nutrientId: 1079, value: nut.fiber}
+                ]
             };
+
             currentSearchResults = [fakeFood];
-            document.getElementById('foodSelect').innerHTML = `<option value="0" selected>${fakeFood.description}</option>`;
+            const sel = document.getElementById('foodSelect');
+            sel.innerHTML = `<option value="0" selected>${name} (${brand})</option>`;
+
+            document.getElementById('servingInput').value = 1; 
+            document.getElementById('amountInput').value = '';
+            
             updatePreview();
-        } catch(e) { prev.innerHTML = "Error fetching data."; }
+
+        } catch (e) {
+            console.error("Barcode fetch/parse error:", e);
+            preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
+        }
     }
 
     init();
