@@ -242,7 +242,7 @@
         
         <div id="videoContainer" style="margin-bottom: 15px;">
             <div id="reader"></div>
-            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading HD camera...</p>
+            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading camera...</p>
         </div>
 
         <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb;">
@@ -555,46 +555,58 @@
         });
     }
 
-    // ==================== HD UNIVERSAL SOFTWARE BARCODE SCANNER ====================
+    // ==================== HD FALLBACK SOFTWARE BARCODE SCANNER ====================
     async function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
         const status = document.getElementById('scanStatus');
-        status.innerHTML = "Initializing HD camera...";
+        status.innerHTML = "Initializing camera...";
 
         if (!html5QrcodeScanner) {
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
 
-        try {
-            // Force High Definition (1080p). This acts as a digital zoom allowing 
-            // the user to hold the phone 6 to 8 inches away to maintain focus.
-            const cameraConfig = { 
-                facingMode: "environment",
-                width: { ideal: 1920, min: 1280 },
-                height: { ideal: 1080, min: 720 }
-            };
+        const scannerConfig = {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+            aspectRatio: 1.333334
+        };
 
+        const onScanSuccess = (decodedText, decodedResult) => {
+            stopBarcodeScan();
+            fetchOpenFoodFacts(decodedText);
+        };
+
+        const onScanFailure = (errorMessage) => {
+            // Ignore background frame read errors
+        };
+
+        try {
+            // Try asking for HD first, without making it a hard requirement
             await html5QrcodeScanner.start(
-                cameraConfig, 
-                {
-                    fps: 15,
-                    qrbox: { width: 280, height: 150 }, // Slightly wider box for distancing
-                    aspectRatio: 1.333334
-                },
-                (decodedText, decodedResult) => {
-                    stopBarcodeScan();
-                    fetchOpenFoodFacts(decodedText);
-                },
-                (errorMessage) => {
-                    // Ignore constant background frame decoding errors
-                }
+                { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } }, 
+                scannerConfig, 
+                onScanSuccess, 
+                onScanFailure
             );
             status.innerHTML = "Point camera at barcode (Hold 6-8 inches away)...";
         } catch (err) {
-            console.error("Camera access failed", err);
-            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
+            console.warn("HD request rejected by browser, falling back to default.", err);
+            
+            try {
+                // If the browser panicked at the HD request, instantly retry with no resolution constraints
+                await html5QrcodeScanner.start(
+                    { facingMode: "environment" }, 
+                    scannerConfig, 
+                    onScanSuccess, 
+                    onScanFailure
+                );
+                status.innerHTML = "Point camera at barcode...";
+            } catch (fallbackErr) {
+                console.error("Camera fallback failed", fallbackErr);
+                status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
+            }
         }
         
         setTimeout(() => document.getElementById('manualBarcode').focus(), 100);
