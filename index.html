@@ -157,7 +157,6 @@
             font-size: 1.05em;
         }
         
-        /* Adjustments for the new scanner library */
         #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
         #reader video { border-radius: 8px; width: 100%; }
 
@@ -243,7 +242,7 @@
         
         <div id="videoContainer" style="margin-bottom: 15px;">
             <div id="reader"></div>
-            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading camera...</p>
+            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading HD camera...</p>
         </div>
 
         <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb;">
@@ -264,7 +263,6 @@
     let appData = { weight: 208, calorieGoal: 1500, wwGoal: 32, targets: {Calories:1500,Protein:50,Fat:22,Fiber:80,Fruit:2,Vegetable:5,Meat:1,Dairy:3,Grain:2}, history: {} };
     let state = { targets: appData.targets, current: null, log: null };
     
-    // Core variable for our software scanner
     let html5QrcodeScanner = null;
 
     function calculateWWPoints(cal, fat, fib) {
@@ -557,36 +555,43 @@
         });
     }
 
-    // ==================== UNIVERSAL SOFTWARE BARCODE SCANNER ====================
+    // ==================== HD UNIVERSAL SOFTWARE BARCODE SCANNER ====================
     async function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
         const status = document.getElementById('scanStatus');
-        status.innerHTML = "Initializing camera...";
+        status.innerHTML = "Initializing HD camera...";
 
-        // Initialize the library engine
         if (!html5QrcodeScanner) {
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
 
         try {
+            // Force High Definition (1080p). This acts as a digital zoom allowing 
+            // the user to hold the phone 6 to 8 inches away to maintain focus.
+            const cameraConfig = { 
+                facingMode: "environment",
+                width: { ideal: 1920, min: 1280 },
+                height: { ideal: 1080, min: 720 }
+            };
+
             await html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
+                cameraConfig, 
                 {
-                    fps: 10,
-                    qrbox: { width: 250, height: 150 }
+                    fps: 15,
+                    qrbox: { width: 280, height: 150 }, // Slightly wider box for distancing
+                    aspectRatio: 1.333334
                 },
                 (decodedText, decodedResult) => {
-                    // Success callback! 
                     stopBarcodeScan();
                     fetchOpenFoodFacts(decodedText);
                 },
                 (errorMessage) => {
-                    // This fires constantly while searching for a code, so we safely ignore it
+                    // Ignore constant background frame decoding errors
                 }
             );
-            status.innerHTML = "Point camera at barcode...";
+            status.innerHTML = "Point camera at barcode (Hold 6-8 inches away)...";
         } catch (err) {
             console.error("Camera access failed", err);
             status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
