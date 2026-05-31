@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diet & Macro Dashboard</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -157,6 +158,10 @@
         @media (max-width: 768px) {
             .container { grid-template-columns: 1fr; }
         }
+
+        /* Adjustments for the new scanner library */
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+        #reader video { border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -235,7 +240,7 @@
         <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Scan or Enter Barcode</h3>
         
         <div id="videoContainer" style="margin-bottom: 15px;">
-            <video id="video" autoplay playsinline style="width:100%;border-radius:8px;background:#000;"></video>
+            <div id="reader"></div>
             <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Looking for barcode...</p>
         </div>
 
@@ -256,7 +261,9 @@
     let currentSearchResults = [];
     let appData = { weight: 208, calorieGoal: 1500, wwGoal: 32, targets: {Calories:1500,Protein:50,Fat:22,Fiber:80,Fruit:2,Vegetable:5,Meat:1,Dairy:3,Grain:2}, history: {} };
     let state = { targets: appData.targets, current: null, log: null };
-    let videoStream = null;
+    
+    // Variable to hold the scanner instance
+    let html5QrcodeScanner = null;
 
     function calculateWWPoints(cal, fat, fib) {
         const capped = Math.min(fib, 4);
@@ -280,7 +287,6 @@
         daySelect.value = days[new Date().getDay()];
         changeDay();
         
-        // Enter key support for inputs
         document.getElementById('searchInput').addEventListener('keypress', e => e.key==='Enter' && searchUSDA());
         document.getElementById('manualBarcode').addEventListener('keypress', e => e.key==='Enter' && manualBarcodeSubmit());
     }
@@ -354,8 +360,9 @@
 
     function guessCategory(food) {
         if (!food) return 'Other';
-        let d = (food.description || '').toLowerCase();
-        let c = (food.foodCategory || '').toLowerCase();
+        let d = String(food.description || '').toLowerCase();
+        let c = String(food.foodCategory || '').toLowerCase();
+        
         if (c.includes('vegetable') || d.includes('broccoli') || d.includes('green bean')) return 'Vegetable';
         if (c.includes('fruit') || d.includes('apple') || d.includes('banana')) return 'Fruit';
         if (c.includes('meat') || d.includes('chicken') || d.includes('beef') || d.includes('big mac')) return 'Meat';
@@ -364,31 +371,31 @@
         return 'Other';
     }
 
-    // Helper to display the serving size in the UI
     function getServingText(food) {
         if (!food) return "100g";
-        if (food.householdServingFullText && food.servingSize && !food.householdServingFullText.includes(food.servingSize)) {
-            return `${food.householdServingFullText} (${food.servingSize}g)`;
+        
+        const householdText = String(food.householdServingFullText || "");
+        const servingSize = String(food.servingSize || "");
+
+        if (householdText && servingSize && householdText !== "100g" && !householdText.includes(servingSize)) {
+            return `${householdText} (${servingSize}g)`;
         }
-        if (food.householdServingFullText) return food.householdServingFullText;
-        if (food.servingSize) return `${food.servingSize}g`;
+        if (householdText && householdText !== "100g") return householdText;
+        if (servingSize && servingSize !== "100g") return `${servingSize}g`;
         return "100g (Database Default)";
     }
 
-    // Updated math engine to calculate based on exact serving weight
     function getMultiplier(food) {
         const amount = parseFloat(document.getElementById('amountInput').value);
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
         
-        // If user enters exact oz/g, override serving size
         if (amount > 0) {
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
             return grams / 100; 
         }
         
-        // Calculate based on the product's suggested serving size
-        let servingSizeGrams = 100; // Fallback
+        let servingSizeGrams = 100; 
         if (food && food.servingSize) {
             servingSizeGrams = parseFloat(food.servingSize);
         }
@@ -402,7 +409,6 @@
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
         
-        // Pass the food item into the math engine
         const multiplier = getMultiplier(food);
         const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
         const servingText = getServingText(food);
@@ -429,7 +435,6 @@
         let logAmount = amountVal;
         let logUnit = document.getElementById('unitSelect').value;
         
-        // Improve log readability: Show "servings" instead of forcing a gram conversion if exact amount is empty
         if (!(amountVal > 0)) {
             logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
             logUnit = logAmount === 1 ? "serving" : "servings";
@@ -458,7 +463,6 @@
         renderLog();
         renderBarometers();
 
-        // Reset Inputs
         document.getElementById('searchInput').value = '';
         document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
         document.getElementById('servingInput').value = 1;
@@ -551,60 +555,55 @@
         });
     }
 
-    // ==================== PRO BARCODE SCANNER LOGIC ====================
+    // ==================== UNIVERSAL SOFTWARE BARCODE SCANNER ====================
     async function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
-        
-        const video = document.getElementById('video');
-        const status = document.getElementById('scanStatus');
-        const videoContainer = document.getElementById('videoContainer');
-        
-        // Clear previous manual input
         document.getElementById('manualBarcode').value = '';
+        const status = document.getElementById('scanStatus');
+        status.innerHTML = "Initializing camera...";
+
+        // Initialize the library if it hasn't been already
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        }
 
         try {
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = videoStream;
-            video.play();
-            videoContainer.style.display = 'block';
-
-            if ('BarcodeDetector' in window) {
-                const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
-                const scanLoop = async () => {
-                    if (!videoStream) return; // Exit if scanner was closed
-                    try {
-                        const barcodes = await detector.detect(video);
-                        if (barcodes.length > 0) {
-                            stopBarcodeScan();
-                            fetchOpenFoodFacts(barcodes.rawValue);
-                            return;
-                        }
-                    } catch(e) {}
-                    setTimeout(scanLoop, 400);
-                };
-                scanLoop();
-            } else {
-                status.innerHTML = "<span style='color:#ef4444;'>Auto-scanning unavailable on this browser.</span> Please enter below.";
-                video.style.display = 'none'; // Hide video to save space, keeping camera active light off if possible
-                if (videoStream) {
-                    videoStream.getTracks().forEach(track => track.stop());
+            await html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 150 },
+                    aspectRatio: 1.333334
+                },
+                (decodedText, decodedResult) => {
+                    // Success callback
+                    stopBarcodeScan();
+                    fetchOpenFoodFacts(decodedText);
+                },
+                (errorMessage) => {
+                    // This fires constantly while searching for a code, so we ignore it
                 }
-            }
+            );
+            status.innerHTML = "Looking for barcode...";
         } catch (err) {
-            videoContainer.style.display = 'none';
+            console.error("Camera access failed", err);
+            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied or unavailable.</span> Please enter below.";
         }
         
-        // Focus the manual input for speed
         setTimeout(() => document.getElementById('manualBarcode').focus(), 100);
     }
 
     function stopBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'none';
-        if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
+        
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+            html5QrcodeScanner.stop().then(() => {
+                // Successfully stopped
+            }).catch(err => {
+                console.error("Failed to stop scanner", err);
+            });
         }
     }
 
@@ -631,7 +630,6 @@
 
             const p = data.product;
             
-            // We strictly pull the 100g data here as the universal base for our math engine
             const nut = {
                 calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
                 protein: parseFloat(p.nutriments?.proteins_100g || 0),
@@ -640,18 +638,19 @@
             };
 
             const name = p.product_name || `Scanned Item (${barcode})`;
-            const brand = p.brands ? p.brands.split(',') : "Open Food Facts";
+            const brandText = String(p.brands || "Open Food Facts");
+            const brand = brandText.split(',');
+            const catText = String(p.categories || "Other");
 
-            // Extract Serving Size info. Default to 100g if the manufacturer didn't provide one.
-            const sSize = p.serving_size || "100g";
+            const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
             const sQuantity = parseFloat(p.serving_quantity) || 100;
 
             const fakeFood = {
                 description: name,
                 brandOwner: brand,
-                foodCategory: p.categories ? p.categories.split(',') : 'Other',
-                servingSize: sQuantity,             // Gram weight of the serving for math
-                householdServingFullText: sSize,    // Text description of serving for UI
+                foodCategory: catText.split(','),
+                servingSize: sQuantity,             
+                householdServingFullText: sSizeText,    
                 foodNutrients: [
                     {nutrientId: 1008, value: nut.calories},
                     {nutrientId: 1003, value: nut.protein},
@@ -670,7 +669,8 @@
             updatePreview();
 
         } catch (e) {
-            preview.innerHTML = `<span style="color:#ef4444;"><strong>Network error fetching barcode.</strong></span><br>Check connection.`;
+            console.error("Barcode fetch/parse error:", e);
+            preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
         }
     }
 
