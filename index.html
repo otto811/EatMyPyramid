@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diet & Macro Dashboard</title>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -155,13 +156,14 @@
             padding: 14px;
             font-size: 1.05em;
         }
+        
+        /* Adjustments for the new scanner library */
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
+        #reader video { border-radius: 8px; width: 100%; }
+
         @media (max-width: 768px) {
             .container { grid-template-columns: 1fr; }
         }
-
-        /* Adjustments for the new scanner library */
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
-        #reader video { border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -241,7 +243,7 @@
         
         <div id="videoContainer" style="margin-bottom: 15px;">
             <div id="reader"></div>
-            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Looking for barcode...</p>
+            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading camera...</p>
         </div>
 
         <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb;">
@@ -262,7 +264,7 @@
     let appData = { weight: 208, calorieGoal: 1500, wwGoal: 32, targets: {Calories:1500,Protein:50,Fat:22,Fiber:80,Fruit:2,Vegetable:5,Meat:1,Dairy:3,Grain:2}, history: {} };
     let state = { targets: appData.targets, current: null, log: null };
     
-    // Variable to hold the scanner instance
+    // Core variable for our software scanner
     let html5QrcodeScanner = null;
 
     function calculateWWPoints(cal, fat, fib) {
@@ -563,7 +565,7 @@
         const status = document.getElementById('scanStatus');
         status.innerHTML = "Initializing camera...";
 
-        // Initialize the library if it hasn't been already
+        // Initialize the library engine
         if (!html5QrcodeScanner) {
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
@@ -573,22 +575,21 @@
                 { facingMode: "environment" }, 
                 {
                     fps: 10,
-                    qrbox: { width: 250, height: 150 },
-                    aspectRatio: 1.333334
+                    qrbox: { width: 250, height: 150 }
                 },
                 (decodedText, decodedResult) => {
-                    // Success callback
+                    // Success callback! 
                     stopBarcodeScan();
                     fetchOpenFoodFacts(decodedText);
                 },
                 (errorMessage) => {
-                    // This fires constantly while searching for a code, so we ignore it
+                    // This fires constantly while searching for a code, so we safely ignore it
                 }
             );
-            status.innerHTML = "Looking for barcode...";
+            status.innerHTML = "Point camera at barcode...";
         } catch (err) {
             console.error("Camera access failed", err);
-            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied or unavailable.</span> Please enter below.";
+            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
         }
         
         setTimeout(() => document.getElementById('manualBarcode').focus(), 100);
@@ -599,9 +600,7 @@
         modal.style.display = 'none';
         
         if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-            html5QrcodeScanner.stop().then(() => {
-                // Successfully stopped
-            }).catch(err => {
+            html5QrcodeScanner.stop().catch(err => {
                 console.error("Failed to stop scanner", err);
             });
         }
