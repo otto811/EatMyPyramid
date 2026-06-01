@@ -157,7 +157,6 @@
             font-size: 1.05em;
         }
         
-        /* Adjustments for the new scanner library */
         #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
         #reader video { border-radius: 8px; width: 100%; }
 
@@ -565,17 +564,34 @@
         const status = document.getElementById('scanStatus');
         status.innerHTML = "Initializing camera...";
 
-        // Initialize the library engine
+        // Initialize the library engine, restricting it to standard 1D product barcodes.
+        // This vastly speeds up processing power on standard devices like the iPhone 14.
         if (!html5QrcodeScanner) {
-            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner = new Html5Qrcode("reader", {
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8
+                ]
+            });
         }
 
         try {
+            // Dynamically size the scanner box. Make it wide so the user can pull 
+            // the phone back 6-8 inches where the iPhone 14 camera can actually focus.
+            const screenWidth = window.innerWidth;
+            const boxWidth = screenWidth > 400 ? 350 : screenWidth * 0.85;
+
             await html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
+                { 
+                    facingMode: "environment",
+                    advanced: [{ focusMode: "continuous" }] // Request hardware auto-focus from iOS
+                }, 
                 {
-                    fps: 10,
-                    qrbox: { width: 250, height: 150 }
+                    fps: 30, // Tripled frame rate to catch the barcode the instant it focuses
+                    qrbox: { width: boxWidth, height: 150 },
+                    disableFlip: true // Barcodes are never mirrored, saving processing power
                 },
                 (decodedText, decodedResult) => {
                     // Success callback! 
@@ -583,10 +599,10 @@
                     fetchOpenFoodFacts(decodedText);
                 },
                 (errorMessage) => {
-                    // This fires constantly while searching for a code, so we safely ignore it
+                    // This fires constantly while searching for a code, safely ignore it
                 }
             );
-            status.innerHTML = "Point camera at barcode...";
+            status.innerHTML = "Point camera at barcode...<br><small style='color:#6b7280; display:block; margin-top:5px;'>If blurry, pull the phone back 6-8 inches.</small>";
         } catch (err) {
             console.error("Camera access failed", err);
             status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
