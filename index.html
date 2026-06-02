@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diet & Macro Dashboard</title>
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
@@ -21,6 +22,7 @@
             --purple: #8b5cf6;
             --teal: #14b8a6;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -30,6 +32,7 @@
             display: flex;
             justify-content: center;
         }
+        
         .container {
             max-width: 1200px;
             width: 100%;
@@ -37,6 +40,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+        
         .card {
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -44,7 +48,10 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
         }
-        .full-width { grid-column: 1 / -1; }
+        
+        .full-width { 
+            grid-column: 1 / -1; 
+        }
        
         .profile-bar {
             display: flex;
@@ -56,9 +63,23 @@
             margin-bottom: 20px;
             align-items: center;
         }
-        h2, h3 { margin-top: 0; color: var(--text-main); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.9em; font-weight: 600; margin-bottom: 5px; }
+        
+        h2, h3 { 
+            margin-top: 0; 
+            color: var(--text-main); 
+        }
+        
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        
+        label { 
+            display: block; 
+            font-size: 0.9em; 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+        }
+        
         input[type="text"], select, input[type="number"] {
             width: 100%;
             padding: 12px;
@@ -67,7 +88,12 @@
             box-sizing: border-box;
             font-size: 1em;
         }
-        .search-row { display: flex; gap: 10px; }
+        
+        .search-row { 
+            display: flex; 
+            gap: 10px; 
+        }
+        
         button {
             background-color: var(--primary);
             color: white;
@@ -78,8 +104,15 @@
             font-weight: 600;
             transition: opacity 0.2s;
         }
-        button:hover { opacity: 0.9; }
-        button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+        
+        button:hover { 
+            opacity: 0.9; 
+        }
+        
+        button:disabled { 
+            background-color: var(--text-muted); 
+            cursor: not-allowed; 
+        }
         
         .preview-box {
             background-color: #f9fafb;
@@ -89,13 +122,18 @@
             border: 1px dashed #d1d5db;
             min-height: 120px;
         }
-        .barometer-container { margin-bottom: 15px; }
+        
+        .barometer-container { 
+            margin-bottom: 15px; 
+        }
+        
         .barometer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 5px;
         }
+        
         .progress-bar-bg {
             background-color: var(--border-color);
             border-radius: 10px;
@@ -104,10 +142,12 @@
             overflow: hidden;
             position: relative;
         }
+        
         .progress-bar-fill {
             height: 100%;
             transition: width 0.4s ease;
         }
+        
         .progress-text {
             position: absolute;
             width: 100%;
@@ -119,6 +159,7 @@
             color: #fff;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
         }
+        
         .log-item {
             padding: 15px;
             border: 1px solid var(--border-color);
@@ -128,6 +169,7 @@
             justify-content: space-between;
             align-items: center;
         }
+        
         .exercise-box {
             background-color: #fef3c7;
             padding: 12px;
@@ -135,19 +177,23 @@
             border: 2px solid #f59e0b;
             margin: 10px 0;
         }
+        
         .amount-row {
             display: flex;
             gap: 10px;
         }
+        
         .amount-row input {
             flex: 2;
             padding: 14px;
             font-size: 1.1em;
         }
+        
         .amount-row select {
             flex: 1;
             padding: 14px;
         }
+        
         .reset-btn {
             background-color: #ef4444;
             color: white;
@@ -157,30 +203,57 @@
             font-size: 1.05em;
         }
         
-        /* Adjustments for the new scanner library */
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
-        #reader video { border-radius: 8px; width: 100%; }
+        /* Barcode Scanner UI Container */
+        #reader { 
+            width: 100%; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: #000; 
+        }
+        
+        #reader video { 
+            border-radius: 8px; 
+            width: 100%; 
+        }
 
         @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; }
+            .container { 
+                grid-template-columns: 1fr; 
+            }
         }
     </style>
 </head>
 <body>
+
 <div class="container">
     <div class="card full-width">
         <h2>Your Profile & Setup</h2>
         <div class="profile-bar">
-            <div><label>Day of Week</label><select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select></div>
-            <div><label>Body Weight (lbs)</label><input type="number" id="weightInput" value="208" onchange="recalculateMacroTargets()"></div>
-            <div><label>Daily Calorie Goal</label><input type="number" id="calorieGoalInput" value="1500" onchange="recalculateMacroTargets()"></div>
-            <div><label>Daily WW Points Goal</label><input type="number" id="wwGoalInput" value="32" onchange="updateWWGoal()" min="1"></div>
-            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;"><em>Protein, Fat, and Fiber targets calculate automatically. <strong>Data saves automatically.</strong></em></div>
+            <div>
+                <label>Day of Week</label>
+                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
+            </div>
+            <div>
+                <label>Body Weight (lbs)</label>
+                <input type="number" id="weightInput" value="208" onchange="recalculateMacroTargets()">
+            </div>
+            <div>
+                <label>Daily Calorie Goal</label>
+                <input type="number" id="calorieGoalInput" value="1500" onchange="recalculateMacroTargets()">
+            </div>
+            <div>
+                <label>Daily WW Points Goal</label>
+                <input type="number" id="wwGoalInput" value="32" onchange="updateWWGoal()" min="1">
+            </div>
+            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
+                <em>Protein, Fat, and Fiber targets calculate automatically. <strong>Data saves automatically.</strong></em>
+            </div>
         </div>
     </div>
 
     <div class="card">
         <h2>Search & Log Food</h2>
+        
         <div class="form-group">
             <label>Search USDA Database</label>
             <div class="search-row">
@@ -189,14 +262,17 @@
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
         </div>
+        
         <div class="form-group">
             <label>Search Results</label>
             <select id="foodSelect" onchange="updatePreview()"></select>
         </div>
+        
         <div class="form-group">
             <label>Number of Servings (optional)</label>
             <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()">
         </div>
+        
         <div class="form-group">
             <label>Consumed Amount (overrides servings)</label>
             <div class="amount-row">
@@ -207,14 +283,17 @@
                 </select>
             </div>
         </div>
+        
         <div class="form-group preview-box" id="nutritionPreview">
             <em>Select a food to view nutritional information.</em>
         </div>
+        
         <button onclick="logFood()" style="width:100%; padding: 14px; font-size: 1.05em;">Log Food</button>
 
         <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
             <strong style="color:var(--purple);">Daily WW Points</strong>
             <div class="barometer-container" id="wwBarometer"></div>
+            
             <div class="exercise-box">
                 <label><strong>Exercise Points Earned</strong> (subtracts from total)</label>
                 <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()">
@@ -224,8 +303,10 @@
 
     <div class="card">
         <h2>Daily Targets</h2>
+        
         <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;">Macros & Energy</h3>
         <div id="macroBarometersContainer"></div>
+        
         <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups (Servings)</h3>
         <div id="groupBarometersContainer"></div>
     </div>
@@ -239,6 +320,7 @@
 
 <div id="scannerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:white;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        
         <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Scan or Enter Barcode</h3>
         
         <div id="videoContainer" style="margin-bottom: 15px;">
@@ -259,23 +341,39 @@
 </div>
 
 <script>
+    // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
     const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
     let currentSearchResults = [];
-    let appData = { weight: 208, calorieGoal: 1500, wwGoal: 32, targets: {Calories:1500,Protein:50,Fat:22,Fiber:80,Fruit:2,Vegetable:5,Meat:1,Dairy:3,Grain:2}, history: {} };
-    let state = { targets: appData.targets, current: null, log: null };
-    
-    // Core variable for our software scanner
     let html5QrcodeScanner = null;
+    
+    let appData = { 
+        weight: 208, 
+        calorieGoal: 1500, 
+        wwGoal: 32, 
+        targets: { Calories:1500, Protein:50, Fat:22, Fiber:80, Fruit:2, Vegetable:5, Meat:1, Dairy:3, Grain:2 }, 
+        history: {} 
+    };
+    
+    let state = { 
+        targets: appData.targets, 
+        current: null, 
+        log: null 
+    };
 
     function calculateWWPoints(cal, fat, fib) {
         const capped = Math.min(fib, 4);
         return Math.max(0, Math.round(((cal/50) + (fat/12) - (capped/4)) * 10) / 10);
     }
 
-    function saveData() { localStorage.setItem('foodTrackerData', JSON.stringify(appData)); }
+    function saveData() { 
+        localStorage.setItem('foodTrackerData', JSON.stringify(appData)); 
+    }
+
     function loadData() {
         const saved = localStorage.getItem('foodTrackerData');
-        if (saved) Object.assign(appData, JSON.parse(saved));
+        if (saved) {
+            Object.assign(appData, JSON.parse(saved));
+        }
         document.getElementById('weightInput').value = appData.weight;
         document.getElementById('calorieGoalInput').value = appData.calorieGoal;
         document.getElementById('wwGoalInput').value = appData.wwGoal;
@@ -285,72 +383,117 @@
         loadData();
         const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const daySelect = document.getElementById('daySelect');
+        
         daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
         daySelect.value = days[new Date().getDay()];
+        
         changeDay();
         
-        document.getElementById('searchInput').addEventListener('keypress', e => e.key==='Enter' && searchUSDA());
-        document.getElementById('manualBarcode').addEventListener('keypress', e => e.key==='Enter' && manualBarcodeSubmit());
+        // Listen for Enter key presses on search inputs
+        document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchUSDA());
+        document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
     }
 
     function changeDay() {
         const day = document.getElementById('daySelect').value;
-        if (!appData.history[day]) appData.history[day] = {current: {Calories:0,Protein:0,Fat:0,Fiber:0,Fruit:0,Vegetable:0,Meat:0,Dairy:0,Grain:0,exercisePoints:0}, log:[]};
+        
+        // Create an empty state for the day if it doesn't exist
+        if (!appData.history[day]) {
+            appData.history[day] = {
+                current: { Calories:0, Protein:0, Fat:0, Fiber:0, Fruit:0, Vegetable:0, Meat:0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                log: []
+            };
+        }
+        
         state.current = appData.history[day].current;
         state.log = appData.history[day].log;
+        
         document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
-        renderLog(); renderBarometers();
+        
+        renderLog(); 
+        renderBarometers();
     }
 
-    function updateWWGoal() { appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value)||32; saveData(); renderBarometers(); }
-    function updateExercisePoints() { state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value)||0; saveData(); renderBarometers(); }
+    // ==================== GOALS & TARGETS LOGIC ====================
+    function updateWWGoal() { 
+        appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value) || 32; 
+        saveData(); 
+        renderBarometers(); 
+    }
+
+    function updateExercisePoints() { 
+        state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value) || 0; 
+        saveData(); 
+        renderBarometers(); 
+    }
 
     function recalculateMacroTargets() {
-        appData.weight = parseFloat(document.getElementById('weightInput').value)||208;
-        appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value)||1500;
+        appData.weight = parseFloat(document.getElementById('weightInput').value) || 208;
+        appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 1500;
+        
         state.targets.Calories = appData.calorieGoal;
         state.targets.Protein = Math.ceil(1.6 * (appData.weight / 4.8));
         state.targets.Fat = Math.round((appData.calorieGoal * 0.10) / 9);
         state.targets.Fiber = Math.round((appData.calorieGoal / 1000) * 40);
-        saveData(); renderBarometers();
+        
+        saveData(); 
+        renderBarometers();
     }
 
     function updateTarget(cat, val) {
         const v = parseFloat(val);
-        if (v>0) { state.targets[cat] = v; saveData(); renderBarometers(); }
+        if (v > 0) { 
+            state.targets[cat] = v; 
+            saveData(); 
+            renderBarometers(); 
+        }
     }
 
+    // ==================== USDA DATABASE SEARCH ====================
     async function searchUSDA() {
-        const q = document.getElementById('searchInput').value.trim();
-        if (!q) return;
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+        
         const btn = document.getElementById('searchBtn');
-        btn.disabled = true; btn.textContent = 'Searching...';
+        btn.disabled = true; 
+        btn.textContent = 'Searching...';
+        
         try {
-            const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(q)}&pageSize=25`);
+            const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=25`);
             const data = await res.json();
             currentSearchResults = data.foods || [];
+            
             const sel = document.getElementById('foodSelect');
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-            currentSearchResults.forEach((f,i) => {
+            
+            currentSearchResults.forEach((food, index) => {
                 const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = f.description + (f.brandOwner ? ` (${f.brandOwner})` : '');
+                opt.value = index;
+                opt.textContent = food.description + (food.brandOwner ? ` (${food.brandOwner})` : '');
                 sel.appendChild(opt);
             });
+            
             if(currentSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
             }
-        } catch(e) { alert("Search failed. Please check your connection."); }
-        finally { btn.disabled=false; btn.textContent='Search'; }
+        } catch(e) { 
+            alert("Search failed. Please check your network connection."); 
+        } finally { 
+            btn.disabled = false; 
+            btn.textContent = 'Search'; 
+        }
     }
 
+    // ==================== DATA PARSING HELPER FUNCTIONS ====================
     function getAllNutrients(food) {
         let nut = {calories: 0, protein: 0, fat: 0, fiber: 0};
         if (!food) return nut;
+        
         if (food.foodNutrients && Array.isArray(food.foodNutrients)) {
             for (let n of food.foodNutrients) {
                 let id = n.nutrientId || (n.nutrient && n.nutrient.id);
                 let val = parseFloat(n.value !== undefined ? n.value : n.amount) || 0;
+                
                 if (id === 1008 || id === 208) nut.calories = val;
                 if (id === 1003 || id === 203) nut.protein = val;
                 if (id === 1004 || id === 204) nut.fat = val;
@@ -362,14 +505,17 @@
 
     function guessCategory(food) {
         if (!food) return 'Other';
-        let d = String(food.description || '').toLowerCase();
-        let c = String(food.foodCategory || '').toLowerCase();
         
-        if (c.includes('vegetable') || d.includes('broccoli') || d.includes('green bean')) return 'Vegetable';
-        if (c.includes('fruit') || d.includes('apple') || d.includes('banana')) return 'Fruit';
-        if (c.includes('meat') || d.includes('chicken') || d.includes('beef') || d.includes('big mac')) return 'Meat';
-        if (c.includes('dairy') || d.includes('milk') || d.includes('cheese')) return 'Dairy';
-        if (c.includes('grain') || d.includes('bread') || d.includes('rice')) return 'Grain';
+        // Convert to strings securely to avoid API crashes
+        let desc = String(food.description || '').toLowerCase();
+        let cat = String(food.foodCategory || '').toLowerCase();
+        
+        if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
+        if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
+        if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('big mac')) return 'Meat';
+        if (cat.includes('dairy') || desc.includes('milk') || desc.includes('cheese')) return 'Dairy';
+        if (cat.includes('grain') || desc.includes('bread') || desc.includes('rice')) return 'Grain';
+        
         return 'Other';
     }
 
@@ -384,6 +530,7 @@
         }
         if (householdText && householdText !== "100g") return householdText;
         if (servingSize && servingSize !== "100g") return `${servingSize}g`;
+        
         return "100g (Database Default)";
     }
 
@@ -392,11 +539,13 @@
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
         
+        // User entered a specific manual weight 
         if (amount > 0) {
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
             return grams / 100; 
         }
         
+        // Calculate based on the product's suggested serving size
         let servingSizeGrams = 100; 
         if (food && food.servingSize) {
             servingSizeGrams = parseFloat(food.servingSize);
@@ -405,12 +554,13 @@
         return (servingSizeGrams / 100) * servings;
     }
 
+    // ==================== LOGGING & EDITING FUNCTIONS ====================
     function updatePreview() {
         const idx = document.getElementById('foodSelect').value;
         if (!idx) return;
+        
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
-        
         const multiplier = getMultiplier(food);
         const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
         const servingText = getServingText(food);
@@ -426,7 +576,7 @@
 
     function logFood() {
         const idx = document.getElementById('foodSelect').value;
-        if (!idx) return alert("Please select a food first.");
+        if (!idx) return alert("Please select a food from the dropdown first.");
 
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
@@ -437,6 +587,7 @@
         let logAmount = amountVal;
         let logUnit = document.getElementById('unitSelect').value;
         
+        // Show "servings" text if the user didn't type a specific gram/oz amount
         if (!(amountVal > 0)) {
             logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
             logUnit = logAmount === 1 ? "serving" : "servings";
@@ -451,20 +602,31 @@
             protein: nut.protein * multiplier,
             fat: nut.fat * multiplier,
             fiber: nut.fiber * multiplier,
-            wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier)
+            wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
+            
+            // Critical for the Edit feature: Store the base macros per 1 serving or per gram
+            calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
+            protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
+            fatPerUnit: nut.fat / (parseFloat(food.servingSize) || 100),
+            fibPerUnit: nut.fiber / (parseFloat(food.servingSize) || 100)
         };
 
         state.log.push(item);
+        
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
         state.current.Fiber += item.fiber;
-        if (state.current[cat] !== undefined) state.current[cat] += 1;
+        
+        if (state.current[cat] !== undefined) {
+            state.current[cat] += 1;
+        }
 
         saveData();
         renderLog();
         renderBarometers();
 
+        // Reset the interface
         document.getElementById('searchInput').value = '';
         document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
         document.getElementById('servingInput').value = 1;
@@ -472,56 +634,109 @@
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
     }
 
-    function deleteItem(i) {
-        const item = state.log[i];
+    function editItem(index) {
+        const item = state.log[index];
+        const newAmt = prompt(`Edit amount for ${item.name}\n(Currently ${item.amount} ${item.unit}):`, item.amount);
+        
+        if (newAmt === null || newAmt === "") return; // User cancelled
+        
+        const val = parseFloat(newAmt);
+        if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
+        
+        // 1. Subtract the old values from the daily totals
         state.current.Calories -= item.calories;
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
         state.current.Fiber -= item.fiber;
-        if (state.current[item.category] !== undefined) state.current[item.category] -= 1;
-        state.log.splice(i, 1);
-        saveData();
-        renderLog();
+
+        // 2. Re-calculate the new macros based on the new amount
+        item.amount = val;
+        item.calories = val * item.calsPerUnit * 100; // * 100 adjusts back from the 100g baseline
+        item.protein = val * item.protPerUnit * 100;
+        item.fat = val * item.fatPerUnit * 100;
+        item.fiber = val * item.fibPerUnit * 100;
+        item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
+
+        // 3. Add the updated values back to the daily totals
+        state.current.Calories += item.calories;
+        state.current.Protein += item.protein;
+        state.current.Fat += item.fat;
+        state.current.Fiber += item.fiber;
+
+        saveData(); 
+        renderLog(); 
+        renderBarometers();
+    }
+
+    function deleteItem(index) {
+        const item = state.log[index];
+        
+        state.current.Calories -= item.calories;
+        state.current.Protein -= item.protein;
+        state.current.Fat -= item.fat;
+        state.current.Fiber -= item.fiber;
+        
+        if (state.current[item.category] !== undefined) {
+            state.current[item.category] -= 1;
+        }
+        
+        state.log.splice(index, 1);
+        
+        saveData(); 
+        renderLog(); 
         renderBarometers();
     }
 
     function resetDay() {
-        if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nProfile settings will NOT be changed.")) {
+        if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
             const day = document.getElementById('daySelect').value;
-            appData.history[day] = {current: {Calories:0,Protein:0,Fat:0,Fiber:0,Fruit:0,Vegetable:0,Meat:0,Dairy:0,Grain:0,exercisePoints:0}, log: []};
+            appData.history[day] = {
+                current: { Calories:0, Protein:0, Fat:0, Fiber:0, Fruit:0, Vegetable:0, Meat:0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                log: []
+            };
+            
             state.current = appData.history[day].current;
             state.log = appData.history[day].log;
             document.getElementById('exerciseInput').value = 0;
+            
             saveData();
             renderLog();
             renderBarometers();
         }
     }
 
+    // ==================== UI RENDERING ====================
     function renderBarometers() {
-        const foodPts = state.log.reduce((s, it) => s + (it.wwPoints||0), 0);
+        const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
         const exer = state.current.exercisePoints || 0;
         const net = Math.max(0, foodPts - exer);
         const goal = appData.wwGoal;
 
         document.getElementById('wwBarometer').innerHTML = `
-            <div class="barometer-header"><strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span></div>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min((net/goal)*100,100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
-            <div class="progress-text">${net.toFixed(1)} / ${goal}</div></div>
+            <div class="barometer-header">
+                <strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${Math.min((net/goal)*100,100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
+                <div class="progress-text">${net.toFixed(1)} / ${goal}</div>
+            </div>
         `;
 
         const renderGroup = (keys, containerId, colors) => {
             const cont = document.getElementById(containerId);
             cont.innerHTML = '';
+            
             keys.forEach(cat => {
                 const target = state.targets[cat];
                 const curr = state.current[cat] || 0;
                 const perc = Math.min((curr / target) * 100, 100);
                 const div = document.createElement('div');
+                
                 div.className = 'barometer-container';
                 div.innerHTML = `
-                    <div class="barometer-header"><strong>${cat}</strong>
-                    <input type="number" value="${target}" style="width:70px; padding:4px;" onchange="updateTarget('${cat}',this.value)">
+                    <div class="barometer-header">
+                        <strong>${cat}</strong>
+                        <input type="number" value="${target}" style="width:70px; padding:4px;" onchange="updateTarget('${cat}',this.value)">
                     </div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat]||'#8b5cf6'}"></div>
@@ -532,18 +747,20 @@
             });
         };
 
-        renderGroup(['Calories','Protein','Fat','Fiber'], 'macroBarometersContainer', {Calories:'#3b82f6',Protein:'#ef4444',Fat:'#f59e0b',Fiber:'#14b8a6'});
+        renderGroup(['Calories','Protein','Fat','Fiber'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Fiber:'#14b8a6' });
         renderGroup(['Fruit','Vegetable','Meat','Dairy','Grain'], 'groupBarometersContainer', {});
     }
 
     function renderLog() {
         const cont = document.getElementById('logContainer');
+        
         if (state.log.length === 0) {
             cont.innerHTML = '<p style="color:gray;font-size:0.9em;">No foods logged yet today.</p>';
             return;
         }
+        
         cont.innerHTML = '';
-        state.log.forEach((item, i) => {
+        state.log.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'log-item';
             div.innerHTML = `
@@ -551,66 +768,82 @@
                     <strong>${item.name}</strong><br>
                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
                 </div>
-                <button onclick="deleteItem(${i})" style="background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Remove</button>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                    <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
+                </div>
             `;
             cont.appendChild(div);
         });
     }
 
-    // ==================== UNIVERSAL SOFTWARE BARCODE SCANNER ====================
-    async function startBarcodeScan() {
+    // ==================== SMART BARCODE SCANNER (WebRTC ZOOM + HTML5-QRCODE) ====================
+    function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
-        const status = document.getElementById('scanStatus');
-        status.innerHTML = "Initializing camera...";
-
-        // Initialize the library engine
+        const statusText = document.getElementById('scanStatus');
+        
+        statusText.innerHTML = "Initializing camera...";
+        
         if (!html5QrcodeScanner) {
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
 
-        try {
-            await html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 150 }
-                },
-                (decodedText, decodedResult) => {
-                    // Success callback! 
-                    stopBarcodeScan();
-                    fetchOpenFoodFacts(decodedText);
-                },
-                (errorMessage) => {
-                    // This fires constantly while searching for a code, so we safely ignore it
+        // Initialize normally to guarantee the camera opens safely without triggering OverconstrainedError
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, 
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 150 } 
+            },
+            (decodedText) => { 
+                stopBarcodeScan(); 
+                fetchOpenFoodFacts(decodedText); 
+            }
+        ).then(() => {
+            statusText.innerHTML = "Point camera at barcode...";
+
+            // EXPERIMENTAL: Once camera is safely running, attempt to apply Digital Zoom for iPhone 14/15/16 main lenses
+            setTimeout(async () => {
+                try {
+                    const videoElement = document.querySelector('#reader video');
+                    if (videoElement && videoElement.srcObject) {
+                        const track = videoElement.srcObject.getVideoTracks();
+                        const capabilities = track.getCapabilities();
+                        
+                        // Check if the hardware allows the browser to control zoom
+                        if (capabilities && capabilities.zoom) {
+                            // Request 2.0x zoom, safely capping it at the camera's physical max limit
+                            const zoomLevel = Math.min(2.0, capabilities.zoom.max);
+                            await track.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
+                            statusText.innerHTML = `Camera active (Zoom: ${zoomLevel}x). Hold 8-10 inches away...`;
+                        }
+                    }
+                } catch (e) {
+                    // If zoom API fails, silently handle it. The standard camera feed remains active.
+                    console.warn("Digital zoom not supported or blocked by this browser.");
                 }
-            );
-            status.innerHTML = "Point camera at barcode...";
-        } catch (err) {
-            console.error("Camera access failed", err);
-            status.innerHTML = "<span style='color:#ef4444;'>Camera access denied.</span> Please enter below.";
-        }
-        
-        setTimeout(() => document.getElementById('manualBarcode').focus(), 100);
+            }, 800); 
+
+        }).catch(err => {
+            console.error("Camera error:", err);
+            statusText.innerHTML = "Camera access denied. Ensure page is HTTPS and permissions are allowed.";
+        });
     }
 
     function stopBarcodeScan() {
-        const modal = document.getElementById('scannerModal');
-        modal.style.display = 'none';
-        
+        document.getElementById('scannerModal').style.display = 'none';
         if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
-            html5QrcodeScanner.stop().catch(err => {
-                console.error("Failed to stop scanner", err);
-            });
+            html5QrcodeScanner.stop().catch(err => console.error("Error stopping scanner", err));
         }
     }
 
     function manualBarcodeSubmit() {
         const barcode = document.getElementById('manualBarcode').value.trim();
-        if (barcode) {
-            stopBarcodeScan();
-            fetchOpenFoodFacts(barcode);
+        if (barcode) { 
+            stopBarcodeScan(); 
+            fetchOpenFoodFacts(barcode); 
         }
     }
 
@@ -673,6 +906,7 @@
         }
     }
 
+    // Initialize application on load
     init();
 </script>
 </body>
