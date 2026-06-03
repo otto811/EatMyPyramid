@@ -235,15 +235,15 @@
             </div>
             <div>
                 <label>Body Weight (lbs)</label>
-                <input type="number" id="weightInput" value="208" onchange="recalculateMacroTargets()">
+                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()">
             </div>
             <div>
                 <label>Daily Calorie Goal</label>
-                <input type="number" id="calorieGoalInput" value="1500" onchange="recalculateMacroTargets()">
+                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
             </div>
             <div>
                 <label>Daily WW Points Goal</label>
-                <input type="number" id="wwGoalInput" value="32" onchange="updateWWGoal()" min="1">
+                <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
             </div>
             <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
                 <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
@@ -347,11 +347,11 @@
     let html5QrcodeScanner = null;
     
     let appData = { 
-        weight: 208, 
-        calorieGoal: 1500, 
-        wwGoal: 32, 
+        weight: 0, 
+        calorieGoal: 0, 
+        wwGoal: 0, 
         // Macro targets represent percentages (30%, 30%, 40%)
-        targets: { Calories:1500, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
+        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
         history: {} 
     };
     
@@ -376,7 +376,6 @@
             Object.assign(appData, JSON.parse(saved));
             
             // Seamless Migration 1: Grams -> Percentages
-            // If the saved target is > 100, it means it was previously tracking grams. Reset to percentage.
             if (appData.targets.Protein > 100 || appData.targets.Fiber !== undefined) {
                 delete appData.targets.Fiber;
                 appData.targets.Protein = 30;
@@ -396,7 +395,6 @@
                     currentDay.Carbs = 0;
                     appData.history[day].log.forEach(item => {
                         if (item.carbs === undefined) {
-                            // Estimate carbs based on remainder of calories if not previously tracked
                             item.carbs = Math.max(0, (item.calories - (item.protein * 4) - (item.fat * 9)) / 4);
                             item.carbsPerUnit = item.carbs / (item.amount || 1); 
                         }
@@ -448,7 +446,7 @@
 
     // ==================== GOALS & TARGETS LOGIC ====================
     function updateWWGoal() { 
-        appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value) || 32; 
+        appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value) || 0; 
         saveData(); 
         renderBarometers(); 
     }
@@ -460,8 +458,8 @@
     }
 
     function recalculateMacroTargets() {
-        appData.weight = parseFloat(document.getElementById('weightInput').value) || 208;
-        appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 1500;
+        appData.weight = parseFloat(document.getElementById('weightInput').value) || 0;
+        appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 0;
         
         state.targets.Calories = appData.calorieGoal;
         // Ensure percentage defaults are present, but don't overwrite if the user customized them
@@ -543,7 +541,6 @@
         let desc = String(food.description || '').toLowerCase();
         let cat = String(food.foodCategory || '').toLowerCase();
         
-        // Logic waterfall.
         if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
         if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
         if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac')) return 'Animal Protein';
@@ -645,8 +642,6 @@
 
         state.log.push(item);
         
-        // We still save grams internally so the math always remains perfectly accurate 
-        // even if the user changes their daily calorie goal later in the day.
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
@@ -660,7 +655,6 @@
         renderLog();
         renderBarometers();
 
-        // Reset the interface
         document.getElementById('searchInput').value = '';
         document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
         document.getElementById('servingInput').value = 1;
@@ -672,18 +666,16 @@
         const item = state.log[index];
         const newAmt = prompt(`Edit amount for ${item.name}\n(Currently ${item.amount} ${item.unit}):`, item.amount);
         
-        if (newAmt === null || newAmt === "") return; // User cancelled
+        if (newAmt === null || newAmt === "") return; 
         
         const val = parseFloat(newAmt);
         if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
         
-        // 1. Subtract the old values
         state.current.Calories -= item.calories;
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
         state.current.Carbs -= (item.carbs || 0);
 
-        // 2. Re-calculate based on the new amount
         item.amount = val;
         item.calories = val * item.calsPerUnit * 100;
         item.protein = val * item.protPerUnit * 100;
@@ -692,7 +684,6 @@
         item.fiber = val * (item.fibPerUnit || 0) * 100;
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
 
-        // 3. Add the updated values back
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
@@ -720,6 +711,27 @@
         saveData(); 
         renderLog(); 
         renderBarometers();
+    }
+
+    function copyItemName(index, btnElement) {
+        const itemName = state.log[index].name;
+        
+        navigator.clipboard.writeText(itemName).then(() => {
+            const originalText = btnElement.innerText;
+            const originalBg = btnElement.style.background;
+            
+            // Visual feedback
+            btnElement.innerText = "Copied!";
+            btnElement.style.background = "#10b981"; // Success green
+            
+            setTimeout(() => {
+                btnElement.innerText = originalText;
+                btnElement.style.background = originalBg;
+            }, 1500);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            alert("Failed to copy text. Your browser may not support this feature.");
+        });
     }
 
     function resetDay() {
@@ -766,11 +778,10 @@
                 let displayCurr = state.current[cat] || 0;
                 let suffix = '';
 
-                // Core Logic: Convert raw logged grams into a Percentage of Daily Calories
                 if (isMacroPercentage && cat !== 'Calories') {
-                    let multiplier = (cat === 'Fat') ? 9 : 4; // 9 cals per gram of fat, 4 for protein/carbs
+                    let multiplier = (cat === 'Fat') ? 9 : 4; 
                     let currentCaloriesOfMacro = displayCurr * multiplier;
-                    displayCurr = (currentCaloriesOfMacro / appData.calorieGoal) * 100;
+                    displayCurr = appData.calorieGoal > 0 ? (currentCaloriesOfMacro / appData.calorieGoal) * 100 : 0;
                     suffix = '%';
                 }
 
@@ -795,9 +806,7 @@
             });
         };
 
-        // Render Macros as Percentages of Daily Calories
         renderGroup(['Calories','Protein','Fat','Carbs'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Carbs:'#14b8a6' }, true);
-        // Render Standard Food Groups as whole numbers
         renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain'], 'groupBarometersContainer', {}, false);
     }
 
@@ -814,11 +823,12 @@
             const div = document.createElement('div');
             div.className = 'log-item';
             div.innerHTML = `
-                <div style="flex-grow:1">
+                <div style="flex-grow:1; padding-right:10px;">
                     <strong>${item.name}</strong><br>
                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
                 </div>
-                <div style="display:flex; gap:5px;">
+                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
                     <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
                     <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
                 </div>
@@ -840,7 +850,6 @@
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
 
-        // Initialize normally to guarantee the camera opens safely without triggering OverconstrainedError
         html5QrcodeScanner.start(
             { facingMode: "environment" }, 
             { 
@@ -854,7 +863,6 @@
         ).then(() => {
             statusText.innerHTML = "Point camera at barcode...";
 
-            // EXPERIMENTAL: Once camera is safely running, attempt to apply Digital Zoom for iPhone 14/15/16 main lenses
             setTimeout(async () => {
                 try {
                     const videoElement = document.querySelector('#reader video');
@@ -862,16 +870,13 @@
                         const track = videoElement.srcObject.getVideoTracks();
                         const capabilities = track.getCapabilities();
                         
-                        // Check if the hardware allows the browser to control zoom
                         if (capabilities && capabilities.zoom) {
-                            // Request 2.0x zoom, safely capping it at the camera's physical max limit
                             const zoomLevel = Math.min(2.0, capabilities.zoom.max);
                             await track.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
                             statusText.innerHTML = `Camera active (Zoom: ${zoomLevel}x). Hold 8-10 inches away...`;
                         }
                     }
                 } catch (e) {
-                    // If zoom API fails, silently handle it. The standard camera feed remains active.
                     console.warn("Digital zoom not supported or blocked by this browser.");
                 }
             }, 800); 
@@ -958,7 +963,6 @@
         }
     }
 
-    // Initialize application on load
     init();
 </script>
 </body>
