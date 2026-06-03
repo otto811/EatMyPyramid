@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Points Calculator</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .calculator-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 0.6rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #e8f4f8;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h2>Points Calculator</h2>
+        
+        <form id="calcForm">
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender">
+                    <option value="0" disabled selected>Select Gender</option>
+                    <option value="2">Female</option>
+                    <option value="8">Male</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="age">Age</label>
+                <select id="age">
+                    <option value="0" disabled selected>Select Age Range</option>
+                    <option value="4">17 - 26</option>
+                    <option value="3">27 - 37</option>
+                    <option value="2">38 - 47</option>
+                    <option value="1">48 - 58</option>
+                    <option value="0">Over 58</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="weight">Weight (lbs)</label>
+                <input type="number" id="weight" placeholder="Enter weight (e.g. 150)" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="height">Height</label>
+                <select id="height">
+                    <option value="0" disabled selected>Select Height</option>
+                    <option value="0">Under 5'1"</option>
+                    <option value="1">5'1" to 5'10"</option>
+                    <option value="2">Over 5'10"</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="activity">Daily Activity Level</label>
+                <select id="activity">
+                    <option value="0" disabled selected>Select Activity Level</option>
+                    <option value="0">Mostly sitting</option>
+                    <option value="2">Occasionally sitting</option>
+                    <option value="4">Walking a lot</option>
+                    <option value="6">Physical hard work</option>
+                </select>
+            </div>
+        </form>
+
+        <div class="result" id="output">WW Points = 0</div>
+    </div>
+
+    <script>
+        // Grab form inputs and output container
+        const genderEl = document.getElementById('gender');
+        const ageEl = document.getElementById('age');
+        const weightEl = document.getElementById('weight');
+        const heightEl = document.getElementById('height');
+        const activityEl = document.getElementById('activity');
+        const outputEl = document.getElementById('output');
+
+        // Function to calculate and update points
+        function calculatePoints() {
+            // Get values from dropdowns (defaults to 0 if not selected)
+            const genderPts = parseInt(genderEl.value) || 0;
+            const agePts = parseInt(ageEl.value) || 0;
+            const heightPts = parseInt(heightEl.value) || 0;
+            const activityPts = parseInt(activityEl.value) || 0;
+
+            // Handle weight: Divide by 10 and drop decimals
+            const weightVal = parseFloat(weightEl.value) || 0;
+            const weightPts = Math.floor(weightVal / 10);
+
+            // Sum it all up
+            const totalPoints = genderPts + agePts + weightPts + heightPts + activityPts;
+
+            // Update UI
+            outputEl.innerText = `WW Points = ${totalPoints}`;
+        }
+
+        // Attach event listeners to trigger calculation immediately on any change
+        genderEl.addEventListener('change', calculatePoints);
+        ageEl.addEventListener('change', calculatePoints);
+        weightEl.addEventListener('input', calculatePoints); // 'input' fires on every keystroke
+        heightEl.addEventListener('change', calculatePoints);
+        activityEl.addEventListener('change', calculatePoints);
+    </script>
+
+</body>
+</html>
