@@ -246,7 +246,7 @@
                 <input type="number" id="wwGoalInput" value="32" onchange="updateWWGoal()" min="1">
             </div>
             <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
-                <em>Protein, Fat, and Fiber targets calculate automatically. <strong>Data saves automatically.</strong></em>
+                <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
             </div>
         </div>
     </div>
@@ -350,7 +350,8 @@
         weight: 208, 
         calorieGoal: 1500, 
         wwGoal: 32, 
-        targets: { Calories:1500, Protein:50, Fat:22, Fiber:80, Fruit:2, Vegetable:5, Meat:1, Dairy:3, Grain:2 }, 
+        // Macro targets represent percentages (30%, 30%, 40%)
+        targets: { Calories:1500, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
         history: {} 
     };
     
@@ -373,7 +374,38 @@
         const saved = localStorage.getItem('foodTrackerData');
         if (saved) {
             Object.assign(appData, JSON.parse(saved));
+            
+            // Seamless Migration 1: Grams -> Percentages
+            // If the saved target is > 100, it means it was previously tracking grams. Reset to percentage.
+            if (appData.targets.Protein > 100 || appData.targets.Fiber !== undefined) {
+                delete appData.targets.Fiber;
+                appData.targets.Protein = 30;
+                appData.targets.Fat = 30;
+                appData.targets.Carbs = 40;
+            }
+
+            // Seamless Migration 2: Ensure Carbs exist in history and estimate for old logs
+            for (let day in appData.history) {
+                let currentDay = appData.history[day].current;
+                
+                if (currentDay.Fiber !== undefined) {
+                    delete currentDay.Fiber;
+                }
+                
+                if (currentDay.Carbs === undefined) {
+                    currentDay.Carbs = 0;
+                    appData.history[day].log.forEach(item => {
+                        if (item.carbs === undefined) {
+                            // Estimate carbs based on remainder of calories if not previously tracked
+                            item.carbs = Math.max(0, (item.calories - (item.protein * 4) - (item.fat * 9)) / 4);
+                            item.carbsPerUnit = item.carbs / (item.amount || 1); 
+                        }
+                        currentDay.Carbs += item.carbs;
+                    });
+                }
+            }
         }
+        
         document.getElementById('weightInput').value = appData.weight;
         document.getElementById('calorieGoalInput').value = appData.calorieGoal;
         document.getElementById('wwGoalInput').value = appData.wwGoal;
@@ -400,7 +432,7 @@
         // Create an empty state for the day if it doesn't exist
         if (!appData.history[day]) {
             appData.history[day] = {
-                current: { Calories:0, Protein:0, Fat:0, Fiber:0, Fruit:0, Vegetable:0, Meat:0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
                 log: []
             };
         }
@@ -432,9 +464,10 @@
         appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 1500;
         
         state.targets.Calories = appData.calorieGoal;
-        state.targets.Protein = Math.ceil(1.6 * (appData.weight / 4.8));
-        state.targets.Fat = Math.round((appData.calorieGoal * 0.10) / 9);
-        state.targets.Fiber = Math.round((appData.calorieGoal / 1000) * 40);
+        // Ensure percentage defaults are present, but don't overwrite if the user customized them
+        if (!state.targets.Protein) state.targets.Protein = 30;
+        if (!state.targets.Fat) state.targets.Fat = 30;
+        if (!state.targets.Carbs) state.targets.Carbs = 40;
         
         saveData(); 
         renderBarometers();
@@ -486,7 +519,7 @@
 
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
     function getAllNutrients(food) {
-        let nut = {calories: 0, protein: 0, fat: 0, fiber: 0};
+        let nut = {calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0};
         if (!food) return nut;
         
         if (food.foodNutrients && Array.isArray(food.foodNutrients)) {
@@ -497,7 +530,8 @@
                 if (id === 1008 || id === 208) nut.calories = val;
                 if (id === 1003 || id === 203) nut.protein = val;
                 if (id === 1004 || id === 204) nut.fat = val;
-                if (id === 1079 || id === 291) nut.fiber = val;
+                if (id === 1005 || id === 205) nut.carbs = val;
+                if (id === 1079 || id === 291) nut.fiber = val; // Still tracked for WW calculation
             }
         }
         return nut;
@@ -506,13 +540,13 @@
     function guessCategory(food) {
         if (!food) return 'Other';
         
-        // Convert to strings securely to avoid API crashes
         let desc = String(food.description || '').toLowerCase();
         let cat = String(food.foodCategory || '').toLowerCase();
         
+        // Logic waterfall.
         if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
         if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
-        if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('big mac')) return 'Meat';
+        if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac')) return 'Animal Protein';
         if (cat.includes('dairy') || desc.includes('milk') || desc.includes('cheese')) return 'Dairy';
         if (cat.includes('grain') || desc.includes('bread') || desc.includes('rice')) return 'Grain';
         
@@ -539,13 +573,11 @@
         const unit = document.getElementById('unitSelect').value;
         const servings = parseFloat(document.getElementById('servingInput').value) || 1;
         
-        // User entered a specific manual weight 
         if (amount > 0) {
             const grams = unit === 'oz' ? amount * 28.3495 : amount;
             return grams / 100; 
         }
         
-        // Calculate based on the product's suggested serving size
         let servingSizeGrams = 100; 
         if (food && food.servingSize) {
             servingSizeGrams = parseFloat(food.servingSize);
@@ -569,7 +601,7 @@
             <strong>${food.description}</strong><br>
             <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong></em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
-            Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Fiber: ${(nut.fiber * multiplier).toFixed(1)}g<br>
+            Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
         `;
     }
@@ -587,7 +619,6 @@
         let logAmount = amountVal;
         let logUnit = document.getElementById('unitSelect').value;
         
-        // Show "servings" text if the user didn't type a specific gram/oz amount
         if (!(amountVal > 0)) {
             logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
             logUnit = logAmount === 1 ? "serving" : "servings";
@@ -601,22 +632,25 @@
             calories: nut.calories * multiplier,
             protein: nut.protein * multiplier,
             fat: nut.fat * multiplier,
-            fiber: nut.fiber * multiplier,
+            carbs: nut.carbs * multiplier,
+            fiber: nut.fiber * multiplier, 
             wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
             
-            // Critical for the Edit feature: Store the base macros per 1 serving or per gram
             calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
             protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
             fatPerUnit: nut.fat / (parseFloat(food.servingSize) || 100),
+            carbsPerUnit: nut.carbs / (parseFloat(food.servingSize) || 100),
             fibPerUnit: nut.fiber / (parseFloat(food.servingSize) || 100)
         };
 
         state.log.push(item);
         
+        // We still save grams internally so the math always remains perfectly accurate 
+        // even if the user changes their daily calorie goal later in the day.
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
-        state.current.Fiber += item.fiber;
+        state.current.Carbs += item.carbs;
         
         if (state.current[cat] !== undefined) {
             state.current[cat] += 1;
@@ -643,25 +677,26 @@
         const val = parseFloat(newAmt);
         if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
         
-        // 1. Subtract the old values from the daily totals
+        // 1. Subtract the old values
         state.current.Calories -= item.calories;
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
-        state.current.Fiber -= item.fiber;
+        state.current.Carbs -= (item.carbs || 0);
 
-        // 2. Re-calculate the new macros based on the new amount
+        // 2. Re-calculate based on the new amount
         item.amount = val;
-        item.calories = val * item.calsPerUnit * 100; // * 100 adjusts back from the 100g baseline
+        item.calories = val * item.calsPerUnit * 100;
         item.protein = val * item.protPerUnit * 100;
         item.fat = val * item.fatPerUnit * 100;
-        item.fiber = val * item.fibPerUnit * 100;
+        item.carbs = val * (item.carbsPerUnit || 0) * 100;
+        item.fiber = val * (item.fibPerUnit || 0) * 100;
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
 
-        // 3. Add the updated values back to the daily totals
+        // 3. Add the updated values back
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
-        state.current.Fiber += item.fiber;
+        state.current.Carbs += item.carbs;
 
         saveData(); 
         renderLog(); 
@@ -674,7 +709,7 @@
         state.current.Calories -= item.calories;
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
-        state.current.Fiber -= item.fiber;
+        state.current.Carbs -= (item.carbs || 0);
         
         if (state.current[item.category] !== undefined) {
             state.current[item.category] -= 1;
@@ -691,7 +726,7 @@
         if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
             const day = document.getElementById('daySelect').value;
             appData.history[day] = {
-                current: { Calories:0, Protein:0, Fat:0, Fiber:0, Fruit:0, Vegetable:0, Meat:0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
                 log: []
             };
             
@@ -722,33 +757,48 @@
             </div>
         `;
 
-        const renderGroup = (keys, containerId, colors) => {
+        const renderGroup = (keys, containerId, colors, isMacroPercentage = false) => {
             const cont = document.getElementById(containerId);
             cont.innerHTML = '';
             
             keys.forEach(cat => {
                 const target = state.targets[cat];
-                const curr = state.current[cat] || 0;
-                const perc = Math.min((curr / target) * 100, 100);
+                let displayCurr = state.current[cat] || 0;
+                let suffix = '';
+
+                // Core Logic: Convert raw logged grams into a Percentage of Daily Calories
+                if (isMacroPercentage && cat !== 'Calories') {
+                    let multiplier = (cat === 'Fat') ? 9 : 4; // 9 cals per gram of fat, 4 for protein/carbs
+                    let currentCaloriesOfMacro = displayCurr * multiplier;
+                    displayCurr = (currentCaloriesOfMacro / appData.calorieGoal) * 100;
+                    suffix = '%';
+                }
+
+                const perc = target > 0 ? Math.min((displayCurr / target) * 100, 100) : 0;
                 const div = document.createElement('div');
                 
                 div.className = 'barometer-container';
                 div.innerHTML = `
                     <div class="barometer-header">
                         <strong>${cat}</strong>
-                        <input type="number" value="${target}" style="width:70px; padding:4px;" onchange="updateTarget('${cat}',this.value)">
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" value="${target}" style="width:60px; padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
+                            <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
+                        </div>
                     </div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat]||'#8b5cf6'}"></div>
-                        <div class="progress-text">${curr.toFixed(1)} / ${target}</div>
+                        <div class="progress-text">${displayCurr.toFixed(1)}${suffix} / ${target}${suffix}</div>
                     </div>
                 `;
                 cont.appendChild(div);
             });
         };
 
-        renderGroup(['Calories','Protein','Fat','Fiber'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Fiber:'#14b8a6' });
-        renderGroup(['Fruit','Vegetable','Meat','Dairy','Grain'], 'groupBarometersContainer', {});
+        // Render Macros as Percentages of Daily Calories
+        renderGroup(['Calories','Protein','Fat','Carbs'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Carbs:'#14b8a6' }, true);
+        // Render Standard Food Groups as whole numbers
+        renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain'], 'groupBarometersContainer', {}, false);
     }
 
     function renderLog() {
@@ -777,7 +827,7 @@
         });
     }
 
-    // ==================== SMART BARCODE SCANNER (WebRTC ZOOM + HTML5-QRCODE) ====================
+    // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
     function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
@@ -866,6 +916,7 @@
                 calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
                 protein: parseFloat(p.nutriments?.proteins_100g || 0),
                 fat: parseFloat(p.nutriments?.fat_100g || 0),
+                carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
                 fiber: parseFloat(p.nutriments?.fiber_100g || 0)
             };
 
@@ -887,6 +938,7 @@
                     {nutrientId: 1008, value: nut.calories},
                     {nutrientId: 1003, value: nut.protein},
                     {nutrientId: 1004, value: nut.fat},
+                    {nutrientId: 1005, value: nut.carbs},
                     {nutrientId: 1079, value: nut.fiber}
                 ]
             };
