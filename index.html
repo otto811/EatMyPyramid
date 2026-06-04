@@ -231,10 +231,7 @@
         <div class="profile-bar">
             <div>
                 <label>Day of Week</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
-                    <button onclick="showClearWeekModal()" style="background-color: var(--danger); white-space: nowrap;">Clear Weekly Logs</button>
-                </div>
+                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
             </div>
             <div>
                 <label>Body Weight (lbs)</label>
@@ -245,8 +242,11 @@
                 <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
             </div>
             <div>
-                <label>Daily WW Points Goal</label>
-                <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
+                <label>Daily Points Goal</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
+                    <button onclick="showCalculatorModal()" style="background-color: var(--teal); white-space: nowrap;">Calculate Your Points</button>
+                </div>
             </div>
             <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
                 <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
@@ -355,13 +355,64 @@
     </div>
 </div>
 
-<div id="clearWeekModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5); text-align:center;">
-        <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--danger);">Warning</h3>
-        <p style="font-weight:600; margin: 20px 0;">This will clear all of the daily logs for the week.</p>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-            <button onclick="closeClearWeekModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel Reset</button>
-            <button onclick="executeClearAllWeek()" style="background:var(--danger); flex:1; padding:12px;">Continue</button>
+<div id="calculatorModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Points Calculator</h3>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="calc-gender">Gender</label>
+            <select id="calc-gender" onchange="calculatePoints()">
+                <option value="0" disabled selected>Select Gender</option>
+                <option value="2">Female</option>
+                <option value="8">Male</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="calc-age">Age</label>
+            <select id="calc-age" onchange="calculatePoints()">
+                <option value="0" disabled selected>Select Age Range</option>
+                <option value="4">17 - 26</option>
+                <option value="3">27 - 37</option>
+                <option value="2">38 - 47</option>
+                <option value="1">48 - 58</option>
+                <option value="0">Over 58</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="calc-weight">Weight (lbs)</label>
+            <input type="number" id="calc-weight" placeholder="Enter weight (e.g. 150)" min="0" oninput="calculatePoints()">
+        </div>
+
+        <div class="form-group">
+            <label for="calc-height">Height</label>
+            <select id="calc-height" onchange="calculatePoints()">
+                <option value="0" disabled selected>Select Height</option>
+                <option value="0">Under 5'1"</option>
+                <option value="1">5'1" to 5'10"</option>
+                <option value="2">Over 5'10"</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="calc-activity">Daily Activity Level</label>
+            <select id="calc-activity" onchange="calculatePoints()">
+                <option value="0" disabled selected>Select Activity Level</option>
+                <option value="0">Mostly sitting</option>
+                <option value="2">Occasionally sitting</option>
+                <option value="4">Walking a lot</option>
+                <option value="6">Physical hard work</option>
+            </select>
+        </div>
+
+        <div id="calc-output" style="margin-top: 1.5rem; padding: 1rem; background-color: #e8f4f8; border-radius: 8px; text-align: center; font-size: 1.5em; font-weight: bold; color: #2980b9;">
+            Points = 0
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="closeCalculatorModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+            <button onclick="applyCalculatedPoints()" style="background:var(--primary); flex:1; padding:12px;">Apply Goal</button>
         </div>
     </div>
 </div>
@@ -807,25 +858,50 @@
         }
     }
 
-    // ==================== CLEAR WEEK FUNCTIONS ====================
-    function showClearWeekModal() {
-        document.getElementById('clearWeekModal').style.display = 'flex';
+    // ==================== POINTS CALCULATOR FUNCTIONS ====================
+    function showCalculatorModal() {
+        document.getElementById('calculatorModal').style.display = 'flex';
+        // Auto-fill weight if it's already set in the main app
+        if (appData.weight > 0) {
+            document.getElementById('calc-weight').value = appData.weight;
+            calculatePoints();
+        }
     }
 
-    function closeClearWeekModal() {
-        document.getElementById('clearWeekModal').style.display = 'none';
+    function closeCalculatorModal() {
+        document.getElementById('calculatorModal').style.display = 'none';
     }
 
-    function executeClearAllWeek() {
-        // 1. Reset and clear all daily logs for the week
-        appData.history = {};
-        saveData();
+    function calculatePoints() {
+        const genderPts = parseInt(document.getElementById('calc-gender').value) || 0;
+        const agePts = parseInt(document.getElementById('calc-age').value) || 0;
+        const heightPts = parseInt(document.getElementById('calc-height').value) || 0;
+        const activityPts = parseInt(document.getElementById('calc-activity').value) || 0;
         
-        // 2. Refresh the current view to reflect the empty state
-        changeDay(); 
+        const weightVal = parseFloat(document.getElementById('calc-weight').value) || 0;
+        const weightPts = Math.floor(weightVal / 10);
         
-        // 3. Clear the message and return to previous state
-        closeClearWeekModal();
+        const totalPoints = genderPts + agePts + weightPts + heightPts + activityPts;
+        
+        document.getElementById('calc-output').innerText = `Points = ${totalPoints}`;
+        return totalPoints;
+    }
+
+    function applyCalculatedPoints() {
+        const totalPoints = calculatePoints();
+        if (totalPoints > 0) {
+            // Apply the calculated WW Points goal
+            document.getElementById('wwGoalInput').value = totalPoints;
+            updateWWGoal(); // trigger save and UI update
+            
+            // Optionally, sync the weight back to the main app if they updated it in the calculator
+            const calcWeight = document.getElementById('calc-weight').value;
+            if (calcWeight && calcWeight !== document.getElementById('weightInput').value) {
+                document.getElementById('weightInput').value = calcWeight;
+                recalculateMacroTargets(); // trigger save and UI update for weight
+            }
+        }
+        closeCalculatorModal();
     }
 
     // ==================== UI RENDERING ====================
