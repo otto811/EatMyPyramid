@@ -295,8 +295,20 @@
             <div class="barometer-container" id="wwBarometer"></div>
             
             <div class="exercise-box">
-                <label><strong>Exercise Points Earned</strong> (subtracts from total)</label>
-                <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()">
+                <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from total)</label>
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                    <input type="number" id="exDuration" placeholder="Duration (min)" style="flex:1; padding:10px;">
+                    <select id="exIntensity" style="flex:1; padding:10px;">
+                        <option value="Low">Low</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="High">High</option>
+                    </select>
+                    <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
+                    <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()" style="flex:1;">
+                </div>
             </div>
         </div>
     </div>
@@ -455,6 +467,36 @@
         state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value) || 0; 
         saveData(); 
         renderBarometers(); 
+    }
+
+    function addExercisePoints() {
+        const duration = parseFloat(document.getElementById('exDuration').value);
+        const intensityText = document.getElementById('exIntensity').value;
+        
+        if (isNaN(duration) || duration <= 0) return alert("Please enter a valid duration in minutes.");
+        
+        // Securely convert string selection back to required decimal values
+        let intensity = 0;
+        if (intensityText === "Low") intensity = 0.00033;
+        else if (intensityText === "Moderate") intensity = 0.00047;
+        else if (intensityText === "High") intensity = 0.00117;
+        
+        const weight = parseFloat(document.getElementById('weightInput').value) || appData.weight || 0;
+        
+        // Formula: Body Weight x Duration x Intensity Level
+        const earned = weight * duration * intensity;
+        
+        let currentPoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
+        let newTotal = currentPoints + earned;
+        
+        // Update the input box
+        document.getElementById('exerciseInput').value = newTotal.toFixed(1);
+        
+        // Clear duration input for the next entry
+        document.getElementById('exDuration').value = '';
+        
+        // Call the existing function to save and update UI
+        updateExercisePoints();
     }
 
     function recalculateMacroTargets() {
@@ -720,9 +762,8 @@
             const originalText = btnElement.innerText;
             const originalBg = btnElement.style.background;
             
-            // Visual feedback
             btnElement.innerText = "Copied!";
-            btnElement.style.background = "#10b981"; // Success green
+            btnElement.style.background = "#10b981"; 
             
             setTimeout(() => {
                 btnElement.innerText = originalText;
