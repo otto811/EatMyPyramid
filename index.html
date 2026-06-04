@@ -338,11 +338,6 @@
         
         <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Scan or Enter Barcode</h3>
         
-        <p style="font-size:0.82em; color:#4b5563; margin:-8px 0 12px 0; text-align:center; line-height:1.3;">
-            <strong>Tip for iPhone 12 / 14:</strong> Hold camera <strong>6–10 inches</strong> from barcode.<br>
-            Newer iPhones (15+) can often scan from farther away due to better cameras.
-        </p>
-        
         <div id="videoContainer" style="margin-bottom: 15px;">
             <div id="reader"></div>
             <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Loading camera...</p>
@@ -1001,77 +996,46 @@
         document.getElementById('manualBarcode').value = '';
         const statusText = document.getElementById('scanStatus');
         
-        statusText.innerHTML = "Initializing camera...<br><small style='color:#6b7280'>iPhone 12/14: Hold 6–10 inches from barcode</small>";
+        statusText.innerHTML = "Initializing camera...";
         
         if (!html5QrcodeScanner) {
             html5QrcodeScanner = new Html5Qrcode("reader");
         }
 
-        // Larger qrbox + slightly lower fps gives better results at moderate distances on older cameras
-        const qrboxSize = { width: 300, height: 180 };
-
         html5QrcodeScanner.start(
             { facingMode: "environment" }, 
             { 
                 fps: 10, 
-                qrbox: qrboxSize,
-                aspectRatio: 1.777
+                qrbox: { width: 250, height: 150 } 
             },
             (decodedText) => { 
                 stopBarcodeScan(); 
                 fetchOpenFoodFacts(decodedText); 
             }
         ).then(() => {
-            statusText.innerHTML = `Point camera at barcode.<br><small style="color:#6b7280">iPhone 12/14 users: get closer (6-10 inches) for best results</small>`;
+            statusText.innerHTML = "Point camera at barcode...";
 
-            // Apply higher resolution + zoom after camera starts (fixes original bug + adds resolution boost)
             setTimeout(async () => {
                 try {
                     const videoElement = document.querySelector('#reader video');
                     if (videoElement && videoElement.srcObject) {
-                        const tracks = videoElement.srcObject.getVideoTracks();
-                        if (tracks.length > 0) {
-                            const track = tracks[0];
-                            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-
-                            const advancedConstraints = [];
-
-                            // Request higher resolution for more detail on barcodes (helps older 12MP cameras)
-                            if (capabilities.width && capabilities.width.max >= 1920) {
-                                advancedConstraints.push({ width: { ideal: 1920 } });
-                            }
-                            if (capabilities.height && capabilities.height.max >= 1080) {
-                                advancedConstraints.push({ height: { ideal: 1080 } });
-                            }
-
-                            // Apply digital zoom if the device supports it (helps on some iOS versions)
-                            let zoomApplied = false;
-                            if (capabilities.zoom) {
-                                const maxZoom = capabilities.zoom.max || 2.0;
-                                const targetZoom = Math.min(2.0, maxZoom);
-                                advancedConstraints.push({ zoom: targetZoom });
-                                zoomApplied = true;
-                            }
-
-                            if (advancedConstraints.length > 0) {
-                                await track.applyConstraints({ advanced: advancedConstraints });
-                                
-                                let statusMsg = "Camera ready — hold 6-10 inches from barcode";
-                                if (zoomApplied) statusMsg += " (Zoom applied)";
-                                statusText.innerHTML = `${statusMsg}.<br><small style="color:#6b7280">iPhone 12/14: 12MP camera needs closer distance than newer 48MP models.</small>`;
-                            }
+                        const track = videoElement.srcObject.getVideoTracks();
+                        const capabilities = track.getCapabilities();
+                        
+                        if (capabilities && capabilities.zoom) {
+                            const zoomLevel = Math.min(2.0, capabilities.zoom.max);
+                            await track.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
+                            statusText.innerHTML = `Camera active (Zoom: ${zoomLevel}x). Hold 8-10 inches away...`;
                         }
                     }
                 } catch (e) {
-                    console.warn("Advanced camera constraints (resolution/zoom) not fully supported on this device:", e);
-                    // Still give the user helpful guidance
-                    statusText.innerHTML = `Camera active.<br><small style="color:#6b7280">On iPhone 12 or 14, bring the camera <strong>closer (6-10 inches)</strong> for reliable barcode detection.</small>`;
+                    console.warn("Digital zoom not supported or blocked by this browser.");
                 }
-            }, 650);
+            }, 800); 
 
         }).catch(err => {
             console.error("Camera error:", err);
-            statusText.innerHTML = `Camera access failed.<br><small>${err}</small><br>Please use HTTPS and allow camera permission in Safari settings.`;
+            statusText.innerHTML = "Camera access denied. Ensure page is HTTPS and permissions are allowed.";
         });
     }
 
