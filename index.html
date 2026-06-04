@@ -231,7 +231,10 @@
         <div class="profile-bar">
             <div>
                 <label>Day of Week</label>
-                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
+                    <button onclick="showClearWeekModal()" style="background-color: var(--danger); white-space: nowrap;">Clear Weekly Logs</button>
+                </div>
             </div>
             <div>
                 <label>Body Weight (lbs)</label>
@@ -349,6 +352,17 @@
         </div>
 
         <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;padding:12px;margin-top:20px;">Close / Cancel</button>
+    </div>
+</div>
+
+<div id="clearWeekModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5); text-align:center;">
+        <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--danger);">Warning</h3>
+        <p style="font-weight:600; margin: 20px 0;">This will clear all of the daily logs for the week.</p>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+            <button onclick="closeClearWeekModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel Reset</button>
+            <button onclick="executeClearAllWeek()" style="background:var(--danger); flex:1; padding:12px;">Continue</button>
+        </div>
     </div>
 </div>
 
@@ -791,6 +805,27 @@
             renderLog();
             renderBarometers();
         }
+    }
+
+    // ==================== CLEAR WEEK FUNCTIONS ====================
+    function showClearWeekModal() {
+        document.getElementById('clearWeekModal').style.display = 'flex';
+    }
+
+    function closeClearWeekModal() {
+        document.getElementById('clearWeekModal').style.display = 'none';
+    }
+
+    function executeClearAllWeek() {
+        // 1. Reset and clear all daily logs for the week
+        appData.history = {};
+        saveData();
+        
+        // 2. Refresh the current view to reflect the empty state
+        changeDay(); 
+        
+        // 3. Clear the message and return to previous state
+        closeClearWeekModal();
     }
 
     // ==================== UI RENDERING ====================
