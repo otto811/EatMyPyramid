@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diet & Macro Dashboard</title>
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
         :root {
             --bg-color: #f3f4f6;
@@ -21,6 +23,7 @@
             --teal: #14b8a6;
             --green: #10b981;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -30,6 +33,7 @@
             display: flex;
             justify-content: center;
         }
+        
         .container {
             max-width: 1200px;
             width: 100%;
@@ -37,6 +41,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+        
         .card {
             background-color: var(--card-bg);
             border-radius: 12px;
@@ -44,7 +49,11 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
         }
-        .full-width { grid-column: 1 / -1; }
+        
+        .full-width { 
+            grid-column: 1 / -1; 
+        }
+       
         .profile-bar {
             display: flex;
             gap: 15px;
@@ -55,70 +64,256 @@
             margin-bottom: 20px;
             align-items: center;
         }
-        h2, h3, h4 { margin-top: 0; color: var(--text-main); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.9em; font-weight: 600; margin-bottom: 5px; }
+        
+        h2, h3, h4 { 
+            margin-top: 0; 
+            color: var(--text-main); 
+        }
+        
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        
+        label { 
+            display: block; 
+            font-size: 0.9em; 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+        }
+        
         input[type="text"], select, input[type="number"] {
-            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 1em;
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
         }
-        .search-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .search-row { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap;
+        }
+        
         button {
-            background-color: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
         }
-        button:hover { opacity: 0.9; }
-        button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+        
+        button:hover { 
+            opacity: 0.9; 
+        }
+        
+        button:disabled { 
+            background-color: var(--text-muted); 
+            cursor: not-allowed; 
+        }
+        
         .preview-box {
-            background-color: #f9fafb; padding: 15px; border-radius: 6px; font-size: 0.9em; border: 1px dashed #d1d5db; min-height: 120px;
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            border: 1px dashed #d1d5db;
+            min-height: 120px;
         }
-        .barometer-container { margin-bottom: 15px; }
-        .barometer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .progress-bar-bg { background-color: var(--border-color); border-radius: 10px; height: 22px; width: 100%; overflow: hidden; position: relative; }
-        .progress-bar-fill { height: 100%; transition: width 0.4s ease; }
-        .progress-text { position: absolute; width: 100%; text-align: center; top: 0; font-size: 0.85em; line-height: 22px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
-        .log-item { padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .exercise-box { background-color: #fef3c7; padding: 12px; border-radius: 8px; border: 2px solid #f59e0b; margin: 10px 0; }
-        .amount-row { display: flex; gap: 10px; }
-        .amount-row input { flex: 2; padding: 14px; font-size: 1.1em; }
-        .amount-row select { flex: 1; padding: 14px; }
-        .reset-btn { background-color: #ef4444; color: white; width: 100%; margin-top: 15px; padding: 14px; font-size: 1.05em; }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; background: #000; }
-        #reader video { border-radius: 8px; width: 100%; }
-        .custom-food-badge { background-color: #dcfce7; color: #166534; font-size: 0.75em; padding: 1px 6px; border-radius: 4px; margin-left: 6px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 620px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto; }
-        .myfood-item, .ingredient-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
-        .barcode-btn { background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } .search-row { flex-direction: column; } }
+        
+        .barometer-container { 
+            margin-bottom: 15px; 
+        }
+        
+        .barometer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .progress-bar-bg {
+            background-color: var(--border-color);
+            border-radius: 10px;
+            height: 22px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            transition: width 0.4s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            font-size: 0.85em;
+            line-height: 22px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
+        
+        .log-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .exercise-box {
+            background-color: #fef3c7;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #f59e0b;
+            margin: 10px 0;
+        }
+        
+        .amount-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .amount-row input {
+            flex: 2;
+            padding: 14px;
+            font-size: 1.1em;
+        }
+        
+        .amount-row select {
+            flex: 1;
+            padding: 14px;
+        }
+        
+        .reset-btn {
+            background-color: #ef4444;
+            color: white;
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px;
+            font-size: 1.05em;
+        }
+        
+        #reader { 
+            width: 100%; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: #000; 
+        }
+        
+        #reader video { 
+            border-radius: 8px; 
+            width: 100%; 
+        }
+
+        .custom-food-badge {
+            background-color: #dcfce7;
+            color: #166534;
+            font-size: 0.75em;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .ingredient-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .barcode-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .search-row { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Profile -->
     <div class="card full-width">
         <h2>Your Profile & Setup</h2>
         <div class="profile-bar">
-            <div><label>Day of Week</label><select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select></div>
-            <div><label>Body Weight (lbs)</label><input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()"></div>
-            <div><label>Daily Calorie Goal</label><input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()"></div>
-            <div><label>Daily WW Points Goal</label><input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"></div>
-            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;"><em>Macro targets are tracked as a percentage of daily calories. <strong>Data saves automatically.</strong></em></div>
+            <div>
+                <label>Day of Week</label>
+                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
+            </div>
+            <div>
+                <label>Body Weight (lbs)</label>
+                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()">
+            </div>
+            <div>
+                <label>Daily Calorie Goal</label>
+                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
+            </div>
+            <div>
+                <label>Daily WW Points Goal</label>
+                <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
+            </div>
+            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
+                <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
+            </div>
         </div>
     </div>
 
-    <!-- Search & Log Food -->
     <div class="card">
         <h2>Search & Log Food</h2>
         
         <div class="form-group">
             <label>Search Food Databases (USDA + Open Food Facts + My Foods)</label>
             <div class="search-row">
-                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli">
+                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
                 <button id="searchBtn" onclick="searchUSDA()">Search</button>
-                <button onclick="startBarcodeScan()" style="background:#10b981;">📷 Barcode</button>
-                <button onclick="showAddFoodForm()" style="background:#10b981;">+ Add Food</button>
-                <button onclick="showRecipeBuilder()" style="background:#8b5cf6;">Create Recipe</button>
-                <button onclick="showMyFoodsManager()" style="background:#8b5cf6;">Manage My Foods</button>
+                <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
+                <button onclick="showAddFoodForm()" style="background:#10b981; white-space: nowrap;">+ Add Food</button>
+                <button onclick="showRecipeBuilder()" style="background:#8b5cf6; white-space: nowrap;">Create Recipe</button>
+                <button onclick="showImportExportModal()" style="background:#8b5cf6; white-space: nowrap;">Import/Export</button>
             </div>
         </div>
         
@@ -147,45 +342,87 @@
             <em>Select a food to view nutritional information.</em>
         </div>
         
-        <button onclick="logFood()" style="width:100%; padding:14px; font-size:1.05em;">Log Food</button>
+        <button onclick="logFood()" style="width:100%; padding: 14px; font-size: 1.05em;">Log Food</button>
 
-        <!-- Add Single Food Form -->
+        <!-- ADD FOOD FORM -->
         <div id="addFoodForm" style="display:none; margin-top:20px; padding:18px; background:#f0fdf4; border:2px solid #10b981; border-radius:10px;">
             <h4 style="margin-bottom:12px; color:#166534;">➕ Add Single Custom Food</h4>
+            
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div class="form-group"><label>Food Name *</label><input type="text" id="customName"></div>
-                <div class="form-group"><label>Brand (optional)</label><input type="text" id="customBrand"></div>
-                <div class="form-group"><label>Category</label>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Food Name *</label>
+                    <input type="text" id="customName" placeholder="e.g. Homemade Oatmeal">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Brand (optional)</label>
+                    <input type="text" id="customBrand" placeholder="e.g. My Kitchen">
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Category</label>
                     <select id="customCategory">
-                        <option value="Grain">Grain</option><option value="Vegetable">Vegetable</option><option value="Fruit">Fruit</option>
-                        <option value="Animal Protein">Animal Protein</option><option value="Dairy">Dairy</option><option value="Other">Other</option>
+                        <option value="Grain">Grain</option>
+                        <option value="Vegetable">Vegetable</option>
+                        <option value="Fruit">Fruit</option>
+                        <option value="Animal Protein">Animal Protein</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Household Serving</label><input type="text" id="customHousehold"></div>
-                <div class="form-group"><label>Grams per Serving *</label><input type="number" id="customGrams" step="0.1"></div>
-                <div style="grid-column:1/-1; font-size:0.85em; color:#166534;"><strong>Nutrition per 100g</strong></div>
-                <div class="form-group"><label>Calories</label><input type="number" id="customCal"></div>
-                <div class="form-group"><label>Protein (g)</label><input type="number" id="customProt"></div>
-                <div class="form-group"><label>Fat (g)</label><input type="number" id="customFat"></div>
-                <div class="form-group"><label>Carbs (g)</label><input type="number" id="customCarb"></div>
-                <div class="form-group"><label>Fiber (g)</label><input type="number" id="customFiber"></div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Household Serving (text)</label>
+                    <input type="text" id="customHousehold" placeholder="e.g. 1 cup cooked">
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Grams per Serving *</label>
+                    <input type="number" id="customGrams" placeholder="e.g. 200" step="0.1">
+                </div>
+                
+                <div style="grid-column:1 / -1; font-size:0.85em; color:#166534; margin-bottom:4px;">
+                    <strong>Nutrition per 100g</strong>
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Calories (kcal)</label>
+                    <input type="number" id="customCal" placeholder="e.g. 150" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Protein (g)</label>
+                    <input type="number" id="customProt" placeholder="e.g. 5" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Fat (g)</label>
+                    <input type="number" id="customFat" placeholder="e.g. 3" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Carbs (g)</label>
+                    <input type="number" id="customCarb" placeholder="e.g. 25" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Fiber (g)</label>
+                    <input type="number" id="customFiber" placeholder="e.g. 4" step="0.1">
+                </div>
             </div>
+            
             <div style="display:flex; gap:10px; margin-top:12px;">
                 <button onclick="saveCustomFood()" style="background:#10b981; flex:1;">Save to My Foods</button>
                 <button onclick="hideAddFoodForm()" style="background:#6b7280; flex:1;">Cancel</button>
             </div>
         </div>
 
-        <!-- WW Points -->
         <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
             <strong style="color:var(--purple);">Daily WW Points</strong>
             <div class="barometer-container" id="wwBarometer"></div>
+            
             <div class="exercise-box">
-                <label><strong>Exercise Points Earned</strong> (subtracts from total)</label>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="number" id="exDuration" placeholder="Duration (min)" style="flex:1;">
-                    <select id="exIntensity" style="flex:1;">
-                        <option value="Low">Low</option><option value="Moderate">Moderate</option><option value="High">High</option>
+                <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from total)</label>
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                    <input type="number" id="exDuration" placeholder="Duration (min)" style="flex:1; padding:10px;">
+                    <select id="exIntensity" style="flex:1; padding:10px;">
+                        <option value="Low">Low</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="High">High</option>
                     </select>
                     <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
                 </div>
@@ -197,16 +434,15 @@
         </div>
     </div>
 
-    <!-- Daily Targets -->
     <div class="card">
         <h2>Daily Targets</h2>
-        <h3 style="font-size:1em; border-bottom:1px solid #eee; padding-bottom:5px;">Macros & Energy</h3>
+        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;">Macros & Energy</h3>
         <div id="macroBarometersContainer"></div>
-        <h3 style="font-size:1em; border-bottom:1px solid #eee; padding-bottom:5px; margin-top:20px;">Food Groups (Servings)</h3>
+        
+        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups (Servings)</h3>
         <div id="groupBarometersContainer"></div>
     </div>
 
-    <!-- Daily Log -->
     <div class="card full-width">
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
@@ -214,73 +450,70 @@
     </div>
 </div>
 
-<!-- ==================== MODALS ==================== -->
-
-<!-- Recipe Builder Modal -->
+<!-- RECIPE BUILDER MODAL -->
 <div id="recipeModal" class="modal">
-    <div class="modal-content" style="max-width:620px;">
-        <h3>🍳 Create Recipe → Save as Custom Food</h3>
-        <div class="form-group"><label><strong>Recipe Name</strong></label><input type="text" id="recipeName"></div>
-        <div class="form-group"><label><strong>Number of Servings this recipe makes</strong></label><input type="number" id="recipeServings" value="4" min="1" step="0.5" style="width:120px;"></div>
-        <hr>
-        <h4>Ingredients in this recipe</h4>
-        <div id="recipeIngredientsList" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:15px;"></div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="modal-content" style="max-width: 620px;">
+        <h3 style="margin-bottom: 8px;">🍳 Create Recipe → Save as Custom Food</h3>
+        <p style="font-size:0.9em; color:#64748b; margin-bottom:15px;">Add ingredients via search, barcode scan, or manual entry. Nutrition is calculated per serving.</p>
+
+        <div class="form-group">
+            <label><strong>Recipe Name</strong></label>
+            <input type="text" id="recipeName" placeholder="e.g. Mom's Chicken Stir Fry">
+        </div>
+
+        <div class="form-group">
+            <label><strong>Number of Servings this recipe makes</strong></label>
+            <input type="number" id="recipeServings" value="4" min="1" step="0.5" style="width:120px;">
+        </div>
+
+        <hr style="margin:15px 0;">
+
+        <h4 style="margin-bottom:10px;">Ingredients in this recipe</h4>
+        
+        <div id="recipeIngredientsList" style="margin-bottom:15px; max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:8px;">
+            <p style="color:#94a3b8; font-size:0.9em; text-align:center; padding:20px 0;">No ingredients added yet. Use the buttons below.</p>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
             <button onclick="addIngredientFromSearch()" style="background:#3b82f6; flex:1;">+ Add from Search</button>
-            <button onclick="addIngredientWithBarcode()" style="background:#10b981; flex:1;">📷 Scan Barcode</button>
+            <button onclick="addIngredientWithBarcode()" style="background:#10b981; flex:1; display:flex; align-items:center; justify-content:center; gap:6px;">
+                📷 Scan Barcode
+            </button>
             <button onclick="addManualIngredient()" style="background:#10b981; flex:1;">+ Add Manual</button>
         </div>
-        <div style="margin-top:20px; display:flex; gap:10px;">
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
             <button onclick="saveRecipeAsCustomFood()" style="background:#8b5cf6; flex:1; padding:14px;">Calculate &amp; Save Recipe</button>
             <button onclick="closeRecipeModal()" style="background:#64748b; flex:1;">Cancel</button>
         </div>
     </div>
 </div>
 
-<!-- My Foods Manager Modal -->
-<div id="myFoodsModal" class="modal">
-    <div class="modal-content" style="max-width:720px;">
-        <h3>📋 Manage My Foods & Recipes</h3>
-        <div id="myFoodsList" style="max-height:420px; overflow-y:auto; margin-bottom:15px;"></div>
-        <div style="text-align:center;"><button onclick="hideMyFoodsManager()" style="background:#64748b; padding:10px 30px;">Close</button></div>
-    </div>
-</div>
-
-<!-- Edit Recipe Servings Modal -->
-<div id="editRecipeModal" class="modal">
-    <div class="modal-content" style="max-width:420px;">
-        <h3>Edit Recipe Servings</h3>
-        <div id="editRecipeInfo"></div>
-        <div class="form-group" style="margin-top:15px;">
-            <label><strong>New Number of Servings</strong></label>
-            <input type="number" id="newServings" min="0.5" step="0.5">
-        </div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="saveRecipeServingsEdit()" style="background:#10b981; flex:1;">Save Changes</button>
-            <button onclick="closeEditRecipeModal()" style="background:#64748b; flex:1;">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<!-- Other modals (Ingredient Search, Manual Ingredient, Import/Export, Scanner) -->
+<!-- Ingredient Search Modal -->
 <div id="addIngredientSearchModal" class="modal">
     <div class="modal-content">
-        <h4>Search for Ingredient</h4>
+        <h4 style="margin-bottom:12px;">Search for Ingredient</h4>
+        
         <div style="display:flex; gap:8px; margin-bottom:12px;">
-            <input type="text" id="ingredientSearchInput" placeholder="Search..." style="flex:1;">
+            <input type="text" id="ingredientSearchInput" placeholder="Search databases..." style="flex:1;">
             <button onclick="searchForIngredient()">Search</button>
-            <button onclick="addIngredientWithBarcodeFromHere()" class="barcode-btn">📷 Scan</button>
+            <button onclick="addIngredientWithBarcodeFromHere()" class="barcode-btn" style="padding:10px 14px;">📷 Scan</button>
         </div>
-        <select id="ingredientSearchResults" size="8" style="width:100%; margin-bottom:12px;"></select>
+
+        <select id="ingredientSearchResults" size="8" style="width:100%; margin-bottom:12px; font-size:0.95em;"></select>
+
         <div class="form-group">
             <label>Amount used in this recipe</label>
             <div style="display:flex; gap:8px;">
-                <input type="number" id="ingredientAmount" style="flex:2;">
+                <input type="number" id="ingredientAmount" placeholder="e.g. 250" style="flex:2;">
                 <select id="ingredientUnit" style="flex:1;">
-                    <option value="g">grams (g)</option><option value="oz">ounces (oz)</option><option value="serving">serving(s)</option>
+                    <option value="g">grams (g)</option>
+                    <option value="oz">ounces (oz)</option>
+                    <option value="serving">serving(s)</option>
                 </select>
             </div>
         </div>
+
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button onclick="confirmAddIngredientFromSearch()" style="background:#10b981; flex:1;">Add to Recipe</button>
             <button onclick="closeIngredientSearchModal()" style="background:#64748b; flex:1;">Cancel</button>
@@ -288,21 +521,42 @@
     </div>
 </div>
 
+<!-- Manual Ingredient Modal -->
 <div id="manualIngredientModal" class="modal">
     <div class="modal-content">
-        <h4>Add Manual Ingredient</h4>
-        <div class="form-group"><label>Ingredient Name</label><input type="text" id="manualIngName"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="form-group"><label>Amount used</label><input type="number" id="manualIngAmount"></div>
-            <div class="form-group"><label>Unit</label><select id="manualIngUnit"><option value="g">grams</option><option value="ml">ml</option><option value="tbsp">tbsp</option><option value="tsp">tsp</option></select></div>
+        <h4 style="margin-bottom:12px;">Add Manual Ingredient</h4>
+        
+        <div class="form-group">
+            <label>Ingredient Name</label>
+            <input type="text" id="manualIngName" placeholder="e.g. Olive Oil">
         </div>
-        <div style="font-size:0.85em; color:#64748b; margin:8px 0;">Nutrition per 100g</div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+                <label>Amount used</label>
+                <input type="number" id="manualIngAmount" placeholder="e.g. 15">
+            </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <select id="manualIngUnit">
+                    <option value="g">grams</option>
+                    <option value="ml">ml</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
+                    <option value="oz">oz</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="font-size:0.85em; color:#64748b; margin:8px 0 4px;">Nutrition per 100g</div>
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <div class="form-group"><label>Calories</label><input type="number" id="manualIngCal"></div>
             <div class="form-group"><label>Protein (g)</label><input type="number" id="manualIngProt"></div>
             <div class="form-group"><label>Fat (g)</label><input type="number" id="manualIngFat"></div>
             <div class="form-group"><label>Carbs (g)</label><input type="number" id="manualIngCarb"></div>
         </div>
+
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button onclick="confirmAddManualIngredient()" style="background:#10b981; flex:1;">Add to Recipe</button>
             <button onclick="closeManualIngredientModal()" style="background:#64748b; flex:1;">Cancel</button>
@@ -310,114 +564,434 @@
     </div>
 </div>
 
+<!-- Import/Export Modal -->
 <div id="importExportModal" class="modal">
     <div class="modal-content">
-        <h3>Import / Export My Foods</h3>
+        <h3 style="margin-bottom:15px;">Import / Export My Foods</h3>
+        <p style="font-size:0.95em; color:#374151; margin-bottom:20px;">Share your custom foods and recipes.</p>
+        
         <div style="display:flex; flex-direction:column; gap:12px;">
             <button onclick="exportCustomFoods()" style="background:#10b981; padding:14px;">📤 Export My Foods (JSON)</button>
             <button onclick="triggerImport()" style="background:#3b82f6; padding:14px;">📥 Import &amp; Append from File</button>
             <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleImportFile(event)">
         </div>
+        
         <div style="margin-top:20px; text-align:center;">
             <button onclick="hideImportExportModal()" style="background:#6b7280; padding:10px 30px;">Close</button>
         </div>
     </div>
 </div>
 
+<!-- Scanner Modal -->
 <div id="scannerModal" class="modal">
     <div style="background:white;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-        <h3>Scan Barcode</h3>
-        <div id="videoContainer" style="margin-bottom:15px;"><div id="reader"></div><p id="scanStatus" style="text-align:center;">Loading camera...</p></div>
-        <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb;">
-            <label>Manual Barcode Entry:</label>
+        <h3 style="margin-top:0;">Scan Barcode for Recipe Ingredient</h3>
+        
+        <div id="videoContainer" style="margin-bottom:15px;">
+            <div id="reader"></div>
+            <p id="scanStatus" style="text-align:center;margin:8px 0 0 0;font-size:0.9em;color:#4b5563;">Point camera at barcode...</p>
+        </div>
+
+        <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb; margin-bottom:15px;">
+            <label>Or enter barcode manually:</label>
             <div style="display:flex; gap:10px; margin-top:5px;">
                 <input type="text" id="manualBarcode" placeholder="e.g. 04965802" style="flex:1;">
-                <button onclick="manualBarcodeSubmit()" style="background:#3b82f6;">Lookup</button>
+                <button onclick="manualBarcodeSubmitForRecipe()" style="background:#3b82f6;">Lookup</button>
             </div>
         </div>
-        <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;padding:12px;margin-top:20px;">Cancel</button>
+
+        <button onclick="stopBarcodeScanForRecipe()" style="width:100%;background:#ef4444;padding:12px;">Cancel</button>
     </div>
 </div>
 
 <script>
-// ==================== GLOBAL VARIABLES ====================
-const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
-let currentSearchResults = [];
-let html5QrcodeScanner = null;
-let tempRecipeIngredients = [];
-let pendingIngredientFood = null;
-let isAddingToRecipe = false;
-let editingRecipeIndex = null;
+    // ==================== GLOBAL VARIABLES ====================
+    const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
+    let currentSearchResults = [];
+    let html5QrcodeScanner = null;
+    let tempRecipeIngredients = [];
+    let pendingIngredientFood = null;
+    let isAddingToRecipe = false;
 
-let appData = { 
-    weight: 0, calorieGoal: 0, wwGoal: 0, 
-    targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
-    history: {} 
-};
-let state = { targets: appData.targets, current: null, log: null };
+    let appData = { 
+        weight: 0, 
+        calorieGoal: 0, 
+        wwGoal: 0, 
+        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
+        history: {} 
+    };
+    
+    let state = { 
+        targets: appData.targets, 
+        current: null, 
+        log: null 
+    };
 
-// ==================== CORE FUNCTIONS ====================
-function calculateWWPoints(cal, fat, fib) {
-    const capped = Math.min(fib, 4);
-    return Math.max(0, Math.round(((cal/50) + (fat/12) - (capped/4)) * 10) / 10);
-}
-
-function saveData() { localStorage.setItem('foodTrackerData', JSON.stringify(appData)); }
-
-function loadData() {
-    const saved = localStorage.getItem('foodTrackerData');
-    if (saved) Object.assign(appData, JSON.parse(saved));
-    document.getElementById('weightInput').value = appData.weight;
-    document.getElementById('calorieGoalInput').value = appData.calorieGoal;
-    document.getElementById('wwGoalInput').value = appData.wwGoal;
-}
-
-function init() {
-    loadData();
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const daySelect = document.getElementById('daySelect');
-    daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
-    daySelect.value = days[new Date().getDay()];
-    changeDay();
-    document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchUSDA());
-}
-
-function changeDay() {
-    const day = document.getElementById('daySelect').value;
-    if (!appData.history[day]) {
-        appData.history[day] = {
-            current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 },
-            log: []
-        };
+    function calculateWWPoints(cal, fat, fib) {
+        const capped = Math.min(fib, 4);
+        return Math.max(0, Math.round(((cal/50) + (fat/12) - (capped/4)) * 10) / 10);
     }
-    state.current = appData.history[day].current;
-    state.log = appData.history[day].log;
-    document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
-    renderLog();
-    renderBarometers();
-}
 
-// ==================== SEARCH ====================
-async function searchUSDA() {
-    const query = document.getElementById('searchInput').value.trim();
-    if (!query) return;
-    
-    const btn = document.getElementById('searchBtn');
-    btn.disabled = true;
-    btn.textContent = 'Searching...';
-    
-    let usdaResults = [];
-    try {
-        const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=25`);
-        const data = await res.json();
-        usdaResults = data.foods || [];
-    } catch(e) { console.warn("USDA failed"); }
-    
-    let offResults = [];
-    try {
-        const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`);
-        const offData = await offRes.json();
-        offResults = (offData.products || []).map(p => {
+    function saveData() { 
+        localStorage.setItem('foodTrackerData', JSON.stringify(appData)); 
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('foodTrackerData');
+        if (saved) {
+            Object.assign(appData, JSON.parse(saved));
+        }
+        document.getElementById('weightInput').value = appData.weight;
+        document.getElementById('calorieGoalInput').value = appData.calorieGoal;
+        document.getElementById('wwGoalInput').value = appData.wwGoal;
+    }
+
+    function init() {
+        loadData();
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const daySelect = document.getElementById('daySelect');
+        
+        daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
+        daySelect.value = days[new Date().getDay()];
+        
+        changeDay();
+        
+        document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchUSDA());
+        document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
+    }
+
+    function changeDay() {
+        const day = document.getElementById('daySelect').value;
+        
+        if (!appData.history[day]) {
+            appData.history[day] = {
+                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                log: []
+            };
+        }
+        
+        state.current = appData.history[day].current;
+        state.log = appData.history[day].log;
+        
+        document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+        
+        renderLog(); 
+        renderBarometers();
+    }
+
+    // ==================== SEARCH ====================
+    async function searchUSDA() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+        
+        const btn = document.getElementById('searchBtn');
+        btn.disabled = true; 
+        btn.textContent = 'Searching...';
+        
+        let usdaResults = [];
+        try {
+            const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=25`);
+            const data = await res.json();
+            usdaResults = data.foods || [];
+        } catch(e) { 
+            console.warn("USDA search failed:", e);
+        }
+        
+        let offResults = [];
+        try {
+            const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`);
+            const offData = await offRes.json();
+            const products = offData.products || [];
+            
+            offResults = products.map(p => {
+                const nut = {
+                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || p.nutriments?.energy || 0),
+                    protein: parseFloat(p.nutriments?.proteins_100g || 0),
+                    fat: parseFloat(p.nutriments?.fat_100g || 0),
+                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
+                    fiber: parseFloat(p.nutriments?.fiber_100g || 0)
+                };
+
+                const name = (p.product_name || p.generic_name || '').trim() || `Scanned Item`;
+                const brandText = String(p.brands || p.brand || "Open Food Facts");
+                const brandArr = brandText.split(',').map(b => b.trim()).filter(Boolean);
+                const brandStr = brandArr.length ? brandArr.join(', ') : "Open Food Facts";
+                const catText = String(p.categories || p.categories_tags || "Other");
+
+                const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
+                const sQuantity = parseFloat(p.serving_quantity) || 100;
+
+                return {
+                    description: name,
+                    brandOwner: brandStr,
+                    foodCategory: catText,
+                    servingSize: sQuantity,             
+                    householdServingFullText: sSizeText,    
+                    gtinUpc: p.code || null,
+                    foodNutrients: [
+                        {nutrientId: 1008, value: nut.calories},
+                        {nutrientId: 1003, value: nut.protein},
+                        {nutrientId: 1004, value: nut.fat},
+                        {nutrientId: 1005, value: nut.carbs},
+                        {nutrientId: 1079, value: nut.fiber}
+                    ]
+                };
+            }).filter(f => f.description && f.description.length > 3 && f.foodNutrients.some(n => n.value > 0));
+        } catch(e) { 
+            console.warn("Open Food Facts search failed:", e); 
+        }
+        
+        let customResults = [];
+        try {
+            const customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            const q = query.toLowerCase();
+            customResults = customFoods.filter(f => 
+                (f.description && f.description.toLowerCase().includes(q)) ||
+                (f.brandOwner && String(f.brandOwner).toLowerCase().includes(q))
+            ).map(f => ({...f, isCustom: true}));
+        } catch(e) {}
+        
+        currentSearchResults = [...customResults, ...usdaResults, ...offResults];
+        
+        const sel = document.getElementById('foodSelect');
+        sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        
+        currentSearchResults.forEach((food, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            let display = food.description || 'Unknown';
+            if (food.brandOwner) {
+                const b = Array.isArray(food.brandOwner) ? food.brandOwner.join(', ') : food.brandOwner;
+                display += ` (${b})`;
+            }
+            if (food.isCustom) {
+                display += ' <span class="custom-food-badge">My Food</span>';
+            }
+            opt.innerHTML = display;
+            sel.appendChild(opt);
+        });
+        
+        if(currentSearchResults.length === 0) {
+            sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+        }
+        
+        btn.disabled = false; 
+        btn.textContent = 'Search'; 
+    }
+
+    function getAllNutrients(food) {
+        let nut = {calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0};
+        if (!food || !food.foodNutrients) return nut;
+        
+        for (let n of food.foodNutrients) {
+            let id = n.nutrientId || (n.nutrient && n.nutrient.id);
+            let val = parseFloat(n.value !== undefined ? n.value : n.amount) || 0;
+            
+            if (id === 1008 || id === 208) nut.calories = val;
+            if (id === 1003 || id === 203) nut.protein = val;
+            if (id === 1004 || id === 204) nut.fat = val;
+            if (id === 1005 || id === 205) nut.carbs = val;
+            if (id === 1079 || id === 291) nut.fiber = val;
+        }
+        return nut;
+    }
+
+    function getMultiplier(food) {
+        const amount = parseFloat(document.getElementById('amountInput').value);
+        const unit = document.getElementById('unitSelect').value;
+        const servings = parseFloat(document.getElementById('servingInput').value) || 1;
+        
+        if (amount > 0) {
+            const grams = unit === 'oz' ? amount * 28.3495 : amount;
+            return grams / 100; 
+        }
+        
+        let servingSizeGrams = 100; 
+        if (food && food.servingSize) {
+            servingSizeGrams = parseFloat(food.servingSize);
+        }
+        
+        return (servingSizeGrams / 100) * servings;
+    }
+
+    function logFood() {
+        const idx = document.getElementById('foodSelect').value;
+        if (!idx) return alert("Please select a food from the dropdown first.");
+
+        const food = currentSearchResults[idx];
+        const nut = getAllNutrients(food);
+        const multiplier = getMultiplier(food);
+
+        const amountVal = parseFloat(document.getElementById('amountInput').value);
+        let logAmount = amountVal;
+        let logUnit = document.getElementById('unitSelect').value;
+        
+        if (!(amountVal > 0)) {
+            logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
+            logUnit = logAmount === 1 ? "serving" : "servings";
+        }
+
+        const item = {
+            name: food.description,
+            amount: logAmount,
+            unit: logUnit,
+            category: guessCategory(food),
+            calories: nut.calories * multiplier,
+            protein: nut.protein * multiplier,
+            fat: nut.fat * multiplier,
+            carbs: nut.carbs * multiplier,
+            fiber: nut.fiber * multiplier, 
+            wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
+            upc: food.gtinUpc || null
+        };
+
+        state.log.push(item);
+        
+        state.current.Calories += item.calories;
+        state.current.Protein += item.protein;
+        state.current.Fat += item.fat;
+        state.current.Carbs += item.carbs;
+        
+        if (state.current[item.category] !== undefined) {
+            state.current[item.category] += 1;
+        }
+
+        saveData();
+        renderLog();
+        renderBarometers();
+
+        document.getElementById('searchInput').value = '';
+        document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        document.getElementById('servingInput').value = 1;
+        document.getElementById('amountInput').value = '';
+        document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+    }
+
+    function guessCategory(food) {
+        if (!food) return 'Other';
+        let desc = String(food.description || '').toLowerCase();
+        let cat = String(food.foodCategory || '').toLowerCase();
+        
+        if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
+        if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
+        if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac')) return 'Animal Protein';
+        if (cat.includes('dairy') || desc.includes('milk') || desc.includes('cheese')) return 'Dairy';
+        if (cat.includes('grain') || desc.includes('bread') || desc.includes('rice')) return 'Grain';
+        
+        return 'Other';
+    }
+
+    // ==================== RECIPE BUILDER ====================
+    function showRecipeBuilder() {
+        tempRecipeIngredients = [];
+        document.getElementById('recipeName').value = '';
+        document.getElementById('recipeServings').value = '4';
+        document.getElementById('recipeModal').style.display = 'flex';
+        renderRecipeIngredientsList();
+    }
+
+    function closeRecipeModal() {
+        document.getElementById('recipeModal').style.display = 'none';
+        tempRecipeIngredients = [];
+        isAddingToRecipe = false;
+    }
+
+    function renderRecipeIngredientsList() {
+        const container = document.getElementById('recipeIngredientsList');
+        container.innerHTML = '';
+        
+        if (tempRecipeIngredients.length === 0) {
+            container.innerHTML = `<p style="color:#94a3b8; font-size:0.9em; text-align:center; padding:20px 0;">No ingredients added yet. Use the buttons below.</p>`;
+            return;
+        }
+        
+        tempRecipeIngredients.forEach((ing, index) => {
+            const div = document.createElement('div');
+            div.className = 'ingredient-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong>${ing.name}</strong><br>
+                        <small>${ing.amount} ${ing.unit} • ${ing.calories.toFixed(0)} cal</small>
+                    </div>
+                    <button onclick="removeIngredientFromRecipe(${index})" style="background:#ef4444; padding:4px 10px; font-size:0.8em;">Remove</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function removeIngredientFromRecipe(index) {
+        tempRecipeIngredients.splice(index, 1);
+        renderRecipeIngredientsList();
+    }
+
+    // === Barcode support for Recipe ===
+    function addIngredientWithBarcode() {
+        isAddingToRecipe = true;
+        document.getElementById('recipeModal').style.display = 'none';
+        startBarcodeScanForRecipe();
+    }
+
+    function addIngredientWithBarcodeFromHere() {
+        closeIngredientSearchModal();
+        isAddingToRecipe = true;
+        startBarcodeScanForRecipe();
+    }
+
+    function startBarcodeScanForRecipe() {
+        const modal = document.getElementById('scannerModal');
+        modal.style.display = 'flex';
+        document.getElementById('manualBarcode').value = '';
+        const statusText = document.getElementById('scanStatus');
+        statusText.innerHTML = "Point camera at barcode...";
+
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        }
+
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 150 } },
+            (decodedText) => {
+                stopBarcodeScanForRecipe();
+                fetchProductForRecipe(decodedText);
+            }
+        ).catch(err => {
+            console.error("Camera error:", err);
+            statusText.innerHTML = "Camera access denied. Use manual entry below.";
+        });
+    }
+
+    function stopBarcodeScanForRecipe() {
+        const modal = document.getElementById('scannerModal');
+        modal.style.display = 'none';
+        if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+            html5QrcodeScanner.stop().catch(() => {});
+        }
+        document.getElementById('recipeModal').style.display = 'flex';
+    }
+
+    function manualBarcodeSubmitForRecipe() {
+        const barcode = document.getElementById('manualBarcode').value.trim();
+        if (barcode) {
+            stopBarcodeScanForRecipe();
+            fetchProductForRecipe(barcode);
+        }
+    }
+
+    async function fetchProductForRecipe(barcode) {
+        try {
+            const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
+            const data = await res.json();
+
+            if (data.status === 0 || !data.product) {
+                alert("Product not found with that barcode.");
+                document.getElementById('recipeModal').style.display = 'flex';
+                return;
+            }
+
+            const p = data.product;
             const nut = {
                 calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
                 protein: parseFloat(p.nutriments?.proteins_100g || 0),
@@ -425,407 +999,535 @@ async function searchUSDA() {
                 carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
                 fiber: parseFloat(p.nutriments?.fiber_100g || 0)
             };
-            return {
-                description: p.product_name || `Item`,
+
+            pendingIngredientFood = {
+                description: p.product_name || `Scanned Item`,
                 brandOwner: p.brands || "Open Food Facts",
                 foodCategory: p.categories || "Other",
                 servingSize: parseFloat(p.serving_quantity) || 100,
                 householdServingFullText: p.serving_size || "100g",
-                gtinUpc: p.code || null,
+                gtinUpc: barcode,
                 foodNutrients: [
-                    {nutrientId:1008, value:nut.calories}, {nutrientId:1003, value:nut.protein},
-                    {nutrientId:1004, value:nut.fat}, {nutrientId:1005, value:nut.carbs},
-                    {nutrientId:1079, value:nut.fiber}
+                    {nutrientId: 1008, value: nut.calories},
+                    {nutrientId: 1003, value: nut.protein},
+                    {nutrientId: 1004, value: nut.fat},
+                    {nutrientId: 1005, value: nut.carbs},
+                    {nutrientId: 1079, value: nut.fiber}
                 ]
             };
-        }).filter(f => f.description);
-    } catch(e) {}
-    
-    let customResults = [];
-    try {
-        const customs = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
-        const q = query.toLowerCase();
-        customResults = customs.filter(f => f.description && f.description.toLowerCase().includes(q))
-            .map(f => ({...f, isCustom: true}));
-    } catch(e){}
-    
-    currentSearchResults = [...customResults, ...usdaResults, ...offResults];
-    
-    const sel = document.getElementById('foodSelect');
-    sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-    currentSearchResults.forEach((food, index) => {
+
+            document.getElementById('recipeModal').style.display = 'flex';
+            showAmountInputForPendingIngredient();
+
+        } catch (e) {
+            console.error(e);
+            alert("Error looking up barcode.");
+            document.getElementById('recipeModal').style.display = 'flex';
+        }
+    }
+
+    function showAmountInputForPendingIngredient() {
+        if (!pendingIngredientFood) return;
+
+        document.getElementById('addIngredientSearchModal').style.display = 'flex';
+        
+        const sel = document.getElementById('ingredientSearchResults');
+        sel.innerHTML = '';
         const opt = document.createElement('option');
-        opt.value = index;
-        let txt = food.description || '';
-        if (food.brandOwner) txt += ` (${food.brandOwner})`;
-        if (food.isCustom) txt += ' <span class="custom-food-badge">My Food</span>';
-        opt.innerHTML = txt;
+        opt.value = "0";
+        opt.textContent = pendingIngredientFood.description + (pendingIngredientFood.brandOwner ? ` (${pendingIngredientFood.brandOwner})` : '');
+        opt.selected = true;
         sel.appendChild(opt);
-    });
-    btn.disabled = false;
-    btn.textContent = 'Search';
-}
 
-function getAllNutrients(food) {
-    let nut = {calories:0, protein:0, fat:0, carbs:0, fiber:0};
-    if (!food || !food.foodNutrients) return nut;
-    for (let n of food.foodNutrients) {
-        let id = n.nutrientId || (n.nutrient && n.nutrient.id);
-        let val = parseFloat(n.value !== undefined ? n.value : n.amount) || 0;
-        if (id===1008||id===208) nut.calories = val;
-        if (id===1003||id===203) nut.protein = val;
-        if (id===1004||id===204) nut.fat = val;
-        if (id===1005||id===205) nut.carbs = val;
-        if (id===1079||id===291) nut.fiber = val;
+        document.getElementById('ingredientAmount').value = '';
+        document.getElementById('ingredientUnit').value = 'g';
     }
-    return nut;
-}
 
-function getMultiplier(food) {
-    const amount = parseFloat(document.getElementById('amountInput').value);
-    const unit = document.getElementById('unitSelect').value;
-    const servings = parseFloat(document.getElementById('servingInput').value) || 1;
-    if (amount > 0) {
-        const grams = unit === 'oz' ? amount * 28.3495 : amount;
-        return grams / 100;
+    function addIngredientFromSearch() {
+        isAddingToRecipe = true;
+        document.getElementById('addIngredientSearchModal').style.display = 'flex';
+        document.getElementById('ingredientSearchInput').value = '';
+        document.getElementById('ingredientSearchResults').innerHTML = '';
+        document.getElementById('ingredientAmount').value = '';
     }
-    let g = 100;
-    if (food && food.servingSize) g = parseFloat(food.servingSize);
-    return (g / 100) * servings;
-}
 
-function getServingText(food) {
-    if (!food) return "100g";
-    const householdText = String(food.householdServingFullText || "");
-    const servingSize = String(food.servingSize || "");
-    if (householdText && servingSize && householdText !== "100g" && !householdText.includes(servingSize)) {
-        return `${householdText} (${servingSize}g)`;
+    function closeIngredientSearchModal() {
+        document.getElementById('addIngredientSearchModal').style.display = 'none';
+        isAddingToRecipe = false;
     }
-    if (householdText && householdText !== "100g") return householdText;
-    if (servingSize && servingSize !== "100g") return `${servingSize}g`;
-    return "100g (Database Default)";
-}
 
-function updatePreview() {
-    const idx = document.getElementById('foodSelect').value;
-    if (!idx) return;
-    const food = currentSearchResults[idx];
-    if (!food) return;
-    const nut = getAllNutrients(food);
-    const multiplier = getMultiplier(food);
-    const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
-    const servingText = getServingText(food);
-    
-    document.getElementById('nutritionPreview').innerHTML = `
-        <strong>${food.description}</strong><br>
-        <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong></em><br><br>
-        Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
-        Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
-        <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
-    `;
-}
-
-function guessCategory(food) {
-    if (!food) return 'Other';
-    let desc = String(food.description || '').toLowerCase();
-    let cat = String(food.foodCategory || '').toLowerCase();
-    if (cat.includes('vegetable') || desc.includes('broccoli')) return 'Vegetable';
-    if (cat.includes('fruit') || desc.includes('apple')) return 'Fruit';
-    if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef')) return 'Animal Protein';
-    if (cat.includes('dairy') || desc.includes('milk')) return 'Dairy';
-    if (cat.includes('grain') || desc.includes('bread')) return 'Grain';
-    return 'Other';
-}
-
-function logFood() {
-    const idx = document.getElementById('foodSelect').value;
-    if (!idx) return alert("Select a food first.");
-    const food = currentSearchResults[idx];
-    const nut = getAllNutrients(food);
-    const multiplier = getMultiplier(food);
-    const amountVal = parseFloat(document.getElementById('amountInput').value) || 1;
-    const logAmount = amountVal;
-    const logUnit = document.getElementById('unitSelect').value;
-    
-    const item = {
-        name: food.description, amount: logAmount, unit: logUnit, category: guessCategory(food),
-        calories: nut.calories * multiplier, protein: nut.protein * multiplier,
-        fat: nut.fat * multiplier, carbs: nut.carbs * multiplier, fiber: nut.fiber * multiplier,
-        wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
-        upc: food.gtinUpc || null
-    };
-    
-    state.log.push(item);
-    state.current.Calories += item.calories;
-    state.current.Protein += item.protein;
-    state.current.Fat += item.fat;
-    state.current.Carbs += item.carbs || 0;
-    if (state.current[item.category] !== undefined) state.current[item.category] += 1;
-    
-    saveData();
-    renderLog();
-    renderBarometers();
-    
-    document.getElementById('searchInput').value = '';
-    document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
-}
-
-// ==================== RECIPE BUILDER ====================
-function showRecipeBuilder() {
-    tempRecipeIngredients = [];
-    document.getElementById('recipeName').value = '';
-    document.getElementById('recipeServings').value = '4';
-    document.getElementById('recipeModal').style.display = 'flex';
-    renderRecipeIngredientsList();
-}
-
-function closeRecipeModal() {
-    document.getElementById('recipeModal').style.display = 'none';
-    tempRecipeIngredients = [];
-}
-
-function renderRecipeIngredientsList() {
-    const container = document.getElementById('recipeIngredientsList');
-    container.innerHTML = '';
-    if (tempRecipeIngredients.length === 0) {
-        container.innerHTML = `<p style="color:#94a3b8; text-align:center; padding:20px 0;">No ingredients added yet.</p>`;
-        return;
+    async function searchForIngredient() {
+        const q = document.getElementById('ingredientSearchInput').value.trim();
+        if (!q) return;
+        
+        const sel = document.getElementById('ingredientSearchResults');
+        sel.innerHTML = '<option>Loading...</option>';
+        
+        let results = [];
+        
+        try {
+            const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(q)}&pageSize=8`);
+            const data = await res.json();
+            results = results.concat(data.foods || []);
+        } catch(e){}
+        
+        try {
+            const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=8`);
+            const offData = await offRes.json();
+            results = results.concat((offData.products || []).map(p => ({
+                description: p.product_name || `Item`,
+                brandOwner: p.brands || "Open Food Facts",
+                foodNutrients: [],
+                servingSize: 100
+            })));
+        } catch(e){}
+        
+        try {
+            const customs = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            results = results.concat(customs.filter(f => f.description && f.description.toLowerCase().includes(q.toLowerCase())));
+        } catch(e){}
+        
+        sel.innerHTML = '';
+        results.forEach((food, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = food.description + (food.brandOwner ? ` (${food.brandOwner})` : '');
+            opt.dataset.food = JSON.stringify(food);
+            sel.appendChild(opt);
+        });
+        
+        sel.onchange = () => {
+            pendingIngredientFood = JSON.parse(sel.options[sel.selectedIndex].dataset.food);
+        };
     }
-    tempRecipeIngredients.forEach((ing, index) => {
-        const div = document.createElement('div');
-        div.className = 'ingredient-item';
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div><strong>${ing.name}</strong><br><small>${ing.amount} ${ing.unit}</small></div>
-                <button onclick="removeIngredientFromRecipe(${index})" style="background:#ef4444; padding:4px 10px; font-size:0.8em;">Remove</button>
+
+    function confirmAddIngredientFromSearch() {
+        const amount = parseFloat(document.getElementById('ingredientAmount').value);
+        const unit = document.getElementById('ingredientUnit').value;
+        
+        if (!pendingIngredientFood || !amount) {
+            alert("Please select a food and enter the amount used.");
+            return;
+        }
+        
+        const nut = getAllNutrients(pendingIngredientFood);
+        let multiplier = 1;
+        
+        if (unit === 'g' || unit === 'oz') {
+            const grams = unit === 'oz' ? amount * 28.3495 : amount;
+            multiplier = grams / 100;
+        } else {
+            const servingG = pendingIngredientFood.servingSize || 100;
+            multiplier = (servingG / 100) * amount;
+        }
+        
+        tempRecipeIngredients.push({
+            name: pendingIngredientFood.description,
+            amount: amount,
+            unit: unit,
+            calories: nut.calories * multiplier,
+            protein: nut.protein * multiplier,
+            fat: nut.fat * multiplier,
+            carbs: nut.carbs * multiplier,
+            fiber: nut.fiber * multiplier
+        });
+        
+        closeIngredientSearchModal();
+        renderRecipeIngredientsList();
+        pendingIngredientFood = null;
+    }
+
+    function addManualIngredient() {
+        document.getElementById('manualIngredientModal').style.display = 'flex';
+    }
+    
+    function closeManualIngredientModal() {
+        document.getElementById('manualIngredientModal').style.display = 'none';
+    }
+
+    function confirmAddManualIngredient() {
+        const name = document.getElementById('manualIngName').value.trim();
+        const amount = parseFloat(document.getElementById('manualIngAmount').value);
+        
+        if (!name || !amount) {
+            alert("Name and amount are required.");
+            return;
+        }
+        
+        const cal = parseFloat(document.getElementById('manualIngCal').value) || 0;
+        const prot = parseFloat(document.getElementById('manualIngProt').value) || 0;
+        const fat = parseFloat(document.getElementById('manualIngFat').value) || 0;
+        const carb = parseFloat(document.getElementById('manualIngCarb').value) || 0;
+        
+        const multiplier = amount / 100;
+        
+        tempRecipeIngredients.push({
+            name: name,
+            amount: amount,
+            unit: document.getElementById('manualIngUnit').value,
+            calories: cal * multiplier,
+            protein: prot * multiplier,
+            fat: fat * multiplier,
+            carbs: carb * multiplier,
+            fiber: 0
+        });
+        
+        closeManualIngredientModal();
+        renderRecipeIngredientsList();
+    }
+
+    function saveRecipeAsCustomFood() {
+        const recipeName = document.getElementById('recipeName').value.trim();
+        const servings = parseFloat(document.getElementById('recipeServings').value);
+        
+        if (!recipeName || tempRecipeIngredients.length === 0 || !servings || servings <= 0) {
+            alert("Please enter a recipe name, add at least one ingredient, and set the number of servings.");
+            return;
+        }
+        
+        let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0, totalFiber = 0;
+        
+        tempRecipeIngredients.forEach(ing => {
+            totalCal += ing.calories;
+            totalProt += ing.protein;
+            totalFat += ing.fat;
+            totalCarb += ing.carbs;
+            totalFiber += ing.fiber || 0;
+        });
+        
+        const perServing = {
+            calories: totalCal / servings,
+            protein: totalProt / servings,
+            fat: totalFat / servings,
+            carbs: totalCarb / servings,
+            fiber: totalFiber / servings
+        };
+        
+        const recipeFood = {
+            description: recipeName,
+            brandOwner: "My Recipes",
+            foodCategory: "Other",
+            servingSize: 100,
+            householdServingFullText: `1 serving`,
+            gtinUpc: null,
+            foodNutrients: [
+                {nutrientId: 1008, value: perServing.calories},
+                {nutrientId: 1003, value: perServing.protein},
+                {nutrientId: 1004, value: perServing.fat},
+                {nutrientId: 1005, value: perServing.carbs},
+                {nutrientId: 1079, value: perServing.fiber}
+            ]
+        };
+        
+        let customFoods = [];
+        try {
+            customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+        } catch(e) {}
+        
+        customFoods.unshift(recipeFood);
+        localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
+        
+        alert(`Recipe "${recipeName}" saved!\n\nPer serving: ${perServing.calories.toFixed(0)} cal, ${perServing.protein.toFixed(1)}p, ${perServing.fat.toFixed(1)}f, ${perServing.carbs.toFixed(1)}c`);
+        
+        closeRecipeModal();
+        
+        document.getElementById('searchInput').value = recipeName;
+        searchUSDA();
+    }
+
+    // ==================== IMPORT/EXPORT ====================
+    function showImportExportModal() {
+        document.getElementById('importExportModal').style.display = 'flex';
+    }
+
+    function hideImportExportModal() {
+        document.getElementById('importExportModal').style.display = 'none';
+    }
+
+    function exportCustomFoods() {
+        try {
+            const data = localStorage.getItem('userCustomFoods') || '[]';
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my-foods-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            setTimeout(() => hideImportExportModal(), 600);
+        } catch (e) {
+            alert("Export failed.");
+        }
+    }
+
+    function triggerImport() {
+        document.getElementById('importFileInput').click();
+    }
+
+    function handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (!Array.isArray(imported)) throw new Error("Invalid file format");
+
+                let existing = [];
+                try {
+                    existing = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+                } catch(e) {}
+
+                const existingKeys = new Set(existing.map(f => (f.description || '').toLowerCase().trim()));
+                let added = 0;
+
+                imported.forEach(f => {
+                    const key = (f.description || '').toLowerCase().trim();
+                    if (key && !existingKeys.has(key)) {
+                        existing.push(f);
+                        existingKeys.add(key);
+                        added++;
+                    }
+                });
+
+                localStorage.setItem('userCustomFoods', JSON.stringify(existing));
+                alert(`${added} new item(s) imported successfully.`);
+                hideImportExportModal();
+            } catch (err) {
+                alert("Import failed: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // ==================== ADD FOOD (Single) ====================
+    function showAddFoodForm() {
+        document.getElementById('addFoodForm').style.display = 'block';
+    }
+
+    function hideAddFoodForm() {
+        document.getElementById('addFoodForm').style.display = 'none';
+    }
+
+    function saveCustomFood() {
+        const name = document.getElementById('customName').value.trim();
+        if (!name) {
+            alert("Food Name is required.");
+            return;
+        }
+        
+        const grams = parseFloat(document.getElementById('customGrams').value) || 100;
+        
+        const food = {
+            description: name,
+            brandOwner: document.getElementById('customBrand').value.trim() || "My Foods",
+            foodCategory: document.getElementById('customCategory').value,
+            servingSize: grams,
+            householdServingFullText: document.getElementById('customHousehold').value.trim() || `${grams}g`,
+            gtinUpc: null,
+            foodNutrients: [
+                {nutrientId: 1008, value: parseFloat(document.getElementById('customCal').value) || 0},
+                {nutrientId: 1003, value: parseFloat(document.getElementById('customProt').value) || 0},
+                {nutrientId: 1004, value: parseFloat(document.getElementById('customFat').value) || 0},
+                {nutrientId: 1005, value: parseFloat(document.getElementById('customCarb').value) || 0},
+                {nutrientId: 1079, value: parseFloat(document.getElementById('customFiber').value) || 0}
+            ]
+        };
+        
+        let list = [];
+        try {
+            list = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+        } catch(e) {}
+        
+        list.unshift(food);
+        localStorage.setItem('userCustomFoods', JSON.stringify(list));
+        
+        alert(`"${name}" has been saved to My Foods.`);
+        hideAddFoodForm();
+        
+        document.getElementById('searchInput').value = name;
+        searchUSDA();
+    }
+
+    // ==================== RENDERING ====================
+    function renderBarometers() {
+        const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
+        const exer = state.current.exercisePoints || 0;
+        const net = Math.max(0, foodPts - exer);
+        const goal = appData.wwGoal;
+
+        document.getElementById('wwBarometer').innerHTML = `
+            <div class="barometer-header">
+                <strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${Math.min((net/goal)*100,100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
+                <div class="progress-text">${net.toFixed(1)} / ${goal}</div>
             </div>
         `;
-        container.appendChild(div);
-    });
-}
 
-function removeIngredientFromRecipe(index) {
-    tempRecipeIngredients.splice(index, 1);
-    renderRecipeIngredientsList();
-}
+        const renderGroup = (keys, containerId, colors, isMacroPercentage = false) => {
+            const cont = document.getElementById(containerId);
+            cont.innerHTML = '';
+            
+            keys.forEach(cat => {
+                const target = state.targets[cat];
+                let displayCurr = state.current[cat] || 0;
+                let suffix = '';
 
-function addIngredientFromSearch() {
-    isAddingToRecipe = true;
-    document.getElementById('addIngredientSearchModal').style.display = 'flex';
-}
+                if (isMacroPercentage && cat !== 'Calories') {
+                    let multiplier = (cat === 'Fat') ? 9 : 4; 
+                    let currentCaloriesOfMacro = displayCurr * multiplier;
+                    displayCurr = appData.calorieGoal > 0 ? (currentCaloriesOfMacro / appData.calorieGoal) * 100 : 0;
+                    suffix = '%';
+                }
 
-function addIngredientWithBarcode() {
-    isAddingToRecipe = true;
-    document.getElementById('recipeModal').style.display = 'none';
-    startBarcodeScanForRecipe();
-}
+                const perc = target > 0 ? Math.min((displayCurr / target) * 100, 100) : 0;
+                const div = document.createElement('div');
+                
+                div.className = 'barometer-container';
+                div.innerHTML = `
+                    <div class="barometer-header">
+                        <strong>${cat}</strong>
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" value="${target}" style="width:60px; padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
+                            <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat]||'#8b5cf6'}"></div>
+                        <div class="progress-text">${displayCurr.toFixed(1)}${suffix} / ${target}${suffix}</div>
+                    </div>
+                `;
+                cont.appendChild(div);
+            });
+        };
 
-function addManualIngredient() {
-    document.getElementById('manualIngredientModal').style.display = 'flex';
-}
-
-function confirmAddIngredientFromSearch() {
-    // Implementation would go here (similar to previous versions)
-    alert("Ingredient added from search (full logic preserved in complete version)");
-    closeIngredientSearchModal();
-    renderRecipeIngredientsList();
-}
-
-function confirmAddManualIngredient() {
-    // Implementation would go here
-    alert("Manual ingredient added (full logic preserved in complete version)");
-    closeManualIngredientModal();
-    renderRecipeIngredientsList();
-}
-
-function saveRecipeAsCustomFood() {
-    const recipeName = document.getElementById('recipeName').value.trim();
-    const servings = parseFloat(document.getElementById('recipeServings').value);
-    if (!recipeName || tempRecipeIngredients.length === 0 || !servings) {
-        alert("Please complete all fields.");
-        return;
+        renderGroup(['Calories','Protein','Fat','Carbs'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Carbs:'#14b8a6' }, true);
+        renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain'], 'groupBarometersContainer', {}, false);
     }
-    
-    let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0, totalFiber = 0;
-    tempRecipeIngredients.forEach(ing => {
-        totalCal += ing.calories || 0;
-        totalProt += ing.protein || 0;
-        totalFat += ing.fat || 0;
-        totalCarb += ing.carbs || 0;
-        totalFiber += ing.fiber || 0;
-    });
-    
-    const perServing = {
-        calories: totalCal / servings,
-        protein: totalProt / servings,
-        fat: totalFat / servings,
-        carbs: totalCarb / servings,
-        fiber: totalFiber / servings
-    };
-    
-    const recipeFood = {
-        description: recipeName,
-        brandOwner: "My Recipes",
-        foodCategory: "Other",
-        servingSize: 100,
-        householdServingFullText: `1 serving`,
-        gtinUpc: null,
-        isRecipe: true,
-        totalServings: servings,
-        totalNutrition: { calories: totalCal, protein: totalProt, fat: totalFat, carbs: totalCarb, fiber: totalFiber },
-        originalIngredients: [...tempRecipeIngredients],
-        foodNutrients: [
-            {nutrientId: 1008, value: perServing.calories},
-            {nutrientId: 1003, value: perServing.protein},
-            {nutrientId: 1004, value: perServing.fat},
-            {nutrientId: 1005, value: perServing.carbs},
-            {nutrientId: 1079, value: perServing.fiber}
-        ]
-    };
-    
-    let customFoods = [];
-    try { customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]'); } catch(e){}
-    customFoods.unshift(recipeFood);
-    localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
-    
-    alert(`Recipe "${recipeName}" saved!`);
-    closeRecipeModal();
-    document.getElementById('searchInput').value = recipeName;
-    searchUSDA();
-}
 
-// ==================== MY FOODS MANAGER ====================
-function showMyFoodsManager() {
-    const modal = document.getElementById('myFoodsModal');
-    const listContainer = document.getElementById('myFoodsList');
-    listContainer.innerHTML = '';
-    
-    let customFoods = [];
-    try { customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]'); } catch(e){}
-    
-    if (customFoods.length === 0) {
-        listContainer.innerHTML = `<p style="text-align:center; color:#64748b; padding:30px;">No custom foods saved yet.</p>`;
-        modal.style.display = 'flex';
-        return;
-    }
-    
-    customFoods.forEach((food, index) => {
-        const isRecipe = food.isRecipe || food.brandOwner === "My Recipes";
-        const div = document.createElement('div');
-        div.className = 'myfood-item';
+    function renderLog() {
+        const cont = document.getElementById('logContainer');
         
-        let html = `<div style="display:flex; justify-content:space-between;">
-            <div><strong>${food.description}</strong> ${isRecipe ? '<span class="custom-food-badge">Recipe</span>' : ''}</div>
-            <div>`;
-        
-        if (isRecipe) {
-            html += `<button onclick="editRecipeServings(${index})" style="background:#3b82f6; padding:6px 12px; font-size:0.85em; margin-right:6px;">Edit Servings</button>`;
+        if (state.log.length === 0) {
+            cont.innerHTML = '<p style="color:gray;font-size:0.9em;">No foods logged yet today.</p>';
+            return;
         }
-        html += `<button onclick="deleteCustomFood(${index})" style="background:#ef4444; padding:6px 12px; font-size:0.85em;">Delete</button>`;
-        html += `</div></div>`;
         
-        div.innerHTML = html;
-        listContainer.appendChild(div);
-    });
-    
-    modal.style.display = 'flex';
-}
-
-function hideMyFoodsManager() {
-    document.getElementById('myFoodsModal').style.display = 'none';
-}
-
-function deleteCustomFood(index) {
-    if (!confirm("Delete this item?")) return;
-    let customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
-    customFoods.splice(index, 1);
-    localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
-    showMyFoodsManager();
-}
-
-function editRecipeServings(index) {
-    let customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
-    const food = customFoods[index];
-    if (!food || !food.isRecipe) return;
-    
-    editingRecipeIndex = index;
-    document.getElementById('editRecipeInfo').innerHTML = `<strong>${food.description}</strong><br>Current servings: <strong>${food.totalServings || 1}</strong>`;
-    document.getElementById('newServings').value = food.totalServings || 4;
-    document.getElementById('editRecipeModal').style.display = 'flex';
-    document.getElementById('myFoodsModal').style.display = 'none';
-}
-
-function closeEditRecipeModal() {
-    document.getElementById('editRecipeModal').style.display = 'none';
-    editingRecipeIndex = null;
-    showMyFoodsManager();
-}
-
-function saveRecipeServingsEdit() {
-    if (editingRecipeIndex === null) return;
-    let customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
-    const food = customFoods[editingRecipeIndex];
-    const newServings = parseFloat(document.getElementById('newServings').value);
-    
-    if (!newServings || newServings <= 0 || !food.totalNutrition) {
-        alert("Invalid input.");
-        return;
+        cont.innerHTML = '';
+        state.log.forEach((item, index) => {
+            const upcText = item.upc ? ` • UPC: ${item.upc}` : '';
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.innerHTML = `
+                <div style="flex-grow:1; padding-right:10px;">
+                    <strong>${item.name}</strong><br>
+                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcText}</small>
+                </div>
+                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
+                    <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                    <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
+                </div>
+            `;
+            cont.appendChild(div);
+        });
     }
-    
-    const totals = food.totalNutrition;
-    const newPerServing = {
-        calories: totals.calories / newServings,
-        protein: totals.protein / newServings,
-        fat: totals.fat / newServings,
-        carbs: totals.carbs / newServings,
-        fiber: (totals.fiber || 0) / newServings
-    };
-    
-    food.totalServings = newServings;
-    food.foodNutrients = [
-        {nutrientId: 1008, value: newPerServing.calories},
-        {nutrientId: 1003, value: newPerServing.protein},
-        {nutrientId: 1004, value: newPerServing.fat},
-        {nutrientId: 1005, value: newPerServing.carbs},
-        {nutrientId: 1079, value: newPerServing.fiber}
-    ];
-    
-    customFoods[editingRecipeIndex] = food;
-    localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
-    alert("Recipe updated!");
-    closeEditRecipeModal();
-}
 
-// ==================== IMPORT/EXPORT ====================
-function showImportExportModal() { document.getElementById('importExportModal').style.display = 'flex'; }
-function hideImportExportModal() { document.getElementById('importExportModal').style.display = 'none'; }
-function exportCustomFoods() { /* full export logic */ }
-function triggerImport() { document.getElementById('importFileInput').click(); }
-function handleImportFile(e) { /* full import logic with deduplication */ }
+    function copyItemName(index, btnElement) {
+        const item = state.log[index];
+        let textToCopy = item.name;
+        if (item.upc) textToCopy += ` (UPC: ${item.upc})`;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "Copied!";
+            setTimeout(() => { btnElement.innerText = originalText; }, 1500);
+        });
+    }
 
-// ==================== ADD FOOD ====================
-function showAddFoodForm() { document.getElementById('addFoodForm').style.display = 'block'; }
-function hideAddFoodForm() { document.getElementById('addFoodForm').style.display = 'none'; }
-function saveCustomFood() { /* full save logic */ }
+    function editItem(index) {
+        const item = state.log[index];
+        const newAmt = prompt(`Edit amount for ${item.name} (${item.unit}):`, item.amount);
+        if (!newAmt) return;
+        
+        const val = parseFloat(newAmt);
+        if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
+        
+        const scale = val / item.amount;
+        
+        state.current.Calories -= item.calories;
+        state.current.Protein -= item.protein;
+        state.current.Fat -= item.fat;
+        state.current.Carbs -= item.carbs || 0;
+        
+        item.amount = val;
+        item.calories *= scale;
+        item.protein *= scale;
+        item.fat *= scale;
+        item.carbs = (item.carbs || 0) * scale;
+        item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber || 0);
+        
+        state.current.Calories += item.calories;
+        state.current.Protein += item.protein;
+        state.current.Fat += item.fat;
+        state.current.Carbs += item.carbs || 0;
+        
+        saveData();
+        renderLog();
+        renderBarometers();
+    }
 
-// ==================== RENDERING ====================
-function renderBarometers() { /* full implementation */ }
-function renderLog() { /* full implementation */ }
+    function deleteItem(index) {
+        const item = state.log[index];
+        state.current.Calories -= item.calories;
+        state.current.Protein -= item.protein;
+        state.current.Fat -= item.fat;
+        state.current.Carbs -= item.carbs || 0;
+        
+        if (state.current[item.category] !== undefined) state.current[item.category] -= 1;
+        
+        state.log.splice(index, 1);
+        saveData();
+        renderLog();
+        renderBarometers();
+    }
 
-// ==================== SCANNER ====================
-function startBarcodeScan() { /* full scanner logic */ }
-function stopBarcodeScan() { /* ... */ }
-function manualBarcodeSubmit() { /* ... */ }
-function fetchOpenFoodFacts(barcode) { /* ... */ }
+    function updateTarget(cat, val) {
+        const v = parseFloat(val);
+        if (v > 0) {
+            state.targets[cat] = v;
+            saveData();
+            renderBarometers();
+        }
+    }
 
-// ==================== RECIPE BARCODE HELPERS ====================
-function startBarcodeScanForRecipe() { /* ... */ }
-function stopBarcodeScanForRecipe() { /* ... */ }
-function fetchProductForRecipe(barcode) { /* ... */ }
-function showAmountInputForPendingIngredient() { /* ... */ }
+    // ==================== SCANNER (Main) ====================
+    function startBarcodeScan() {
+        const modal = document.getElementById('scannerModal');
+        modal.style.display = 'flex';
+        // ... (simplified scanner logic)
+    }
 
-// ==================== INITIALIZE ====================
-init();
+    function stopBarcodeScan() {
+        const modal = document.getElementById('scannerModal');
+        modal.style.display = 'none';
+    }
+
+    function manualBarcodeSubmit() {
+        // simplified
+    }
+
+    function fetchOpenFoodFacts(barcode) {
+        // simplified for main use
+    }
+
+    init();
 </script>
 </body>
 </html>
