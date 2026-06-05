@@ -255,7 +255,7 @@
         <h2>Search & Log Food</h2>
         
         <div class="form-group">
-            <label>Search USDA Database</label>
+            <label>Search Food Databases (USDA + Open Food Facts)</label>
             <div class="search-row">
                 <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
                 <button id="searchBtn" onclick="searchUSDA()">Search</button>
@@ -522,7 +522,7 @@
         }
     }
 
-    // ==================== USDA DATABASE SEARCH ====================
+    // ==================== USDA + OPEN FOOD FACTS DUAL DATABASE SEARCH ====================
     async function searchUSDA() {
         const query = document.getElementById('searchInput').value.trim();
         if (!query) return;
@@ -570,6 +570,7 @@
                     foodCategory: catText,
                     servingSize: sQuantity,             
                     householdServingFullText: sSizeText,    
+                    gtinUpc: p.code || null,
                     foodNutrients: [
                         {nutrientId: 1008, value: nut.calories},
                         {nutrientId: 1003, value: nut.protein},
@@ -720,6 +721,7 @@
             carbs: nut.carbs * multiplier,
             fiber: nut.fiber * multiplier, 
             wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
+            upc: food.gtinUpc || food.gtin_upc || null,
             
             calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
             protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
@@ -805,9 +807,13 @@
     }
 
     function copyItemName(index, btnElement) {
-        const itemName = state.log[index].name;
+        const item = state.log[index];
+        let textToCopy = item.name;
+        if (item.upc) {
+            textToCopy += ` (UPC: ${item.upc})`;
+        }
         
-        navigator.clipboard.writeText(itemName).then(() => {
+        navigator.clipboard.writeText(textToCopy).then(() => {
             const originalText = btnElement.innerText;
             const originalBg = btnElement.style.background;
             
@@ -910,12 +916,13 @@
         
         cont.innerHTML = '';
         state.log.forEach((item, index) => {
+            const upcText = item.upc ? ` • UPC: ${item.upc}` : '';
             const div = document.createElement('div');
             div.className = 'log-item';
             div.innerHTML = `
                 <div style="flex-grow:1; padding-right:10px;">
                     <strong>${item.name}</strong><br>
-                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
+                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcText}</small>
                 </div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
                     <button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
@@ -927,7 +934,7 @@
         });
     }
 
-    // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
+    // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) + DUAL DB ====================
     function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
@@ -994,63 +1001,99 @@
 
     async function fetchOpenFoodFacts(barcode) {
         const preview = document.getElementById('nutritionPreview');
-        preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+        preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> in both databases...</em>`;
 
+        let offFood = null;
+        let usdaFoods = [];
+
+        // 1. Try Open Food Facts (excellent for barcodes)
         try {
             const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
             const data = await res.json();
 
-            if (data.status === 0 || !data.product) {
-                preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
-                return;
+            if (data.status !== 0 && data.product) {
+                const p = data.product;
+                
+                const nut = {
+                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
+                    protein: parseFloat(p.nutriments?.proteins_100g || 0),
+                    fat: parseFloat(p.nutriments?.fat_100g || 0),
+                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
+                    fiber: parseFloat(p.nutriments?.fiber_100g || 0)
+                };
+
+                const name = p.product_name || `Scanned Item (${barcode})`;
+                const brandText = String(p.brands || "Open Food Facts");
+                const brand = brandText.split(',');
+                const catText = String(p.categories || "Other");
+
+                const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
+                const sQuantity = parseFloat(p.serving_quantity) || 100;
+
+                offFood = {
+                    description: name,
+                    brandOwner: brand,
+                    foodCategory: catText.split(','),
+                    servingSize: sQuantity,             
+                    householdServingFullText: sSizeText,    
+                    gtinUpc: barcode,
+                    foodNutrients: [
+                        {nutrientId: 1008, value: nut.calories},
+                        {nutrientId: 1003, value: nut.protein},
+                        {nutrientId: 1004, value: nut.fat},
+                        {nutrientId: 1005, value: nut.carbs},
+                        {nutrientId: 1079, value: nut.fiber}
+                    ]
+                };
             }
-
-            const p = data.product;
-            
-            const nut = {
-                calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
-                protein: parseFloat(p.nutriments?.proteins_100g || 0),
-                fat: parseFloat(p.nutriments?.fat_100g || 0),
-                carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
-                fiber: parseFloat(p.nutriments?.fiber_100g || 0)
-            };
-
-            const name = p.product_name || `Scanned Item (${barcode})`;
-            const brandText = String(p.brands || "Open Food Facts");
-            const brand = brandText.split(',');
-            const catText = String(p.categories || "Other");
-
-            const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
-            const sQuantity = parseFloat(p.serving_quantity) || 100;
-
-            const fakeFood = {
-                description: name,
-                brandOwner: brand,
-                foodCategory: catText.split(','),
-                servingSize: sQuantity,             
-                householdServingFullText: sSizeText,    
-                foodNutrients: [
-                    {nutrientId: 1008, value: nut.calories},
-                    {nutrientId: 1003, value: nut.protein},
-                    {nutrientId: 1004, value: nut.fat},
-                    {nutrientId: 1005, value: nut.carbs},
-                    {nutrientId: 1079, value: nut.fiber}
-                ]
-            };
-
-            currentSearchResults = [fakeFood];
-            const sel = document.getElementById('foodSelect');
-            sel.innerHTML = `<option value="0" selected>${name} (${brand})</option>`;
-
-            document.getElementById('servingInput').value = 1; 
-            document.getElementById('amountInput').value = '';
-            
-            updatePreview();
-
         } catch (e) {
-            console.error("Barcode fetch/parse error:", e);
-            preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
+            console.warn("OFF barcode lookup failed:", e);
         }
+
+        // 2. Also search USDA with the barcode (forces both databases)
+        try {
+            const usdaRes = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(barcode)}&pageSize=8`);
+            const usdaData = await usdaRes.json();
+            if (usdaData.foods && usdaData.foods.length > 0) {
+                usdaFoods = usdaData.foods;
+            }
+        } catch (e) {
+            console.warn("USDA barcode search failed:", e);
+        }
+
+        // Combine: OFF exact match first (if found), then USDA results
+        if (offFood) {
+            currentSearchResults = [offFood, ...usdaFoods];
+        } else if (usdaFoods.length > 0) {
+            currentSearchResults = usdaFoods;
+        } else {
+            preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in either database.</strong></span><br>Barcode: ${barcode}<br>Try a manual text search instead.`;
+            return;
+        }
+
+        // Populate select (handle both single and multiple)
+        const sel = document.getElementById('foodSelect');
+        sel.innerHTML = '';
+        
+        currentSearchResults.forEach((food, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            let brandStr = '';
+            if (food.brandOwner) {
+                brandStr = Array.isArray(food.brandOwner) ? food.brandOwner.join(', ') : food.brandOwner;
+            }
+            opt.textContent = food.description + (brandStr ? ` (${brandStr})` : '');
+            sel.appendChild(opt);
+        });
+
+        if (currentSearchResults.length > 0) {
+            sel.value = "0"; // select first (usually the OFF exact match)
+        }
+
+        document.getElementById('servingInput').value = 1; 
+        document.getElementById('amountInput').value = '';
+        
+        updatePreview();
     }
 
     init();
