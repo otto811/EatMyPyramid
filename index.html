@@ -842,7 +842,49 @@
         
         return (servingSizeGrams / 100) * servings;
     }
+function updatePreview() {
+        const idx = document.getElementById('foodSelect').value;
+        const previewBox = document.getElementById('nutritionPreview');
+        
+        // If no food is selected, show the default prompt
+        if (!idx) {
+            previewBox.innerHTML = "<em>Select a food to view nutritional information.</em>";
+            return;
+        }
 
+        const food = currentSearchResults[idx];
+        const nut = getAllNutrients(food);
+        const multiplier = getMultiplier(food);
+
+        // Determine the serving/amount to display
+        const amountVal = parseFloat(document.getElementById('amountInput').value);
+        let displayAmount = amountVal;
+        let displayUnit = document.getElementById('unitSelect').value;
+        
+        if (!(amountVal > 0)) {
+            displayAmount = parseFloat(document.getElementById('servingInput').value) || 1;
+            displayUnit = displayAmount === 1 ? "serving" : "servings";
+        }
+
+        // Calculate final nutritional values
+        const cal = (nut.calories * multiplier).toFixed(1);
+        const prot = (nut.protein * multiplier).toFixed(1);
+        const fat = (nut.fat * multiplier).toFixed(1);
+        const carbs = (nut.carbs * multiplier).toFixed(1);
+        const fiber = (nut.fiber * multiplier).toFixed(1);
+        const wwPoints = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier).toFixed(1);
+
+        // Inject the HTML into the preview box
+        previewBox.innerHTML = `
+            <strong>${food.description}</strong><br>
+            <div style="margin-top: 8px; line-height: 1.5;">
+                <strong>Serving Amount:</strong> ${displayAmount} ${displayUnit}<br>
+                <strong>Calories:</strong> ${cal} kcal<br>
+                <strong>Macros:</strong> ${prot}g Protein | ${fat}g Fat | ${carbs}g Carbs | ${fiber}g Fiber<br>
+                <strong style="color: var(--purple);">WW Points:</strong> ${wwPoints}
+            </div>
+        `;
+    }
     function logFood() {
         const idx = document.getElementById('foodSelect').value;
         if (!idx) return alert("Please select a food from the dropdown first.");
@@ -1511,7 +1553,7 @@
         renderLog();
         renderBarometers();
     }
-
+l
     function deleteItem(index) {
         const item = state.log[index];
         state.current.Calories -= item.calories;
