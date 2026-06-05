@@ -242,11 +242,8 @@
                 <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
             </div>
             <div>
-                <label>Daily Points Goal</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
-                    <button onclick="showCalculatorModal()" style="background-color: var(--teal); white-space: nowrap;">Calculate Your Points</button>
-                </div>
+                <label>Daily WW Points Goal</label>
+                <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
             </div>
             <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
                 <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
@@ -352,68 +349,6 @@
         </div>
 
         <button onclick="stopBarcodeScan()" style="width:100%;background:#ef4444;padding:12px;margin-top:20px;">Close / Cancel</button>
-    </div>
-</div>
-
-<div id="calculatorModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-        <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Points Calculator</h3>
-        
-        <div class="form-group" style="margin-top: 15px;">
-            <label for="calc-gender">Gender</label>
-            <select id="calc-gender" onchange="calculatePoints()">
-                <option value="0" disabled selected>Select Gender</option>
-                <option value="2">Female</option>
-                <option value="8">Male</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="calc-age">Age</label>
-            <select id="calc-age" onchange="calculatePoints()">
-                <option value="0" disabled selected>Select Age Range</option>
-                <option value="4">17 - 26</option>
-                <option value="3">27 - 37</option>
-                <option value="2">38 - 47</option>
-                <option value="1">48 - 58</option>
-                <option value="0">Over 58</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="calc-weight">Weight (lbs)</label>
-            <input type="number" id="calc-weight" placeholder="Enter weight (e.g. 150)" min="0" oninput="calculatePoints()">
-        </div>
-
-        <div class="form-group">
-            <label for="calc-height">Height</label>
-            <select id="calc-height" onchange="calculatePoints()">
-                <option value="0" disabled selected>Select Height</option>
-                <option value="0">Under 5'1"</option>
-                <option value="1">5'1" to 5'10"</option>
-                <option value="2">Over 5'10"</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="calc-activity">Daily Activity Level</label>
-            <select id="calc-activity" onchange="calculatePoints()">
-                <option value="0" disabled selected>Select Activity Level</option>
-                <option value="0">Mostly sitting</option>
-                <option value="2">Occasionally sitting</option>
-                <option value="4">Walking a lot</option>
-                <option value="6">Physical hard work</option>
-            </select>
-        </div>
-
-        <div id="calc-output" style="margin-top: 1.5rem; padding: 1rem; background-color: #e8f4f8; border-radius: 8px; text-align: center; font-size: 1.5em; font-weight: bold; color: #2980b9;">
-            Points = 0
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="closeCalculatorModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
-            <button onclick="applyCalculatedPoints()" style="background:var(--primary); flex:1; padding:12px;">Apply Goal</button>
-        </div>
     </div>
 </div>
 
@@ -596,30 +531,76 @@
         btn.disabled = true; 
         btn.textContent = 'Searching...';
         
+        let usdaResults = [];
         try {
             const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=25`);
             const data = await res.json();
-            currentSearchResults = data.foods || [];
-            
-            const sel = document.getElementById('foodSelect');
-            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-            
-            currentSearchResults.forEach((food, index) => {
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = food.description + (food.brandOwner ? ` (${food.brandOwner})` : '');
-                sel.appendChild(opt);
-            });
-            
-            if(currentSearchResults.length === 0) {
-                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
-            }
+            usdaResults = data.foods || [];
         } catch(e) { 
-            alert("Search failed. Please check your network connection."); 
-        } finally { 
-            btn.disabled = false; 
-            btn.textContent = 'Search'; 
+            console.warn("USDA search failed:", e);
         }
+        
+        let offResults = [];
+        try {
+            const offRes = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`);
+            const offData = await offRes.json();
+            const products = offData.products || [];
+            
+            offResults = products.map(p => {
+                const nut = {
+                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || p.nutriments?.energy || 0),
+                    protein: parseFloat(p.nutriments?.proteins_100g || 0),
+                    fat: parseFloat(p.nutriments?.fat_100g || 0),
+                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
+                    fiber: parseFloat(p.nutriments?.fiber_100g || 0)
+                };
+
+                const name = (p.product_name || p.generic_name || '').trim() || `Scanned Item`;
+                const brandText = String(p.brands || p.brand || "Open Food Facts");
+                const brandArr = brandText.split(',').map(b => b.trim()).filter(Boolean);
+                const brandStr = brandArr.length ? brandArr.join(', ') : "Open Food Facts";
+                const catText = String(p.categories || p.categories_tags || "Other");
+
+                const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
+                const sQuantity = parseFloat(p.serving_quantity) || 100;
+
+                return {
+                    description: name,
+                    brandOwner: brandStr,
+                    foodCategory: catText,
+                    servingSize: sQuantity,             
+                    householdServingFullText: sSizeText,    
+                    foodNutrients: [
+                        {nutrientId: 1008, value: nut.calories},
+                        {nutrientId: 1003, value: nut.protein},
+                        {nutrientId: 1004, value: nut.fat},
+                        {nutrientId: 1005, value: nut.carbs},
+                        {nutrientId: 1079, value: nut.fiber}
+                    ]
+                };
+            }).filter(f => f.description && f.description.length > 3 && f.foodNutrients.some(n => n.value > 0));
+        } catch(e) { 
+            console.warn("Open Food Facts search failed:", e); 
+        }
+        
+        currentSearchResults = usdaResults.concat(offResults);
+        
+        const sel = document.getElementById('foodSelect');
+        sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        
+        currentSearchResults.forEach((food, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.textContent = food.description + (food.brandOwner ? ` (${food.brandOwner})` : '');
+            sel.appendChild(opt);
+        });
+        
+        if(currentSearchResults.length === 0) {
+            sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+        }
+        
+        btn.disabled = false; 
+        btn.textContent = 'Search'; 
     }
 
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
@@ -783,12 +764,15 @@
         state.current.Fat -= item.fat;
         state.current.Carbs -= (item.carbs || 0);
 
+        const oldAmount = item.amount || 1;
+        const scale = val / oldAmount;
+        
         item.amount = val;
-        item.calories = val * item.calsPerUnit * 100;
-        item.protein = val * item.protPerUnit * 100;
-        item.fat = val * item.fatPerUnit * 100;
-        item.carbs = val * (item.carbsPerUnit || 0) * 100;
-        item.fiber = val * (item.fibPerUnit || 0) * 100;
+        item.calories *= scale;
+        item.protein *= scale;
+        item.fat *= scale;
+        item.carbs = (item.carbs || 0) * scale;
+        item.fiber = (item.fiber || 0) * scale;
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
 
         state.current.Calories += item.calories;
@@ -856,52 +840,6 @@
             renderLog();
             renderBarometers();
         }
-    }
-
-    // ==================== POINTS CALCULATOR FUNCTIONS ====================
-    function showCalculatorModal() {
-        document.getElementById('calculatorModal').style.display = 'flex';
-        // Auto-fill weight if it's already set in the main app
-        if (appData.weight > 0) {
-            document.getElementById('calc-weight').value = appData.weight;
-            calculatePoints();
-        }
-    }
-
-    function closeCalculatorModal() {
-        document.getElementById('calculatorModal').style.display = 'none';
-    }
-
-    function calculatePoints() {
-        const genderPts = parseInt(document.getElementById('calc-gender').value) || 0;
-        const agePts = parseInt(document.getElementById('calc-age').value) || 0;
-        const heightPts = parseInt(document.getElementById('calc-height').value) || 0;
-        const activityPts = parseInt(document.getElementById('calc-activity').value) || 0;
-        
-        const weightVal = parseFloat(document.getElementById('calc-weight').value) || 0;
-        const weightPts = Math.floor(weightVal / 10);
-        
-        const totalPoints = genderPts + agePts + weightPts + heightPts + activityPts;
-        
-        document.getElementById('calc-output').innerText = `Points = ${totalPoints}`;
-        return totalPoints;
-    }
-
-    function applyCalculatedPoints() {
-        const totalPoints = calculatePoints();
-        if (totalPoints > 0) {
-            // Apply the calculated WW Points goal
-            document.getElementById('wwGoalInput').value = totalPoints;
-            updateWWGoal(); // trigger save and UI update
-            
-            // Optionally, sync the weight back to the main app if they updated it in the calculator
-            const calcWeight = document.getElementById('calc-weight').value;
-            if (calcWeight && calcWeight !== document.getElementById('weightInput').value) {
-                document.getElementById('weightInput').value = calcWeight;
-                recalculateMacroTargets(); // trigger save and UI update for weight
-            }
-        }
-        closeCalculatorModal();
     }
 
     // ==================== UI RENDERING ====================
