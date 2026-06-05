@@ -632,12 +632,41 @@
         return Math.max(0, Math.round(((cal/50) + (fat/12) - (capped/4)) * 10) / 10);
     }
 
+    // Safe localStorage wrappers to prevent crashes in sandboxed iframes
+    let _memoryStorage = {};
+    let _storageAvailable = true;
+
+    function safeGetItem(key) {
+        if (!_storageAvailable) return _memoryStorage[key] || null;
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            _storageAvailable = false;
+            console.warn('%c[App] localStorage is unavailable (sandboxed environment). Using temporary in-memory storage. Data will not persist after page reload.', 'color:#f59e0b');
+            return _memoryStorage[key] || null;
+        }
+    }
+
+    function safeSetItem(key, value) {
+        if (!_storageAvailable) {
+            _memoryStorage[key] = value;
+            return;
+        }
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            _storageAvailable = false;
+            _memoryStorage[key] = value;
+            console.warn('%c[App] localStorage is unavailable (sandboxed environment). Using temporary in-memory storage.', 'color:#f59e0b');
+        }
+    }
+
     function saveData() { 
-        localStorage.setItem('foodTrackerData', JSON.stringify(appData)); 
+        safeSetItem('foodTrackerData', JSON.stringify(appData)); 
     }
 
     function loadData() {
-        const saved = localStorage.getItem('foodTrackerData');
+        const saved = safeGetItem('foodTrackerData');
         if (saved) {
             Object.assign(appData, JSON.parse(saved));
         }
@@ -743,7 +772,7 @@
         
         let customResults = [];
         try {
-            const customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            const customFoods = JSON.parse(safeGetItem('userCustomFoods') || '[]');
             const q = query.toLowerCase();
             customResults = customFoods.filter(f => 
                 (f.description && f.description.toLowerCase().includes(q)) ||
@@ -1083,7 +1112,7 @@
         } catch(e){}
         
         try {
-            const customs = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            const customs = JSON.parse(safeGetItem('userCustomFoods') || '[]');
             results = results.concat(customs.filter(f => f.description && f.description.toLowerCase().includes(q.toLowerCase())));
         } catch(e){}
         
@@ -1221,11 +1250,11 @@
         
         let customFoods = [];
         try {
-            customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            customFoods = JSON.parse(safeGetItem('userCustomFoods') || '[]');
         } catch(e) {}
         
         customFoods.unshift(recipeFood);
-        localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
+        safeSetItem('userCustomFoods', JSON.stringify(customFoods));
         
         alert(`Recipe "${recipeName}" saved!\n\nPer serving: ${perServing.calories.toFixed(0)} cal, ${perServing.protein.toFixed(1)}p, ${perServing.fat.toFixed(1)}f, ${perServing.carbs.toFixed(1)}c`);
         
@@ -1246,7 +1275,7 @@
 
     function exportCustomFoods() {
         try {
-            const data = localStorage.getItem('userCustomFoods') || '[]';
+            const data = safeGetItem('userCustomFoods') || '[]';
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1278,7 +1307,7 @@
 
                 let existing = [];
                 try {
-                    existing = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+                    existing = JSON.parse(safeGetItem('userCustomFoods') || '[]');
                 } catch(e) {}
 
                 const existingKeys = new Set(existing.map(f => (f.description || '').toLowerCase().trim()));
@@ -1293,7 +1322,7 @@
                     }
                 });
 
-                localStorage.setItem('userCustomFoods', JSON.stringify(existing));
+                safeSetItem('userCustomFoods', JSON.stringify(existing));
                 alert(`${added} new item(s) imported successfully.`);
                 hideImportExportModal();
             } catch (err) {
@@ -1340,11 +1369,11 @@
         
         let list = [];
         try {
-            list = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            list = JSON.parse(safeGetItem('userCustomFoods') || '[]');
         } catch(e) {}
         
         list.unshift(food);
-        localStorage.setItem('userCustomFoods', JSON.stringify(list));
+        safeSetItem('userCustomFoods', JSON.stringify(list));
         
         alert(`"${name}" has been saved to My Foods.`);
         hideAddFoodForm();
