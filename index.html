@@ -227,6 +227,25 @@
             margin-left: 6px;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
         @media (max-width: 768px) {
             .container { 
                 grid-template-columns: 1fr; 
@@ -275,6 +294,7 @@
                 <button id="searchBtn" onclick="searchUSDA()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
                 <button onclick="showAddFoodForm()" style="background:#10b981; white-space: nowrap;">+ Add Food</button>
+                <button onclick="showImportExportModal()" style="background:#8b5cf6; white-space: nowrap;">Import/Export My Foods</button>
             </div>
         </div>
         
@@ -412,6 +432,38 @@
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
+    </div>
+</div>
+
+<!-- IMPORT / EXPORT MODAL -->
+<div id="importExportModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:15px; border-bottom:2px solid #eee; padding-bottom:8px;">Import / Export My Foods</h3>
+        
+        <p style="font-size:0.95em; color:#374151; margin-bottom:20px;">
+            Share your custom foods with others or import a friend's collection. 
+            Imported foods will be <strong>appended</strong> to your existing list.
+        </p>
+        
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <button onclick="exportCustomFoods()" style="background:#10b981; padding:14px; font-size:1.05em;">
+                📤 Export My Foods (Download JSON)
+            </button>
+            
+            <button onclick="triggerImport()" style="background:#3b82f6; padding:14px; font-size:1.05em;">
+                📥 Import & Append Foods from File
+            </button>
+            
+            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleImportFile(event)">
+        </div>
+        
+        <div style="margin-top:20px; text-align:center;">
+            <button onclick="hideImportExportModal()" style="background:#6b7280; padding:10px 30px;">Close</button>
+        </div>
+        
+        <div style="font-size:0.8em; color:#6b7280; margin-top:15px; text-align:center;">
+            Files are in JSON format and can be easily shared via email, chat, or cloud drive.
+        </div>
     </div>
 </div>
 
@@ -663,7 +715,7 @@
             customResults = customFoods.filter(f => 
                 (f.description && f.description.toLowerCase().includes(q)) ||
                 (f.brandOwner && String(f.brandOwner).toLowerCase().includes(q))
-            ).map(f => ({...f, isCustom: true})); // mark for display
+            ).map(f => ({...f, isCustom: true}));
         } catch(e) {}
         
         currentSearchResults = [...customResults, ...usdaResults, ...offResults];
@@ -941,7 +993,6 @@
     // ==================== ADD CUSTOM FOOD FUNCTIONS ====================
     function showAddFoodForm() {
         document.getElementById('addFoodForm').style.display = 'block';
-        // Clear previous values
         ['customName','customBrand','customHousehold','customGrams','customCal','customProt','customFat','customCarb','customFiber'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
@@ -978,21 +1029,114 @@
             ]
         };
         
-        // Save to localStorage user custom foods
         let customFoods = [];
         try {
             customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
         } catch(e) {}
         
-        customFoods.unshift(customFood); // newest first
+        customFoods.unshift(customFood);
         localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
         
-        alert(`"${name}" has been saved to your custom foods and will now appear in searches.`);
+        alert(`"${name}" has been saved to your custom foods.`);
         hideAddFoodForm();
         
-        // Optional: immediately search for it so user sees it
         document.getElementById('searchInput').value = name;
         searchUSDA();
+    }
+
+    // ==================== IMPORT / EXPORT MY FOODS ====================
+    function showImportExportModal() {
+        document.getElementById('importExportModal').style.display = 'flex';
+    }
+
+    function hideImportExportModal() {
+        document.getElementById('importExportModal').style.display = 'none';
+    }
+
+    function exportCustomFoods() {
+        try {
+            const customFoods = localStorage.getItem('userCustomFoods') || '[]';
+            const blob = new Blob([customFoods], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `my-foods-backup-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Optional: close modal after export
+            setTimeout(() => {
+                hideImportExportModal();
+            }, 800);
+        } catch (e) {
+            alert("Failed to export. Please try again.");
+            console.error(e);
+        }
+    }
+
+    function triggerImport() {
+        document.getElementById('importFileInput').click();
+    }
+
+    function handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedFoods = JSON.parse(e.target.result);
+                
+                if (!Array.isArray(importedFoods)) {
+                    throw new Error("Invalid file format. Expected a JSON array.");
+                }
+
+                let existingFoods = [];
+                try {
+                    existingFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+                } catch(e) {}
+
+                // Simple deduplication: avoid exact same description + brand
+                const existingKeys = new Set(
+                    existingFoods.map(f => 
+                        `${(f.description || '').toLowerCase().trim()}|${(f.brandOwner || '').toLowerCase().trim()}`
+                    )
+                );
+
+                let addedCount = 0;
+                importedFoods.forEach(food => {
+                    const key = `${(food.description || '').toLowerCase().trim()}|${(food.brandOwner || '').toLowerCase().trim()}`;
+                    if (!existingKeys.has(key) && food.description) {
+                        existingFoods.push(food);
+                        existingKeys.add(key);
+                        addedCount++;
+                    }
+                });
+
+                localStorage.setItem('userCustomFoods', JSON.stringify(existingFoods));
+                
+                alert(`Import complete!\n\n${addedCount} new food(s) were added.\n${importedFoods.length - addedCount} duplicate(s) were skipped.`);
+                
+                hideImportExportModal();
+                
+                // Refresh search results if user has something in the search box
+                const currentQuery = document.getElementById('searchInput').value.trim();
+                if (currentQuery) {
+                    searchUSDA();
+                }
+                
+            } catch (err) {
+                alert("Import failed. The file may be corrupted or in the wrong format.\n\nError: " + err.message);
+                console.error(err);
+            }
+        };
+        
+        reader.readAsText(file);
+        // Reset file input so same file can be selected again later
+        event.target.value = '';
     }
 
     // ==================== UI RENDERING ====================
