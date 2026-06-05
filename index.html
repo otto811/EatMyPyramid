@@ -21,6 +21,7 @@
             --danger: #ef4444;
             --purple: #8b5cf6;
             --teal: #14b8a6;
+            --green: #10b981;
         }
         
         body {
@@ -64,7 +65,7 @@
             align-items: center;
         }
         
-        h2, h3 { 
+        h2, h3, h4 { 
             margin-top: 0; 
             color: var(--text-main); 
         }
@@ -92,6 +93,7 @@
         .search-row { 
             display: flex; 
             gap: 10px; 
+            flex-wrap: wrap;
         }
         
         button {
@@ -216,9 +218,21 @@
             width: 100%; 
         }
 
+        .custom-food-badge {
+            background-color: #dcfce7;
+            color: #166534;
+            font-size: 0.75em;
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
         @media (max-width: 768px) {
             .container { 
                 grid-template-columns: 1fr; 
+            }
+            .search-row { 
+                flex-direction: column; 
             }
         }
     </style>
@@ -255,11 +269,12 @@
         <h2>Search & Log Food</h2>
         
         <div class="form-group">
-            <label>Search Food Databases (USDA + Open Food Facts)</label>
+            <label>Search Food Databases (USDA + Open Food Facts + My Foods)</label>
             <div class="search-row">
                 <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
                 <button id="searchBtn" onclick="searchUSDA()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
+                <button onclick="showAddFoodForm()" style="background:#10b981; white-space: nowrap;">+ Add Food</button>
             </div>
         </div>
         
@@ -289,6 +304,76 @@
         </div>
         
         <button onclick="logFood()" style="width:100%; padding: 14px; font-size: 1.05em;">Log Food</button>
+
+        <!-- ADD FOOD FORM -->
+        <div id="addFoodForm" style="display:none; margin-top:20px; padding:18px; background:#f0fdf4; border:2px solid #10b981; border-radius:10px;">
+            <h4 style="margin-bottom:12px; color:#166534;">➕ Add Custom Food (saved to your device)</h4>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Food Name *</label>
+                    <input type="text" id="customName" placeholder="e.g. Homemade Oatmeal">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Brand (optional)</label>
+                    <input type="text" id="customBrand" placeholder="e.g. My Kitchen">
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Category</label>
+                    <select id="customCategory">
+                        <option value="Grain">Grain</option>
+                        <option value="Vegetable">Vegetable</option>
+                        <option value="Fruit">Fruit</option>
+                        <option value="Animal Protein">Animal Protein</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Household Serving (text)</label>
+                    <input type="text" id="customHousehold" placeholder="e.g. 1 cup cooked">
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Grams per Serving *</label>
+                    <input type="number" id="customGrams" placeholder="e.g. 200" step="0.1">
+                </div>
+                
+                <div style="grid-column:1 / -1; font-size:0.85em; color:#166534; margin-bottom:4px;">
+                    <strong>Nutrition per 100g</strong> (standardized like USDA/OFF)
+                </div>
+                
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Calories (kcal)</label>
+                    <input type="number" id="customCal" placeholder="e.g. 150" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Protein (g)</label>
+                    <input type="number" id="customProt" placeholder="e.g. 5" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Fat (g)</label>
+                    <input type="number" id="customFat" placeholder="e.g. 3" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Carbs (g)</label>
+                    <input type="number" id="customCarb" placeholder="e.g. 25" step="0.1">
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>Fiber (g)</label>
+                    <input type="number" id="customFiber" placeholder="e.g. 4" step="0.1">
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button onclick="saveCustomFood()" style="background:#10b981; flex:1;">Save to My Foods</button>
+                <button onclick="hideAddFoodForm()" style="background:#6b7280; flex:1;">Cancel</button>
+            </div>
+            <div style="font-size:0.8em; color:#166534; margin-top:8px;">
+                Custom foods are stored only on this device and will appear in future searches.
+            </div>
+        </div>
 
         <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
             <strong style="color:var(--purple);">Daily WW Points</strong>
@@ -362,7 +447,6 @@
         weight: 0, 
         calorieGoal: 0, 
         wwGoal: 0, 
-        // Macro targets represent percentages (30%, 30%, 40%)
         targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
         history: {} 
     };
@@ -387,7 +471,6 @@
         if (saved) {
             Object.assign(appData, JSON.parse(saved));
             
-            // Seamless Migration 1: Grams -> Percentages
             if (appData.targets.Protein > 100 || appData.targets.Fiber !== undefined) {
                 delete appData.targets.Fiber;
                 appData.targets.Protein = 30;
@@ -395,7 +478,6 @@
                 appData.targets.Carbs = 40;
             }
 
-            // Seamless Migration 2: Ensure Carbs exist in history and estimate for old logs
             for (let day in appData.history) {
                 let currentDay = appData.history[day].current;
                 
@@ -431,7 +513,6 @@
         
         changeDay();
         
-        // Listen for Enter key presses on search inputs
         document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchUSDA());
         document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
     }
@@ -439,7 +520,6 @@
     function changeDay() {
         const day = document.getElementById('daySelect').value;
         
-        // Create an empty state for the day if it doesn't exist
         if (!appData.history[day]) {
             appData.history[day] = {
                 current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
@@ -475,27 +555,19 @@
         
         if (isNaN(duration) || duration <= 0) return alert("Please enter a valid duration in minutes.");
         
-        // Securely convert string selection back to required decimal values
         let intensity = 0;
         if (intensityText === "Low") intensity = 0.0002332;
         else if (intensityText === "Moderate") intensity = 0.0003270;
         else if (intensityText === "High") intensity = 0.0008077;
         
         const weight = parseFloat(document.getElementById('weightInput').value) || appData.weight || 0;
-        
-        // Formula: Body Weight x Duration x Intensity Level
         const earned = weight * duration * intensity;
         
         let currentPoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
         let newTotal = currentPoints + earned;
         
-        // Update the input box
         document.getElementById('exerciseInput').value = newTotal.toFixed(1);
-        
-        // Clear duration input for the next entry
         document.getElementById('exDuration').value = '';
-        
-        // Call the existing function to save and update UI
         updateExercisePoints();
     }
 
@@ -504,7 +576,6 @@
         appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 0;
         
         state.targets.Calories = appData.calorieGoal;
-        // Ensure percentage defaults are present, but don't overwrite if the user customized them
         if (!state.targets.Protein) state.targets.Protein = 30;
         if (!state.targets.Fat) state.targets.Fat = 30;
         if (!state.targets.Carbs) state.targets.Carbs = 40;
@@ -522,7 +593,7 @@
         }
     }
 
-    // ==================== USDA + OPEN FOOD FACTS DUAL DATABASE SEARCH ====================
+    // ==================== DUAL DATABASE + CUSTOM FOODS SEARCH ====================
     async function searchUSDA() {
         const query = document.getElementById('searchInput').value.trim();
         if (!query) return;
@@ -584,7 +655,18 @@
             console.warn("Open Food Facts search failed:", e); 
         }
         
-        currentSearchResults = usdaResults.concat(offResults);
+        // Load custom user foods and filter by query
+        let customResults = [];
+        try {
+            const customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+            const q = query.toLowerCase();
+            customResults = customFoods.filter(f => 
+                (f.description && f.description.toLowerCase().includes(q)) ||
+                (f.brandOwner && String(f.brandOwner).toLowerCase().includes(q))
+            ).map(f => ({...f, isCustom: true})); // mark for display
+        } catch(e) {}
+        
+        currentSearchResults = [...customResults, ...usdaResults, ...offResults];
         
         const sel = document.getElementById('foodSelect');
         sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
@@ -592,7 +674,15 @@
         currentSearchResults.forEach((food, index) => {
             const opt = document.createElement('option');
             opt.value = index;
-            opt.textContent = food.description + (food.brandOwner ? ` (${food.brandOwner})` : '');
+            let display = food.description || 'Unknown';
+            if (food.brandOwner) {
+                const b = Array.isArray(food.brandOwner) ? food.brandOwner.join(', ') : food.brandOwner;
+                display += ` (${b})`;
+            }
+            if (food.isCustom) {
+                display += ' <span class="custom-food-badge">My Food</span>';
+            }
+            opt.innerHTML = display;
             sel.appendChild(opt);
         });
         
@@ -618,7 +708,7 @@
                 if (id === 1003 || id === 203) nut.protein = val;
                 if (id === 1004 || id === 204) nut.fat = val;
                 if (id === 1005 || id === 205) nut.carbs = val;
-                if (id === 1079 || id === 291) nut.fiber = val; // Still tracked for WW calculation
+                if (id === 1079 || id === 291) nut.fiber = val;
             }
         }
         return nut;
@@ -848,6 +938,63 @@
         }
     }
 
+    // ==================== ADD CUSTOM FOOD FUNCTIONS ====================
+    function showAddFoodForm() {
+        document.getElementById('addFoodForm').style.display = 'block';
+        // Clear previous values
+        ['customName','customBrand','customHousehold','customGrams','customCal','customProt','customFat','customCarb','customFiber'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.getElementById('customCategory').value = 'Grain';
+    }
+
+    function hideAddFoodForm() {
+        document.getElementById('addFoodForm').style.display = 'none';
+    }
+
+    function saveCustomFood() {
+        const name = document.getElementById('customName').value.trim();
+        if (!name) {
+            alert("Food Name is required.");
+            return;
+        }
+        
+        const grams = parseFloat(document.getElementById('customGrams').value) || 100;
+        
+        const customFood = {
+            description: name,
+            brandOwner: document.getElementById('customBrand').value.trim() || "My Foods",
+            foodCategory: document.getElementById('customCategory').value,
+            servingSize: grams,
+            householdServingFullText: document.getElementById('customHousehold').value.trim() || `${grams}g`,
+            gtinUpc: null,
+            foodNutrients: [
+                { nutrientId: 1008, value: parseFloat(document.getElementById('customCal').value) || 0 },
+                { nutrientId: 1003, value: parseFloat(document.getElementById('customProt').value) || 0 },
+                { nutrientId: 1004, value: parseFloat(document.getElementById('customFat').value) || 0 },
+                { nutrientId: 1005, value: parseFloat(document.getElementById('customCarb').value) || 0 },
+                { nutrientId: 1079, value: parseFloat(document.getElementById('customFiber').value) || 0 }
+            ]
+        };
+        
+        // Save to localStorage user custom foods
+        let customFoods = [];
+        try {
+            customFoods = JSON.parse(localStorage.getItem('userCustomFoods') || '[]');
+        } catch(e) {}
+        
+        customFoods.unshift(customFood); // newest first
+        localStorage.setItem('userCustomFoods', JSON.stringify(customFoods));
+        
+        alert(`"${name}" has been saved to your custom foods and will now appear in searches.`);
+        hideAddFoodForm();
+        
+        // Optional: immediately search for it so user sees it
+        document.getElementById('searchInput').value = name;
+        searchUSDA();
+    }
+
     // ==================== UI RENDERING ====================
     function renderBarometers() {
         const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
@@ -934,7 +1081,7 @@
         });
     }
 
-    // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) + DUAL DB ====================
+    // ==================== SMART BARCODE SCANNER + DUAL DB ====================
     function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
@@ -1006,7 +1153,6 @@
         let offFood = null;
         let usdaFoods = [];
 
-        // 1. Try Open Food Facts (excellent for barcodes)
         try {
             const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
             const data = await res.json();
@@ -1050,7 +1196,6 @@
             console.warn("OFF barcode lookup failed:", e);
         }
 
-        // 2. Also search USDA with the barcode (forces both databases)
         try {
             const usdaRes = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(barcode)}&pageSize=8`);
             const usdaData = await usdaRes.json();
@@ -1061,17 +1206,15 @@
             console.warn("USDA barcode search failed:", e);
         }
 
-        // Combine: OFF exact match first (if found), then USDA results
         if (offFood) {
             currentSearchResults = [offFood, ...usdaFoods];
         } else if (usdaFoods.length > 0) {
             currentSearchResults = usdaFoods;
         } else {
-            preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in either database.</strong></span><br>Barcode: ${barcode}<br>Try a manual text search instead.`;
+            preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in either database.</strong></span><br>Barcode: ${barcode}<br>Try a manual text search or use "Add Food".`;
             return;
         }
 
-        // Populate select (handle both single and multiple)
         const sel = document.getElementById('foodSelect');
         sel.innerHTML = '';
         
@@ -1087,7 +1230,7 @@
         });
 
         if (currentSearchResults.length > 0) {
-            sel.value = "0"; // select first (usually the OFF exact match)
+            sel.value = "0";
         }
 
         document.getElementById('servingInput').value = 1; 
