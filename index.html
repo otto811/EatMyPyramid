@@ -771,7 +771,7 @@
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
     }
 
-    function editItem(index) {
+        function editItem(index) {
         const item = state.log[index];
         const newAmt = prompt(`Edit amount for ${item.name}\n(Currently ${item.amount} ${item.unit}):`, item.amount);
         
@@ -780,19 +780,26 @@
         const val = parseFloat(newAmt);
         if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
         
+        // Subtract old values from daily totals
         state.current.Calories -= item.calories;
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
         state.current.Carbs -= (item.carbs || 0);
 
+        // Calculate new nutrition using correct grams = val * gramsPerUnit
+        // calsPerUnit (etc.) is already the per-gram density, so no *100 needed
+        const newGrams = val * (item.gramsPerUnit || 100);
         item.amount = val;
-        item.calories = val * item.calsPerUnit * 100;
-        item.protein = val * item.protPerUnit * 100;
-        item.fat = val * item.fatPerUnit * 100;
-        item.carbs = val * (item.carbsPerUnit || 0) * 100;
-        item.fiber = val * (item.fibPerUnit || 0) * 100;
+        
+        item.calories = newGrams * (item.calsPerUnit || 0);
+        item.protein  = newGrams * (item.protPerUnit || 0);
+        item.fat      = newGrams * (item.fatPerUnit || 0);
+        item.carbs    = newGrams * (item.carbsPerUnit || 0);
+        item.fiber    = newGrams * (item.fibPerUnit || 0);
+        
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
 
+        // Add new values back to daily totals
         state.current.Calories += item.calories;
         state.current.Protein += item.protein;
         state.current.Fat += item.fat;
