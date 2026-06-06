@@ -627,7 +627,7 @@
     }
 
     // ==================== DATABASE SEARCH ====================
-    async function searchDatabases() {
+ async function searchDatabases() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) return;
         
@@ -639,44 +639,66 @@
         const sel = document.getElementById('foodSelect');
         sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-        // 1. Search Local "My Foods" Database
-        const localMatches = appData.myFoods.filter(f => 
-            f.description.toLowerCase().includes(query) || 
-            (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
-            (f.upc && f.upc === query)
-        ).map(f => ({ ...f, source: 'My Foods' }));
+        // 1. Search Local "My Foods" Database safely
+        let localMatches = [];
+        try {
+            localMatches = appData.myFoods.filter(f => 
+                (f.description && f.description.toLowerCase().includes(query)) || 
+                (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
+                (f.upc && f.upc === query)
+            ).map(f => ({ ...f, source: 'My Foods' }));
+        } catch (e) {
+            console.error("Local search error", e);
+        }
 
         try {
-            // 2. Search USDA Database
-            const usdaRes = fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`);
-            
-            // 3. Search Open Food Facts Text Database
-            const offRes = fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`);
+            // Helper function to fetch data and silently return null if an API fails/rate-limits
+            const fetchJSON = async (url) => {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return await res.json();
+                } catch (e) {
+                    console.warn(`Fetch failed for ${url}:`, e);
+                    return null; 
+                }
+            };
 
-            const [usdaResponse, offResponse] = await Promise.all([usdaRes, offRes]);
-            const usdaData = await usdaResponse.json();
-            const offData = await offResponse.json();
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
+            const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
 
-            const usdaFoods = (usdaData.foods || []).map(f => ({ ...f, source: 'USDA' }));
-            
-            const offFoods = (offData.products || []).map(p => ({
-                description: p.product_name || 'Unknown Item',
-                brandOwner: p.brands || '',
-                foodCategory: p.categories || 'Other',
-                servingSize: parseFloat(p.serving_quantity) || 100,
-                householdServingFullText: p.serving_size || '100g',
-                upc: p.code,
-                source: 'Open Food Facts',
-                foodNutrients: [
-                    {nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0)},
-                    {nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0)},
-                    {nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0)},
-                    {nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0)},
-                    {nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0)}
-                ]
-            }));
+            // Search both APIs simultaneously, but independently catch their errors
+            const [usdaData, offData] = await Promise.all([
+                fetchJSON(usdaUrl),
+                fetchJSON(offUrl)
+            ]);
 
-            // Combine all results
+            let usdaFoods = [];
+            if (usdaData && usdaData.foods) {
+                usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
+            }
+
+            let offFoods = [];
+            if (offData && offData.products) {
+                offFoods = offData.products.map(p => ({
+                    description: p.product_name || 'Unknown Item',
+                    brandOwner: p.brands || '',
+                    foodCategory: p.categories || 'Other',
+                    servingSize: parseFloat(p.serving_quantity) || 100,
+                    householdServingFullText: p.serving_size || '100g',
+                    upc: p.code,
+                    source: 'Open Food Facts',
+                    foodNutrients: [
+                        {nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0)},
+                        {nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0)},
+                        {nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0)},
+                        {nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0)},
+                        {nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0)}
+                    ]
+                }));
+            }
+
+            // Combine all successful results
             currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
             
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
@@ -693,7 +715,8 @@
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
             }
         } catch(e) { 
-            console.error(e);
+            // This catch will only trigger if something catastrophically fails outside the API calls
+            console.error("Critical search error:", e);
             sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
             alert("Search failed. Please check your network connection."); 
         } finally { 
