@@ -264,14 +264,15 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
-<!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
-<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+ //=========MODIFICATION 6/6/2026 11:40============== 
+ <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
+                <button onclick="openRecipeBuilder()" style="background:var(--warning); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🍲 Recipe Builder</button>
                 <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
                 <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
-<!-- //=======END MODIFICATION -->
+            </div>         
+	//=======END MODIFICATION
         
         <div class="form-group">
             <label>Search Results</label>
@@ -342,7 +343,54 @@
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
     </div>
 </div>
+<div id="recipeBuilderModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; overflow-y: auto;">
+    <div style="background:white; padding:25px; border-radius:12px; width:95%; max-width:700px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
+        <h2 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Recipe Builder</h2>
+        
+        <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
+            <div class="form-group" style="flex:2; min-width: 200px;"><label>Recipe Name</label><input type="text" id="recipeName" placeholder="e.g. Grandma's Chili"></div>
+            <div class="form-group" style="flex:1; min-width: 100px;"><label>Total Servings</label><input type="number" id="recipeServings" value="1" min="1" onchange="renderRecipe()"></div>
+        </div>
 
+        <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb; margin-bottom:15px;">
+            <h3 style="margin-top:0; font-size:1.1em;">Add Ingredients</h3>
+            <div class="search-row" style="margin-bottom:10px; flex-wrap: wrap;">
+                <input type="text" id="recipeSearchInput" placeholder="Search ingredient..." style="flex:1; min-width: 150px;">
+                <button id="recipeSearchBtn" onclick="searchDatabases('recipe')">Search</button>
+                <button onclick="startBarcodeScan('recipe')" style="background:#10b981; white-space: nowrap;">📷 Scan</button>
+                <button onclick="showCustomFoodModal('recipe')" style="background:var(--purple); white-space: nowrap;">+ Manual</button>
+            </div>
+            
+            <select id="recipeFoodSelect" style="margin-bottom:10px;"></select>
+            
+            <div class="amount-row" style="margin-bottom:10px;">
+                <input type="number" id="recipeAmountInput" placeholder="Amount (e.g. 100)" style="flex:2;">
+                <select id="recipeUnitSelect" style="flex:1;">
+                    <option value="g">grams (g)</option>
+                    <option value="oz">ounces (oz)</option>
+                    <option value="serving">servings (default)</option>
+                </select>
+            </div>
+            <button onclick="addIngredientToRecipe()" style="width:100%; padding:10px; font-size:1em;">Add to Recipe</button>
+        </div>
+
+        <div id="recipeIngredientsList" style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:6px;">
+            <em>No ingredients added yet.</em>
+        </div>
+
+        <div style="background:#e0e7ff; padding:15px; border-radius:8px; margin-bottom:15px;">
+            <strong style="color:var(--purple);">Nutrition Per Serving:</strong>
+            <div id="recipeTotals" style="margin-top:5px; font-size:0.95em;">
+                Calories: 0 | Pro: 0g | Fat: 0g | Carb: 0g | Fib: 0g
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeRecipeBuilder()" style="background:var(--text-muted); flex:1;">Cancel</button>
+            <button onclick="saveRecipe()" style="background:var(--primary); flex:2;">Save Recipe to My Foods</button>
+        </div>
+    </div>
+</div>
 <div id="customFoodModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y: auto;">
     <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
         <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Create Custom Food</h3>
@@ -459,8 +507,14 @@
 
 <script>
     // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
+
     const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
     let currentSearchResults = [];
+    let recipeSearchResults = [];
+    let customFoodMode = 'myFoods'; 
+    let currentScanMode = 'log'; 
+    let currentRecipe = { name: '', servings: 1, ingredients: [] };
+    
     let html5QrcodeScanner = null;
     
     let appData = { 
@@ -542,6 +596,7 @@
         // Listen for Enter key presses on search inputs
         document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
         document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
+document.getElementById('recipeSearchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases('recipe'));
     }
 
     function changeDay() {
@@ -1277,8 +1332,8 @@ function updatePreview() {
         saveData();
         alert(`${food.description} saved to My Foods! You can now search for it locally.`);
     }
-
-    function showCustomFoodModal() {
+function showCustomFoodModal(mode = 'myFoods') {
+        customFoodMode = mode;
         document.getElementById('customFoodModal').style.display = 'flex';
     }
 
@@ -1293,9 +1348,9 @@ function updatePreview() {
 
         const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
-        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
+        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
-        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
+        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
 
         const newFood = {
             description: name,
@@ -1312,6 +1367,27 @@ function updatePreview() {
                 {nutrientId: 1079, value: (fib / serving) * 100}
             ]
         };
+
+        if (customFoodMode === 'recipe') {
+            recipeSearchResults = [newFood];
+            const sel = document.getElementById('recipeFoodSelect');
+            sel.innerHTML = `<option value="0" selected>[Manual] ${name}</option>`;
+            document.getElementById('recipeAmountInput').value = serving;
+            document.getElementById('recipeUnitSelect').value = 'g';
+            alert(`${name} loaded! Click 'Add to Recipe' to insert it.`);
+        } else {
+            appData.myFoods.push(newFood);
+            saveData();
+            alert(`${name} saved to My Foods!`);
+        }
+        
+        document.getElementById('customFoodModal').style.display = 'none';
+        
+        ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
+        ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
+        document.getElementById('cf-serving').value = '100';
+    }
+;
 
         appData.myFoods.push(newFood);
         saveData();
@@ -1384,6 +1460,126 @@ function updatePreview() {
             }
         };
         reader.readAsText(file);
+    }
+// ==================== RECIPE BUILDER LOGIC ====================
+    function openRecipeBuilder() {
+        currentRecipe = { name: '', servings: 1, ingredients: [] };
+        document.getElementById('recipeName').value = '';
+        document.getElementById('recipeServings').value = 1;
+        document.getElementById('recipeSearchInput').value = '';
+        document.getElementById('recipeFoodSelect').innerHTML = '';
+        document.getElementById('recipeAmountInput').value = '';
+        renderRecipe();
+        document.getElementById('recipeBuilderModal').style.display = 'flex';
+    }
+
+    function closeRecipeBuilder() {
+        document.getElementById('recipeBuilderModal').style.display = 'none';
+    }
+
+    function getRecipeMultiplier(food, amount, unit) {
+        if (unit === 'serving') {
+            let servingSizeGrams = parseFloat(food.servingSize) || 100;
+            return (servingSizeGrams / 100) * (amount || 1);
+        } else {
+            const grams = unit === 'oz' ? amount * 28.3495 : amount;
+            return grams / 100;
+        }
+    }
+
+    function addIngredientToRecipe() {
+        const idx = document.getElementById('recipeFoodSelect').value;
+        if (!idx) return alert("Please search and select an ingredient first.");
+
+        const food = recipeSearchResults[idx];
+        const amount = parseFloat(document.getElementById('recipeAmountInput').value) || 1;
+        const unit = document.getElementById('recipeUnitSelect').value;
+
+        const nut = getAllNutrients(food);
+        const multiplier = getRecipeMultiplier(food, amount, unit);
+
+        const ingredient = {
+            name: food.description,
+            amount: amount,
+            unit: unit,
+            calories: nut.calories * multiplier,
+            protein: nut.protein * multiplier,
+            fat: nut.fat * multiplier,
+            carbs: nut.carbs * multiplier,
+            fiber: nut.fiber * multiplier
+        };
+
+        currentRecipe.ingredients.push(ingredient);
+        renderRecipe();
+        
+        document.getElementById('recipeSearchInput').value = '';
+        document.getElementById('recipeFoodSelect').innerHTML = '';
+        document.getElementById('recipeAmountInput').value = '';
+    }
+
+    function removeRecipeIngredient(index) {
+        currentRecipe.ingredients.splice(index, 1);
+        renderRecipe();
+    }
+
+    function renderRecipe() {
+        currentRecipe.servings = parseFloat(document.getElementById('recipeServings').value) || 1;
+        
+        const listDiv = document.getElementById('recipeIngredientsList');
+        if (currentRecipe.ingredients.length === 0) {
+            listDiv.innerHTML = '<em>No ingredients added yet.</em>';
+        } else {
+            listDiv.innerHTML = currentRecipe.ingredients.map((ing, i) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:5px 0;">
+                    <div><strong>${ing.name}</strong> (${ing.amount} ${ing.unit})<br>
+                    <small>${ing.calories.toFixed(0)} cal | P:${ing.protein.toFixed(1)} F:${ing.fat.toFixed(1)} C:${ing.carbs.toFixed(1)}</small></div>
+                    <button onclick="removeRecipeIngredient(${i})" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">X</button>
+                </div>
+            `).join('');
+        }
+
+        let tCal=0, tPro=0, tFat=0, tCarb=0, tFib=0;
+        currentRecipe.ingredients.forEach(ing => {
+            tCal += ing.calories; tPro += ing.protein; tFat += ing.fat; tCarb += ing.carbs; tFib += ing.fiber;
+        });
+
+        const s = currentRecipe.servings;
+        document.getElementById('recipeTotals').innerHTML = `
+            Calories: ${(tCal/s).toFixed(0)} | Pro: ${(tPro/s).toFixed(1)}g | Fat: ${(tFat/s).toFixed(1)}g | Carb: ${(tCarb/s).toFixed(1)}g | Fib: ${(tFib/s).toFixed(1)}g
+        `;
+    }
+
+    function saveRecipe() {
+        currentRecipe.name = document.getElementById('recipeName').value.trim();
+        if (!currentRecipe.name) return alert("Please enter a Recipe Name.");
+        if (currentRecipe.ingredients.length === 0) return alert("Please add at least one ingredient.");
+
+        let tCal=0, tPro=0, tFat=0, tCarb=0, tFib=0;
+        currentRecipe.ingredients.forEach(ing => {
+            tCal += ing.calories; tPro += ing.protein; tFat += ing.fat; tCarb += ing.carbs; tFib += ing.fiber;
+        });
+
+        const s = currentRecipe.servings;
+        const recipeFood = {
+            description: currentRecipe.name + ` (1 of ${s} servings)`,
+            brandOwner: 'Homemade Recipe',
+            foodCategory: 'Other',
+            servingSize: 100, 
+            householdServingFullText: `1 serving`,
+            upc: '',
+            foodNutrients: [
+                {nutrientId: 1008, value: (tCal/s) }, 
+                {nutrientId: 1003, value: (tPro/s) },
+                {nutrientId: 1004, value: (tFat/s) },
+                {nutrientId: 1005, value: (tCarb/s) },
+                {nutrientId: 1079, value: (tFib/s) }
+            ]
+        };
+
+        appData.myFoods.push(recipeFood);
+        saveData();
+        alert(`Recipe "${currentRecipe.name}" saved to My Foods!\nYou can now search and log it like any other food.`);
+        closeRecipeBuilder();
     }
 
     // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
