@@ -264,10 +264,14 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
-            <div style="margin-top: 10px;">
+ //=========MODIFICATION 6/6/2026 11:40==============           
+<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
+                <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
+                <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
+                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
             </div>
-        </div>
+	//=======END MODIFICATION
         
         <div class="form-group">
             <label>Search Results</label>
@@ -1291,7 +1295,7 @@ function updatePreview() {
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
         const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
-        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
+        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
 
         const newFood = {
             description: name,
@@ -1321,7 +1325,68 @@ function updatePreview() {
 
         alert(`${name} saved to My Foods!`);
     }
+// ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
+    function exportMyFoods() {
+        if (!appData.myFoods || appData.myFoods.length === 0) {
+            return alert("Your My Foods database is currently empty. Nothing to export.");
+        }
+        
+        const dataStr = JSON.stringify(appData.myFoods, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `MyFoods_Export_${new Date().toISOString().split('T')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function importMyFoods(event) {
+        const file = event.target.files;
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedFoods = JSON.parse(e.target.result);
+                if (!Array.isArray(importedFoods)) throw new Error("Invalid file format.");
+                
+                let importedCount = 0;
+                let duplicateCount = 0;
+
+                importedFoods.forEach(newFood => {
+                    if (newFood.description && newFood.foodNutrients) {
+                        const exists = appData.myFoods.some(existing => 
+                            existing.description.toLowerCase() === newFood.description.toLowerCase() &&
+                            existing.upc === newFood.upc
+                        );
+                        if (!exists) {
+                            appData.myFoods.push(newFood);
+                            importedCount++;
+                        } else {
+                            duplicateCount++;
+                        }
+                    }
+                });
+
+                saveData();
+                alert(`Import complete!\n\nSuccessfully added: ${importedCount} items.\nSkipped duplicates: ${duplicateCount} items.`);
+            } catch (error) {
+                console.error("Import error:", error);
+                alert("Failed to import file. Please ensure it is a valid My Foods JSON export.");
+            } finally {
+                event.target.value = "";
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
     init();
 </script>
 </body>
