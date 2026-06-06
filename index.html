@@ -264,15 +264,14 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
-
-		<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+<!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
+<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
-                <button onclick="openRecipeBuilder()" style="background:var(--warning); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🍲 Recipe Builder</button>
                 <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
                 <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
             </div>
-
+<!-- //=======END MODIFICATION -->
         
         <div class="form-group">
             <label>Search Results</label>
@@ -341,53 +340,6 @@
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
-    </div>
-<div id="recipeBuilderModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; overflow-y: auto;">
-    <div style="background:white; padding:25px; border-radius:12px; width:95%; max-width:700px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
-        <h2 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Recipe Builder</h2>
-        
-        <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
-            <div class="form-group" style="flex:2; min-width: 200px;"><label>Recipe Name</label><input type="text" id="recipeName" placeholder="e.g. Grandma's Chili"></div>
-            <div class="form-group" style="flex:1; min-width: 100px;"><label>Total Servings</label><input type="number" id="recipeServings" value="1" min="1" onchange="renderRecipe()"></div>
-        </div>
-
-        <div style="background:#f9fafb; padding:15px; border-radius:8px; border:1px solid #e5e7eb; margin-bottom:15px;">
-            <h3 style="margin-top:0; font-size:1.1em;">Add Ingredients</h3>
-            <div class="search-row" style="margin-bottom:10px; flex-wrap: wrap;">
-                <input type="text" id="recipeSearchInput" placeholder="Search ingredient..." style="flex:1; min-width: 150px;">
-                <button id="recipeSearchBtn" onclick="searchDatabases('recipe')">Search</button>
-                <button onclick="startBarcodeScan('recipe')" style="background:#10b981; white-space: nowrap;">📷 Scan</button>
-                <button onclick="showCustomFoodModal('recipe')" style="background:var(--purple); white-space: nowrap;">+ Manual</button>
-            </div>
-            
-            <select id="recipeFoodSelect" style="margin-bottom:10px;"></select>
-            
-            <div class="amount-row" style="margin-bottom:10px;">
-                <input type="number" id="recipeAmountInput" placeholder="Amount (e.g. 100)" style="flex:2;">
-                <select id="recipeUnitSelect" style="flex:1;">
-                    <option value="g">grams (g)</option>
-                    <option value="oz">ounces (oz)</option>
-                    <option value="serving">servings (default)</option>
-                </select>
-            </div>
-            <button onclick="addIngredientToRecipe()" style="width:100%; padding:10px; font-size:1em;">Add to Recipe</button>
-        </div>
-
-        <div id="recipeIngredientsList" style="margin-bottom:15px; max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:6px;">
-            <em>No ingredients added yet.</em>
-        </div>
-
-        <div style="background:#e0e7ff; padding:15px; border-radius:8px; margin-bottom:15px;">
-            <strong style="color:var(--purple);">Nutrition Per Serving:</strong>
-            <div id="recipeTotals" style="margin-top:5px; font-size:0.95em;">
-                Calories: 0 | Pro: 0g | Fat: 0g | Carb: 0g | Fib: 0g
-            </div>
-        </div>
-
-        <div style="display:flex; gap:10px;">
-            <button onclick="closeRecipeBuilder()" style="background:var(--text-muted); flex:1;">Cancel</button>
-            <button onclick="saveRecipe()" style="background:var(--primary); flex:2;">Save Recipe to My Foods</button>
-        </div>
     </div>
 </div>
 
@@ -509,10 +461,6 @@
     // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
     const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
     let currentSearchResults = [];
-	let recipeSearchResults = [];
-    let customFoodMode = 'myFoods'; 
-    let currentScanMode = 'log'; 
-    let currentRecipe = { name: '', servings: 1, ingredients: [] };
     let html5QrcodeScanner = null;
     
     let appData = { 
@@ -594,7 +542,6 @@
         // Listen for Enter key presses on search inputs
         document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
         document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
-		document.getElementById('recipeSearchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases('recipe'));
     }
 
     function changeDay() {
@@ -755,14 +702,12 @@
                 }));
             }
 
-const combinedResults = [...localMatches, ...usdaFoods, ...offFoods];
-            
-            if (mode === 'recipe') recipeSearchResults = combinedResults;
-            else currentSearchResults = combinedResults;
+            // Combine all successful results
+            currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
             
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
             
-            combinedResults.forEach((food, index) => {
+            currentSearchResults.forEach((food, index) => {
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
                 opt.value = index;
@@ -770,8 +715,12 @@ const combinedResults = [...localMatches, ...usdaFoods, ...offFoods];
                 sel.appendChild(opt);
             });
             
-            if(combinedResults.length === 0) sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            if(currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            }
         } catch(e) { 
+            // This catch will only trigger if something catastrophically fails outside the API calls
+            console.error("Critical search error:", e);
             sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
             alert("Search failed. Please check your network connection."); 
         } finally { 
@@ -1166,40 +1115,51 @@ function updatePreview() {
     }
 
     // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
-function startBarcodeScan(mode = 'log') {
-        currentScanMode = mode;
+    function startBarcodeScan() {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
         const statusText = document.getElementById('scanStatus');
+        
         statusText.innerHTML = "Initializing camera...";
         
-        if (!html5QrcodeScanner) html5QrcodeScanner = new Html5Qrcode("reader");
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+        }
 
         html5QrcodeScanner.start(
             { facingMode: "environment" }, 
-            { fps: 10, qrbox: { width: 250, height: 150 } },
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 150 } 
+            },
             (decodedText) => { 
                 stopBarcodeScan(); 
-                fetchOpenFoodFacts(decodedText, currentScanMode); 
+                fetchOpenFoodFacts(decodedText); 
             }
         ).then(() => {
             statusText.innerHTML = "Point camera at barcode...";
+
             setTimeout(async () => {
                 try {
                     const videoElement = document.querySelector('#reader video');
                     if (videoElement && videoElement.srcObject) {
                         const track = videoElement.srcObject.getVideoTracks();
                         const capabilities = track.getCapabilities();
+                        
                         if (capabilities && capabilities.zoom) {
                             const zoomLevel = Math.min(2.0, capabilities.zoom.max);
                             await track.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
                             statusText.innerHTML = `Camera active (Zoom: ${zoomLevel}x). Hold 8-10 inches away...`;
                         }
                     }
-                } catch (e) { console.warn("Digital zoom not supported."); }
+                } catch (e) {
+                    console.warn("Digital zoom not supported or blocked by this browser.");
+                }
             }, 800); 
+
         }).catch(err => {
+            console.error("Camera error:", err);
             statusText.innerHTML = "Camera access denied. Ensure page is HTTPS and permissions are allowed.";
         });
     }
@@ -1211,35 +1171,27 @@ function startBarcodeScan(mode = 'log') {
         }
     }
 
-    
-function manualBarcodeSubmit() {
+    function manualBarcodeSubmit() {
         const barcode = document.getElementById('manualBarcode').value.trim();
         if (barcode) { 
             stopBarcodeScan(); 
-            fetchOpenFoodFacts(barcode, currentScanMode); 
+            fetchOpenFoodFacts(barcode); 
         }
     }
-async function fetchOpenFoodFacts(barcode, mode = 'log') {
-        const previewId = mode === 'log' ? 'nutritionPreview' : null;
-        const selectId = mode === 'log' ? 'foodSelect' : 'recipeFoodSelect';
-        
-        if (previewId) document.getElementById(previewId).innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
 
+    async function fetchOpenFoodFacts(barcode) {
+        const preview = document.getElementById('nutritionPreview');
+        preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+
+        // Check My Foods database first
         const localMatch = appData.myFoods.find(f => f.upc === barcode);
         if (localMatch) {
-            const resultList = [{ ...localMatch, source: 'My Foods' }];
-            if (mode === 'log') {
-                currentSearchResults = resultList;
-                document.getElementById('servingInput').value = 1; 
-                document.getElementById('amountInput').value = '';
-            } else {
-                recipeSearchResults = resultList;
-                document.getElementById('recipeAmountInput').value = '';
-            }
-            
-            const sel = document.getElementById(selectId);
+            currentSearchResults = [{ ...localMatch, source: 'My Foods' }];
+            const sel = document.getElementById('foodSelect');
             sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
-            if (mode === 'log') updatePreview();
+            document.getElementById('servingInput').value = 1; 
+            document.getElementById('amountInput').value = '';
+            updatePreview();
             return;
         }
 
@@ -1248,12 +1200,12 @@ async function fetchOpenFoodFacts(barcode, mode = 'log') {
             const data = await res.json();
 
             if (data.status === 0 || !data.product) {
-                if (previewId) document.getElementById(previewId).innerHTML = `<span style="color:#ef4444;"><strong>Product not found.</strong></span><br>Barcode: ${barcode}`;
-                else alert(`Product not found in Open Food Facts.\nBarcode: ${barcode}`);
+                preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
                 return;
             }
 
             const p = data.product;
+            
             const nut = {
                 calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
                 protein: parseFloat(p.nutriments?.proteins_100g || 0),
@@ -1262,12 +1214,20 @@ async function fetchOpenFoodFacts(barcode, mode = 'log') {
                 fiber: parseFloat(p.nutriments?.fiber_100g || 0)
             };
 
+            const name = p.product_name || `Scanned Item (${barcode})`;
+            const brandText = String(p.brands || "Open Food Facts");
+            const brand = brandText.split(',');
+            const catText = String(p.categories || "Other");
+
+            const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
+            const sQuantity = parseFloat(p.serving_quantity) || 100;
+
             const fakeFood = {
-                description: p.product_name || `Scanned Item (${barcode})`,
-                brandOwner: String(p.brands || "Open Food Facts").split(','),
-                foodCategory: String(p.categories || "Other").split(','),
-                servingSize: parseFloat(p.serving_quantity) || 100,             
-                householdServingFullText: p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g",
+                description: name,
+                brandOwner: brand,
+                foodCategory: catText.split(','),
+                servingSize: sQuantity,             
+                householdServingFullText: sSizeText,
                 upc: barcode,
                 source: 'Open Food Facts',
                 foodNutrients: [
@@ -1279,25 +1239,20 @@ async function fetchOpenFoodFacts(barcode, mode = 'log') {
                 ]
             };
 
-            if (mode === 'log') {
-                currentSearchResults = [fakeFood];
-                document.getElementById('servingInput').value = 1; 
-                document.getElementById('amountInput').value = '';
-            } else {
-                recipeSearchResults = [fakeFood];
-                document.getElementById('recipeAmountInput').value = '';
-            }
+            currentSearchResults = [fakeFood];
+            const sel = document.getElementById('foodSelect');
+            sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
+
+            document.getElementById('servingInput').value = 1; 
+            document.getElementById('amountInput').value = '';
             
-            const sel = document.getElementById(selectId);
-            sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${fakeFood.description}</option>`;
-            if (mode === 'log') updatePreview();
+            updatePreview();
 
         } catch (e) {
-            if (previewId) document.getElementById(previewId).innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span>`;
-            else alert("Error reading product data.");
+            console.error("Barcode fetch/parse error:", e);
+            preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
         }
     }
- 
 
     // ==================== MY FOODS LOGIC ====================
     function saveCurrentToMyFoods() {
@@ -1355,24 +1310,6 @@ async function fetchOpenFoodFacts(barcode, mode = 'log') {
                 {nutrientId: 1079, value: (fib / serving) * 100}
             ]
         };
-		if (customFoodMode === 'recipe') {
-            recipeSearchResults = [newFood];
-            const sel = document.getElementById('recipeFoodSelect');
-            sel.innerHTML = `<option value="0" selected>[Manual] ${name}</option>`;
-            document.getElementById('recipeAmountInput').value = serving;
-            document.getElementById('recipeUnitSelect').value = 'g';
-            alert(`${name} loaded! Click 'Add to Recipe' to insert it.`);
-        } else {
-            appData.myFoods.push(newFood);
-            saveData();
-		}
-		document.getElementById('customFoodModal').style.display = 'none';
-        
-        ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
-        ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
-        document.getElementById('cf-serving').value = '100';
-		}
-            alert(`${name} saved to My Foods!`);
 
         appData.myFoods.push(newFood);
         saveData();
@@ -1446,127 +1383,8 @@ async function fetchOpenFoodFacts(barcode, mode = 'log') {
         };
         reader.readAsText(file);
     }
-// ==================== RECIPE BUILDER LOGIC ====================
-    function openRecipeBuilder() {
-        currentRecipe = { name: '', servings: 1, ingredients: [] };
-        document.getElementById('recipeName').value = '';
-        document.getElementById('recipeServings').value = 1;
-        document.getElementById('recipeSearchInput').value = '';
-        document.getElementById('recipeFoodSelect').innerHTML = '';
-        document.getElementById('recipeAmountInput').value = '';
-        renderRecipe();
-        document.getElementById('recipeBuilderModal').style.display = 'flex';
-    }
 
-    function closeRecipeBuilder() {
-        document.getElementById('recipeBuilderModal').style.display = 'none';
-    }
-
-    function getRecipeMultiplier(food, amount, unit) {
-        if (unit === 'serving') {
-            let servingSizeGrams = parseFloat(food.servingSize) || 100;
-            return (servingSizeGrams / 100) * (amount || 1);
-        } else {
-            const grams = unit === 'oz' ? amount * 28.3495 : amount;
-            return grams / 100;
-        }
-    }
-
-    function addIngredientToRecipe() {
-        const idx = document.getElementById('recipeFoodSelect').value;
-        if (!idx) return alert("Please search and select an ingredient first.");
-
-        const food = recipeSearchResults[idx];
-        const amount = parseFloat(document.getElementById('recipeAmountInput').value) || 1;
-        const unit = document.getElementById('recipeUnitSelect').value;
-
-        const nut = getAllNutrients(food);
-        const multiplier = getRecipeMultiplier(food, amount, unit);
-
-        const ingredient = {
-            name: food.description,
-            amount: amount,
-            unit: unit,
-            calories: nut.calories * multiplier,
-            protein: nut.protein * multiplier,
-            fat: nut.fat * multiplier,
-            carbs: nut.carbs * multiplier,
-            fiber: nut.fiber * multiplier
-        };
-
-        currentRecipe.ingredients.push(ingredient);
-        renderRecipe();
-        
-        document.getElementById('recipeSearchInput').value = '';
-        document.getElementById('recipeFoodSelect').innerHTML = '';
-        document.getElementById('recipeAmountInput').value = '';
-    }
-
-    function removeRecipeIngredient(index) {
-        currentRecipe.ingredients.splice(index, 1);
-        renderRecipe();
-    }
-
-    function renderRecipe() {
-        currentRecipe.servings = parseFloat(document.getElementById('recipeServings').value) || 1;
-        
-        const listDiv = document.getElementById('recipeIngredientsList');
-        if (currentRecipe.ingredients.length === 0) {
-            listDiv.innerHTML = '<em>No ingredients added yet.</em>';
-        } else {
-            listDiv.innerHTML = currentRecipe.ingredients.map((ing, i) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:5px 0;">
-                    <div><strong>${ing.name}</strong> (${ing.amount} ${ing.unit})<br>
-                    <small>${ing.calories.toFixed(0)} cal | P:${ing.protein.toFixed(1)} F:${ing.fat.toFixed(1)} C:${ing.carbs.toFixed(1)}</small></div>
-                    <button onclick="removeRecipeIngredient(${i})" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">X</button>
-                </div>
-            `).join('');
-        }
-
-        let tCal=0, tPro=0, tFat=0, tCarb=0, tFib=0;
-        currentRecipe.ingredients.forEach(ing => {
-            tCal += ing.calories; tPro += ing.protein; tFat += ing.fat; tCarb += ing.carbs; tFib += ing.fiber;
-        });
-
-        const s = currentRecipe.servings;
-        document.getElementById('recipeTotals').innerHTML = `
-            Calories: ${(tCal/s).toFixed(0)} | Pro: ${(tPro/s).toFixed(1)}g | Fat: ${(tFat/s).toFixed(1)}g | Carb: ${(tCarb/s).toFixed(1)}g | Fib: ${(tFib/s).toFixed(1)}g
-        `;
-    }
-
-    function saveRecipe() {
-        currentRecipe.name = document.getElementById('recipeName').value.trim();
-        if (!currentRecipe.name) return alert("Please enter a Recipe Name.");
-        if (currentRecipe.ingredients.length === 0) return alert("Please add at least one ingredient.");
-
-        let tCal=0, tPro=0, tFat=0, tCarb=0, tFib=0;
-        currentRecipe.ingredients.forEach(ing => {
-            tCal += ing.calories; tPro += ing.protein; tFat += ing.fat; tCarb += ing.carbs; tFib += ing.fiber;
-        });
-
-        const s = currentRecipe.servings;
-        const recipeFood = {
-            description: currentRecipe.name + ` (1 of ${s} servings)`,
-            brandOwner: 'Homemade Recipe',
-            foodCategory: 'Other',
-            servingSize: 100, 
-            householdServingFullText: `1 serving`,
-            upc: '',
-            foodNutrients: [
-                {nutrientId: 1008, value: (tCal/s) }, 
-                {nutrientId: 1003, value: (tPro/s) },
-                {nutrientId: 1004, value: (tFat/s) },
-                {nutrientId: 1005, value: (tCarb/s) },
-                {nutrientId: 1079, value: (tFib/s) }
-            ]
-        };
-
-        appData.myFoods.push(recipeFood);
-        saveData();
-        alert(`Recipe "${currentRecipe.name}" saved to My Foods!\nYou can now search and log it like any other food.`);
-        closeRecipeBuilder();
-    }
-  
+    // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
     init();
 </script>
 </body>
