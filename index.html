@@ -1106,7 +1106,6 @@ function updatePreview() {
 					</div>
 					<div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
 						<button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
-						<button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Data</button>
 						<button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
 						<button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
 					</div>
@@ -1277,64 +1276,6 @@ function updatePreview() {
         alert(`${food.description} saved to My Foods! You can now search for it locally.`);
     }
 
-    function saveLogItemToMyFoods(index, btnElement) {
-        const item = state.log[index];
-        if (!item) return;
-
-        // Normalize nutritional data to per-100g values using stored per-gram densities
-        // (calsPerUnit etc. represent nutrients per 1 gram of food)
-        const per100gCals = (item.calsPerUnit || 0) * 100;
-        const per100gProt = (item.protPerUnit || 0) * 100;
-        const per100gFat  = (item.fatPerUnit || 0) * 100;
-        const per100gCarb = (item.carbsPerUnit || 0) * 100;
-        const per100gFib  = (item.fibPerUnit || 0) * 100;
-
-        const newFood = {
-            description: item.name || 'Logged Item',
-            brandOwner: '',
-            foodCategory: item.category || 'Other',
-            servingSize: 100,
-            householdServingFullText: '100g (from Daily Log)',
-            upc: item.upc || '',
-            foodNutrients: [
-                {nutrientId: 1008, value: per100gCals},
-                {nutrientId: 1003, value: per100gProt},
-                {nutrientId: 1004, value: per100gFat},
-                {nutrientId: 1005, value: per100gCarb},
-                {nutrientId: 1079, value: per100gFib}
-            ]
-        };
-
-        // Duplicate check (by description + UPC) similar to import
-        const exists = appData.myFoods.some(existing => 
-            existing.description && existing.description.toLowerCase() === newFood.description.toLowerCase() &&
-            (existing.upc || '') === newFood.upc
-        );
-
-        if (exists) {
-            if (!confirm(`"${item.name}" already exists in My Foods. Add duplicate anyway?`)) {
-                return;
-            }
-        }
-
-        appData.myFoods.push(newFood);
-        saveData();
-
-        // Button feedback like the Copy button
-        if (btnElement) {
-            const origText = btnElement.innerText;
-            const origBg = btnElement.style.background;
-            btnElement.innerText = "Saved!";
-            btnElement.style.background = "#10b981";
-            setTimeout(() => {
-                btnElement.innerText = origText;
-                btnElement.style.background = origBg || "#8b5cf6";
-            }, 1800);
-        } else {
-            alert(`${item.name} saved to My Foods database!`);
-        }
-    }
-
     function showCustomFoodModal() {
         document.getElementById('customFoodModal').style.display = 'flex';
     }
@@ -1350,9 +1291,9 @@ function updatePreview() {
 
         const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
-        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
+        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
-        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
+        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
 
         const newFood = {
             description: name,
