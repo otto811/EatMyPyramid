@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EatMyPyramid</title>
+    <title>Diet & Macro Dashboard</title>
     
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-        <style>
+    
+    <style>
         :root {
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
@@ -223,9 +224,7 @@
     </style>
 </head>
 <body>
-<div style="position: absolute; bottom: 10px; right: 10px; font-size: 0.8em; color: gray;">
-  Version 2.1.0
-</div>
+
 <div class="container">
     <div class="card full-width">
         <h2>Your Profile & Setup</h2>
@@ -770,7 +769,7 @@
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
     }
 
-        function editItem(index) {
+    function editItem(index) {
         const item = state.log[index];
         const newAmt = prompt(`Edit amount for ${item.name}\n(Currently ${item.amount} ${item.unit}):`, item.amount);
         
@@ -1124,6 +1123,6 @@
     }
 
     init();
-//version 2.1.1 fixed edit math and error handling for daily log
+</script>
 </body>
 </html>
