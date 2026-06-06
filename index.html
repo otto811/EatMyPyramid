@@ -627,8 +627,7 @@
     }
 
     // ==================== DATABASE SEARCH ====================
-   // ==================== DATABASE SEARCH ====================
-    async function searchDatabases() {
+ async function searchDatabases() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) return;
         
@@ -724,7 +723,6 @@
             btn.disabled = false; 
             btn.textContent = 'Search'; 
         }
-    
     }
 
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
@@ -796,7 +794,8 @@
     }
 
     // ==================== LOGGING & EDITING FUNCTIONS ====================
-    function updatePreview() {
+   	//============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
+function updatePreview() {
         const idx = document.getElementById('foodSelect').value;
         if (!idx) return;
         
@@ -805,15 +804,19 @@
         const multiplier = getMultiplier(food);
         const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
         const servingText = getServingText(food);
+        
+        // Check for UPC from either Open Food Facts or USDA format
+        const upcText = (food.gtinUpc || food.upc) ? ` | <strong>UPC:</strong> ${food.gtinUpc || food.upc}` : '';
 
         document.getElementById('nutritionPreview').innerHTML = `
             <strong>${food.description}</strong><br>
-            <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong></em><br><br>
+            <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
         `;
     }
+	//===============LOG FOOD FUNCTION=======================
 
     function logFood() {
         const idx = document.getElementById('foodSelect').value;
@@ -1281,7 +1284,7 @@
 
         const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
-        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;
+        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
         const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
 
