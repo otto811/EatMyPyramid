@@ -643,22 +643,17 @@
         const sel = document.getElementById('foodSelect');
         sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-        // 1. Search Local "My Foods" Database safely (always works even if network is down)
+        // 1. Search Local "My Foods" Database safely
         let localMatches = [];
         try {
-            localMatches = (appData.myFoods || []).filter(f => {
-                const desc = (f.description || '').toLowerCase();
-                const brand = (f.brandOwner || '').toLowerCase();
-                const cat = (f.foodCategory || '').toLowerCase();
-                const upcMatch = f.upc && f.upc === query;
-                return desc.includes(query) || brand.includes(query) || cat.includes(query) || upcMatch;
-            }).map(f => ({ ...f, source: 'My Foods' }));
+            localMatches = appData.myFoods.filter(f => 
+                (f.description && f.description.toLowerCase().includes(query)) || 
+                (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
+                (f.upc && f.upc === query)
+            ).map(f => ({ ...f, source: 'My Foods' }));
         } catch (e) {
             console.error("Local search error", e);
         }
-
-        let usdaFoods = [];
-        let offFoods = [];
 
         try {
             // Helper function to fetch data and silently return null if an API fails/rate-limits
@@ -682,10 +677,12 @@
                 fetchJSON(offUrl)
             ]);
 
+            let usdaFoods = [];
             if (usdaData && usdaData.foods) {
                 usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
             }
 
+            let offFoods = [];
             if (offData && offData.products) {
                 offFoods = offData.products.map(p => ({
                     description: p.product_name || 'Unknown Item',
@@ -704,29 +701,32 @@
                     ]
                 }));
             }
+
+            // Combine all successful results
+            currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
+            
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            
+            currentSearchResults.forEach((food, index) => {
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                sel.appendChild(opt);
+            });
+            
+            if(currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            }
         } catch(e) { 
-            console.warn("API search encountered an issue (local My Foods will still be shown):", e);
+            // This catch will only trigger if something catastrophically fails outside the API calls
+            console.error("Critical search error:", e);
+            sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
+            alert("Search failed. Please check your network connection."); 
+        } finally { 
+            btn.disabled = false; 
+            btn.textContent = 'Search'; 
         }
-
-        // Always combine and display whatever we have (My Foods + any successful API results)
-        currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
-        
-        sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-        
-        currentSearchResults.forEach((food, index) => {
-            const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
-            const opt = document.createElement('option');
-            opt.value = index;
-            opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
-            sel.appendChild(opt);
-        });
-        
-        if (currentSearchResults.length === 0) {
-            sel.innerHTML = '<option value="" disabled selected>No results found</option>';
-        }
-
-        btn.disabled = false; 
-        btn.textContent = 'Search';
     }
 
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
@@ -1106,6 +1106,7 @@ function updatePreview() {
 					</div>
 					<div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
 						<button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
+						<button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
 						<button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
 						<button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
 					</div>
