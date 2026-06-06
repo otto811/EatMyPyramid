@@ -1079,8 +1079,8 @@ function updatePreview() {
         renderGroup(['Calories','Protein','Fat','Carbs'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Carbs:'#14b8a6' }, true);
         renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain'], 'groupBarometersContainer', {}, false);
     }
-
-    function renderLog() {
+	//=====FUNCTION RENDER LOG MODIFIED 6/6/2026 11:20=========
+  function renderLog() {
         const cont = document.getElementById('logContainer');
         
         if (state.log.length === 0) {
@@ -1092,10 +1092,14 @@ function updatePreview() {
         state.log.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'log-item';
+            
+            // Format the UPC for display if it exists in the saved item data
+            const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
+            
             div.innerHTML = `
                 <div style="flex-grow:1; padding-right:10px;">
                     <strong>${item.name}</strong><br>
-                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}</small>
+                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                 </div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
                     <button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
@@ -1106,6 +1110,7 @@ function updatePreview() {
             cont.appendChild(div);
         });
     }
+	//=========END FUNCTION RENDER LOG UPDATE============
 
     // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
     function startBarcodeScan() {
