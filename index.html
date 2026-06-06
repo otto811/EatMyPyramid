@@ -264,7 +264,7 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
- //=========MODIFICATION 6/6/2026 11:40============== 
+
  <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
                 <button onclick="openRecipeBuilder()" style="background:var(--warning); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🍲 Recipe Builder</button>
@@ -272,7 +272,7 @@
                 <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
             </div>         
-	//=======END MODIFICATION
+	
         
         <div class="form-group">
             <label>Search Results</label>
@@ -603,7 +603,7 @@ document.getElementById('recipeSearchInput').addEventListener('keypress', e => e
         const day = document.getElementById('daySelect').value;
         
         // Create an empty state for the day if it doesn't exist
-        if (!appData.history[day]) {
+  if (!appData.history[day]) {
             appData.history[day] = {
                 current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
                 log: []
@@ -617,6 +617,7 @@ document.getElementById('recipeSearchInput').addEventListener('keypress', e => e
         
         renderLog(); 
         renderBarometers();
+
     }
 
     // ==================== GOALS & TARGETS LOGIC ====================
