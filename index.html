@@ -265,12 +265,12 @@
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
 <!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
-<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
-                <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
-                <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
-                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
+	<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+					<button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
+					<button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
+					<button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
+					<input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+				</div>
 <!-- //=======END MODIFICATION -->
         
         <div class="form-group">
@@ -299,6 +299,19 @@
         </div>
         
         <div style="display: flex; gap: 10px;">
+	<div class="form-group">
+    <label>Food Group Selection (Overrides Default Category)</label>
+    <select id="groupOverride">
+        <option value="auto">Auto-Select (Keep Default)</option>
+        <option value="none">Don't Count</option>
+        <option value="Animal Protein">Animal Protein</option>
+        <option value="Vegetable">Vegetable</option>
+        <option value="Fruit">Fruit</option>
+        <option value="Dairy">Dairy</option>
+        <option value="Grain">Grain</option>
+        <option value="Water">Water (1 cup / 8oz)</option>
+    </select>
+</div>	
             <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
             <button onclick="saveCurrentToMyFoods()" style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save to My Foods</button>
         </div>
@@ -332,7 +345,7 @@
         <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;">Macros & Energy</h3>
         <div id="macroBarometersContainer"></div>
         
-        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups (Servings)</h3>
+        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups & Water (Servings)</h3>
         <div id="groupBarometersContainer"></div>
     </div>
 
@@ -352,9 +365,13 @@
         <div class="form-group"><label>Brand (Optional)</label><input type="text" id="cf-brand" placeholder="e.g. Homemade"></div>
         <div class="form-group"><label>Category</label>
             <select id="cf-category">
-                <option value="Other">Other</option><option value="Animal Protein">Animal Protein</option><option value="Vegetable">Vegetable</option>
-                <option value="Fruit">Fruit</option><option value="Dairy">Dairy</option><option value="Grain">Grain</option>
-            </select>
+				<option value="Other">Other</option>
+				<option value="Animal Protein">Animal Protein</option>
+				<option value="Vegetable">Vegetable</option>
+				<option value="Fruit">Fruit</option>
+				<option value="Dairy">Dairy</option>
+				<option value="Grain">Grain</option>
+				<option value="Water">Water</option> </select>
         </div>
         <div class="form-group"><label>UPC / Barcode (Optional)</label><input type="text" id="cf-upc" placeholder="e.g. 0123456789"></div>
         
@@ -469,7 +486,7 @@
         calorieGoal: 0, 
         wwGoal: 0, 
         // Macro targets represent percentages (30%, 30%, 40%)
-        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
+        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2, water:8}, 
         history: {},
         myFoods: [] 
     };
@@ -660,8 +677,20 @@
 		} catch(e) {
 			console.error("Error searching My Foods:", e);
 		}
-
-		// 2. Fetch from Open Food Facts API (Priority 2)
+    // 2. Fetch from USDA API (Priority 2)
+    let usdaMatches = [];
+    try {
+        // ---> BE SURE TO PASTE YOUR REAL USDA API KEY HERE <---
+        const usdaKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7'; 
+        const usdaResponse = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${usdaKey}&query=${encodeURIComponent(query)}&pageSize=10`);
+        if (usdaResponse.ok) {
+            const data = await usdaResponse.json();
+            usdaMatches = data.foods.map(f => ({ ...f, source: 'USDA' }));
+        }
+    } catch (e) {
+        console.error("USDA Search Error", e);
+    }
+		// 3. Fetch from Open Food Facts API (Priority 3)
 		let offMatches = [];
 		try {
 			const offResponse = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`);
@@ -693,22 +722,10 @@
 			console.error("Open Food Facts Search Error", e);
 		}
 
-    // 3. Fetch from USDA API (Priority 3)
-    let usdaMatches = [];
-    try {
-        // ---> BE SURE TO PASTE YOUR REAL USDA API KEY HERE <---
-        const usdaKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7'; 
-        const usdaResponse = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${usdaKey}&query=${encodeURIComponent(query)}&pageSize=10`);
-        if (usdaResponse.ok) {
-            const data = await usdaResponse.json();
-            usdaMatches = data.foods.map(f => ({ ...f, source: 'USDA' }));
-        }
-    } catch (e) {
-        console.error("USDA Search Error", e);
-    }
+
 
     // 4. Combine results: PRIORITY goes to My Foods -> Open Food Facts -> USDA
-    currentSearchResults = [...localMatches, ...offMatches, ...usdaMatches];
+   currentSearchResults = [...localMatches, ...usdaMatches, ...offMatches];
 
     // 5. Populate Dropdown
     sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
@@ -716,22 +733,16 @@
     if (currentSearchResults.length === 0) {
         sel.innerHTML = '<option value="" disabled selected>No results found.</option>';
     } else {
-        currentSearchResults.forEach((food, index) => {
-            const isLocal = food.source === 'My Foods';
-            const brand = food.brandOwner ? ` (${food.brandOwner})` : '';
-            const prefix = isLocal ? '⭐ [My Foods]' : `[${food.source}]`; 
-            
+currentSearchResults.forEach((food, index) => {
+            const prefix = food.source === 'My Foods' ? '⭐ [My Foods]' : `[${food.source}]`; 
             const opt = document.createElement('option');
             opt.value = index;
-            opt.textContent = `${prefix} ${food.description}${brand}`;
+            opt.textContent = `${prefix} ${food.description} ${food.brandOwner ? '('+food.brandOwner+')' : ''}`;
             sel.appendChild(opt);
         });
     }
-
-    btn.disabled = false;
-    btn.textContent = 'Search';
+    btn.disabled = false; btn.textContent = 'Search';
 }
-
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
     function getAllNutrients(food) {
         let nut = {calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0};
@@ -830,6 +841,24 @@ function updatePreview() {
         if (!idx) return alert("Please select a food from the dropdown first.");
 
         const food = currentSearchResults[idx];
+		// Add this logic before pushing to the daily log array:
+const groupOverride = document.getElementById('groupOverride').value;
+let finalCategory = food.foodCategory || 'Other';
+
+if (groupOverride === 'none') {
+    finalCategory = null; // Tells the log loop not to count it towards barometers
+} else if (groupOverride !== 'auto') {
+    finalCategory = groupOverride;
+}
+
+// Then use finalCategory for your pushed object:
+appData.history[currentDay].log.push({
+        description: food.description,
+        brandOwner: food.brandOwner,
+        category: finalCategory, // <--- UPDATE THIS LINE
+        upc: food.upc,
+        // ... (the rest of the variables stay the same)
+});
         const nut = getAllNutrients(food);
         const cat = guessCategory(food);
         const multiplier = getMultiplier(food);
@@ -1055,11 +1084,12 @@ function updatePreview() {
         };
 
         // Push to database and save
-        appData.myFoods.push(newFood);
-        saveData();
+if (!appData.myFoods) appData.myFoods = [];
+    appData.myFoods.push(newFood);
+    saveData();
         
         // 2. Indicate entry was made and close the modal
-        alert(`"${name}" has been successfully saved to My Foods!`);
+        alert(`"${name}" saved to My Foods!`);
         document.getElementById('customFoodModal').style.display = 'none';
         
         // Clear the form inputs for the next time it's opened
@@ -1332,26 +1362,40 @@ function updatePreview() {
     }
 
     // ==================== MY FOODS LOGIC ====================
-    function saveCurrentToMyFoods() {
-        const idx = document.getElementById('foodSelect').value;
-        if (!idx) return alert("Please select a food from the dropdown to save.");
-        
-        const food = currentSearchResults[idx];
-        
-        const customFood = {
-            description: food.description,
-            brandOwner: food.brandOwner || '',
-            foodCategory: guessCategory(food),
-            servingSize: food.servingSize || 100,
-            householdServingFullText: food.householdServingFullText || '100g',
-            upc: food.gtinUpc || food.upc || '',
-            foodNutrients: food.foodNutrients || [] 
-        };
-        
-        appData.myFoods.push(customFood);
-        saveData();
-        alert(`${food.description} saved to My Foods! You can now search for it locally.`);
+   function saveCurrentToMyFoods() {
+    const selectedIndex = document.getElementById('foodSelect').value;
+    if (selectedIndex === "") return;
+    
+    const food = currentSearchResults[selectedIndex];
+    const groupOverride = document.getElementById('groupOverride').value;
+    
+    // Apply Override
+    let finalCategory = food.foodCategory || 'Other';
+    if (groupOverride === 'none') {
+        finalCategory = null;
+    } else if (groupOverride !== 'auto') {
+        finalCategory = groupOverride;
     }
+
+    // Format strictly to needed variables for flawless search/log integration
+    const formattedFood = {
+        description: food.description || 'Unknown Food',
+        brandOwner: food.brandOwner || '',
+        foodCategory: finalCategory,
+        upc: food.upc || '',
+        servingSize: food.servingSize || 100,
+        source: 'My Foods',
+        foodNutrients: food.foodNutrients ? food.foodNutrients.filter(n => 
+           .includes(n.nutrientId)
+        ) : []
+    };
+
+    if (!appData.myFoods) appData.myFoods = [];
+    appData.myFoods.push(formattedFood);
+    saveData();
+    
+    alert(`"${formattedFood.description}" saved to My Foods!`);
+} 
 
     function showCustomFoodModal() {
         document.getElementById('customFoodModal').style.display = 'flex';
