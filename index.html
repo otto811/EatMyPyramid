@@ -265,12 +265,12 @@
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
 <!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
-	<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-					<button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
-					<button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
-					<button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
-					<input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-				</div>
+<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
+                <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
+                <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
+                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+            </div>
 <!-- //=======END MODIFICATION -->
         
         <div class="form-group">
@@ -299,19 +299,6 @@
         </div>
         
         <div style="display: flex; gap: 10px;">
-	<div class="form-group">
-    <label>Food Group Selection (Overrides Default Category)</label>
-    <select id="groupOverride">
-        <option value="auto">Auto-Select (Keep Default)</option>
-        <option value="none">Don't Count</option>
-        <option value="Animal Protein">Animal Protein</option>
-        <option value="Vegetable">Vegetable</option>
-        <option value="Fruit">Fruit</option>
-        <option value="Dairy">Dairy</option>
-        <option value="Grain">Grain</option>
-        <option value="Water">Water (1 cup / 8oz)</option>
-    </select>
-</div>	
             <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
             <button onclick="saveCurrentToMyFoods()" style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save to My Foods</button>
         </div>
@@ -345,7 +332,7 @@
         <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;">Macros & Energy</h3>
         <div id="macroBarometersContainer"></div>
         
-        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups & Water (Servings)</h3>
+        <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups (Servings)</h3>
         <div id="groupBarometersContainer"></div>
     </div>
 
@@ -353,7 +340,6 @@
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
-		<button onclick="resetWeek()" class="reset-btn" style="background-color: #7f1d1d; margin-top: 10px;">Reset Week's Data (Clear All Days)</button>
     </div>
 </div>
 
@@ -365,13 +351,9 @@
         <div class="form-group"><label>Brand (Optional)</label><input type="text" id="cf-brand" placeholder="e.g. Homemade"></div>
         <div class="form-group"><label>Category</label>
             <select id="cf-category">
-				<option value="Other">Other</option>
-				<option value="Animal Protein">Animal Protein</option>
-				<option value="Vegetable">Vegetable</option>
-				<option value="Fruit">Fruit</option>
-				<option value="Dairy">Dairy</option>
-				<option value="Grain">Grain</option>
-				<option value="Water">Water</option> </select>
+                <option value="Other">Other</option><option value="Animal Protein">Animal Protein</option><option value="Vegetable">Vegetable</option>
+                <option value="Fruit">Fruit</option><option value="Dairy">Dairy</option><option value="Grain">Grain</option>
+            </select>
         </div>
         <div class="form-group"><label>UPC / Barcode (Optional)</label><input type="text" id="cf-upc" placeholder="e.g. 0123456789"></div>
         
@@ -486,7 +468,7 @@
         calorieGoal: 0, 
         wwGoal: 0, 
         // Macro targets represent percentages (30%, 30%, 40%)
-        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2, water:8}, 
+        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
         history: {},
         myFoods: [] 
     };
@@ -648,101 +630,105 @@
         }
     }
 
-   
-	// ==================== DATABASE SEARCH ====================
-	async function searchDatabases() {
-		const query = document.getElementById('searchInput').value.trim().toLowerCase();
-		if (!query) return;
-		
-		const btn = document.getElementById('searchBtn');
-		btn.disabled = true;
-		btn.textContent = 'Searching...';
-		
-		// Clear previous results
-		currentSearchResults = [];
-		const sel = document.getElementById('foodSelect');
-		sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
+    // ==================== DATABASE SEARCH ====================
+ async function searchDatabases() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        if (!query) return;
+        
+        const btn = document.getElementById('searchBtn');
+        btn.disabled = true; 
+        btn.textContent = 'Searching...';
+        
+        currentSearchResults = [];
+        const sel = document.getElementById('foodSelect');
+        sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-		// 1. Search Local "My Foods" Database SAFELY (Priority 1)
-		let localMatches = [];
-		try {
-			if (!appData.myFoods) {
-				appData.myFoods = [];
-			}
-			localMatches = appData.myFoods.filter(f => 
-				(f.description && f.description.toLowerCase().includes(query)) ||
-				(f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
-				(f.upc && f.upc === query)
-			).map(f => ({ ...f, source: 'My Foods' }));
-		} catch(e) {
-			console.error("Error searching My Foods:", e);
-		}
-    // 2. Fetch from USDA API (Priority 2)
-    let usdaMatches = [];
-    try {
-        // ---> BE SURE TO PASTE YOUR REAL USDA API KEY HERE <---
-        const usdaKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7'; 
-        const usdaResponse = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${usdaKey}&query=${encodeURIComponent(query)}&pageSize=10`);
-        if (usdaResponse.ok) {
-            const data = await usdaResponse.json();
-            usdaMatches = data.foods.map(f => ({ ...f, source: 'USDA' }));
+        // 1. Search Local "My Foods" Database safely
+        let localMatches = [];
+        try {
+            localMatches = appData.myFoods.filter(f => 
+                (f.description && f.description.toLowerCase().includes(query)) || 
+                (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
+                (f.upc && f.upc === query)
+            ).map(f => ({ ...f, source: 'My Foods' }));
+        } catch (e) {
+            console.error("Local search error", e);
         }
-    } catch (e) {
-        console.error("USDA Search Error", e);
+
+        try {
+            // Helper function to fetch data and silently return null if an API fails/rate-limits
+            const fetchJSON = async (url) => {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return await res.json();
+                } catch (e) {
+                    console.warn(`Fetch failed for ${url}:`, e);
+                    return null; 
+                }
+            };
+
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
+            const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
+
+            // Search both APIs simultaneously, but independently catch their errors
+            const [usdaData, offData] = await Promise.all([
+                fetchJSON(usdaUrl),
+                fetchJSON(offUrl)
+            ]);
+
+            let usdaFoods = [];
+            if (usdaData && usdaData.foods) {
+                usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
+            }
+
+            let offFoods = [];
+            if (offData && offData.products) {
+                offFoods = offData.products.map(p => ({
+                    description: p.product_name || 'Unknown Item',
+                    brandOwner: p.brands || '',
+                    foodCategory: p.categories || 'Other',
+                    servingSize: parseFloat(p.serving_quantity) || 100,
+                    householdServingFullText: p.serving_size || '100g',
+                    upc: p.code,
+                    source: 'Open Food Facts',
+                    foodNutrients: [
+                        {nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0)},
+                        {nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0)},
+                        {nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0)},
+                        {nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0)},
+                        {nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0)}
+                    ]
+                }));
+            }
+
+            // Combine all successful results
+            currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
+            
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            
+            currentSearchResults.forEach((food, index) => {
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                sel.appendChild(opt);
+            });
+            
+            if(currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            }
+        } catch(e) { 
+            // This catch will only trigger if something catastrophically fails outside the API calls
+            console.error("Critical search error:", e);
+            sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
+            alert("Search failed. Please check your network connection."); 
+        } finally { 
+            btn.disabled = false; 
+            btn.textContent = 'Search'; 
+        }
     }
-		// 3. Fetch from Open Food Facts API (Priority 3)
-		let offMatches = [];
-		try {
-			const offResponse = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`);
-			if (offResponse.ok) {
-				const data = await offResponse.json();
-				if (data.products && data.products.length > 0) {
-					offMatches = data.products.map(p => {
-						// Standardize the OFF data shape to match your app's expectations
-						return {
-							description: p.product_name || "Unknown Product",
-							brandOwner: p.brands || "",
-							foodCategory: p.categories || "Other",
-							upc: p.code || "",
-							servingSize: parseFloat(p.serving_quantity) || 100,
-							householdServingFullText: p.serving_size || "100g",
-							source: 'Open Food Facts',
-							foodNutrients: [
-								{ nutrientId: 1008, value: p.nutriments ? p.nutriments['energy-kcal_100g'] : 0 },
-								{ nutrientId: 1003, value: p.nutriments ? p.nutriments.proteins_100g : 0 },
-								{ nutrientId: 1004, value: p.nutriments ? p.nutriments.fat_100g : 0 },
-								{ nutrientId: 1005, value: p.nutriments ? p.nutriments.carbohydrates_100g : 0 },
-								{ nutrientId: 1079, value: p.nutriments ? p.nutriments.fiber_100g : 0 }
-							]
-						};
-					});
-				}
-			}
-		} catch (e) {
-			console.error("Open Food Facts Search Error", e);
-		}
 
-
-
-    // 4. Combine results: PRIORITY goes to My Foods -> Open Food Facts -> USDA
-   currentSearchResults = [...localMatches, ...usdaMatches, ...offMatches];
-
-    // 5. Populate Dropdown
-    sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-    
-    if (currentSearchResults.length === 0) {
-        sel.innerHTML = '<option value="" disabled selected>No results found.</option>';
-    } else {
-currentSearchResults.forEach((food, index) => {
-            const prefix = food.source === 'My Foods' ? '⭐ [My Foods]' : `[${food.source}]`; 
-            const opt = document.createElement('option');
-            opt.value = index;
-            opt.textContent = `${prefix} ${food.description} ${food.brandOwner ? '('+food.brandOwner+')' : ''}`;
-            sel.appendChild(opt);
-        });
-    }
-    btn.disabled = false; btn.textContent = 'Search';
-}
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
     function getAllNutrients(food) {
         let nut = {calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0};
@@ -841,24 +827,6 @@ function updatePreview() {
         if (!idx) return alert("Please select a food from the dropdown first.");
 
         const food = currentSearchResults[idx];
-		// Add this logic before pushing to the daily log array:
-const groupOverride = document.getElementById('groupOverride').value;
-let finalCategory = food.foodCategory || 'Other';
-
-if (groupOverride === 'none') {
-    finalCategory = null; // Tells the log loop not to count it towards barometers
-} else if (groupOverride !== 'auto') {
-    finalCategory = groupOverride;
-}
-
-// Then use finalCategory for your pushed object:
-appData.history[currentDay].log.push({
-        description: food.description,
-        brandOwner: food.brandOwner,
-        category: finalCategory, // <--- UPDATE THIS LINE
-        upc: food.upc,
-        // ... (the rest of the variables stay the same)
-});
         const nut = getAllNutrients(food);
         const cat = guessCategory(food);
         const multiplier = getMultiplier(food);
@@ -1057,81 +1025,7 @@ appData.history[currentDay].log.push({
         }
         closeCalculatorModal();
     }
-// ==================== NEW & UPDATED FUNCTIONS ====================
 
-    function saveCustomFood() {
-        const name = document.getElementById('cf-name').value;
-        if (!name) {
-            alert("Please enter a food name.");
-            return;
-        }
-        
-        // 1. Ensure 'description' is used for the Food Name so it searches and logs correctly
-        const newFood = {
-            description: name, 
-            brandOwner: document.getElementById('cf-brand').value,
-            foodCategory: document.getElementById('cf-category').value,
-            upc: document.getElementById('cf-upc').value,
-            source: 'My Foods',
-            servingSize: parseFloat(document.getElementById('cf-serving').value) || 100,
-            foodNutrients: [
-                { nutrientId: 1008, value: parseFloat(document.getElementById('cf-cal').value) || 0 },
-                { nutrientId: 1003, value: parseFloat(document.getElementById('cf-pro').value) || 0 },
-                { nutrientId: 1004, value: parseFloat(document.getElementById('cf-fat').value) || 0 },
-                { nutrientId: 1005, value: parseFloat(document.getElementById('cf-carb').value) || 0 },
-                { nutrientId: 1079, value: parseFloat(document.getElementById('cf-fib').value) || 0 }
-            ]
-        };
-
-        // Push to database and save
-if (!appData.myFoods) appData.myFoods = [];
-    appData.myFoods.push(newFood);
-    saveData();
-        
-        // 2. Indicate entry was made and close the modal
-        alert(`"${name}" saved to My Foods!`);
-        document.getElementById('customFoodModal').style.display = 'none';
-        
-        // Clear the form inputs for the next time it's opened
-        document.getElementById('cf-name').value = '';
-        document.getElementById('cf-brand').value = '';
-        document.getElementById('cf-upc').value = '';
-        document.getElementById('cf-serving').value = '100';
-        document.getElementById('cf-cal').value = '0';
-        document.getElementById('cf-pro').value = '0';
-        document.getElementById('cf-fat').value = '0';
-        document.getElementById('cf-carb').value = '0';
-        document.getElementById('cf-fib').value = '0';
-    }
-
-    function resetWeek() {
-        // 4. Warning prompt before resetting all week's data
-        const warningMessage = "WARNING: This will reset all Logs and Totals for EVERY day of the week. This action cannot be undone.\n\nAre you sure you want to proceed?";
-        
-        if (confirm(warningMessage)) {
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            
-            days.forEach(day => {
-                // Reinitialize every day in the history to a clean state
-                appData.history[day] = {
-                    log: [],
-                    current: { 
-                        Calories: 0, 
-                        Protein: 0, 
-                        Fat: 0, 
-                        Carbs: 0, 
-                        exercisePoints: 0 
-                    }
-                };
-            });
-            
-            saveData();
-            loadData(); // Re-sync the active day variables
-            changeDay(); // Refresh the current view
-            
-            alert("All data for the week has been successfully reset.");
-        }
-    }
     // ==================== UI RENDERING ====================
     function renderBarometers() {
         const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
@@ -1362,100 +1256,73 @@ if (!appData.myFoods) appData.myFoods = [];
     }
 
     // ==================== MY FOODS LOGIC ====================
-   function saveCurrentToMyFoods() {
-    const selectedIndex = document.getElementById('foodSelect').value;
-    if (selectedIndex === "") return;
-    
-    const food = currentSearchResults[selectedIndex];
-    const groupOverride = document.getElementById('groupOverride').value;
-    
-    // Apply Override
-    let finalCategory = food.foodCategory || 'Other';
-    if (groupOverride === 'none') {
-        finalCategory = null;
-    } else if (groupOverride !== 'auto') {
-        finalCategory = groupOverride;
+    function saveCurrentToMyFoods() {
+        const idx = document.getElementById('foodSelect').value;
+        if (!idx) return alert("Please select a food from the dropdown to save.");
+        
+        const food = currentSearchResults[idx];
+        
+        const customFood = {
+            description: food.description,
+            brandOwner: food.brandOwner || '',
+            foodCategory: guessCategory(food),
+            servingSize: food.servingSize || 100,
+            householdServingFullText: food.householdServingFullText || '100g',
+            upc: food.gtinUpc || food.upc || '',
+            foodNutrients: food.foodNutrients || [] 
+        };
+        
+        appData.myFoods.push(customFood);
+        saveData();
+        alert(`${food.description} saved to My Foods! You can now search for it locally.`);
     }
-
-    // Format strictly to needed variables for flawless search/log integration
-    const formattedFood = {
-        description: food.description || 'Unknown Food',
-        brandOwner: food.brandOwner || '',
-        foodCategory: finalCategory,
-        upc: food.upc || '',
-        servingSize: food.servingSize || 100,
-        source: 'My Foods',
-        foodNutrients: food.foodNutrients ? food.foodNutrients.filter(n => 
-           .includes(n.nutrientId)
-        ) : []
-    };
-
-    if (!appData.myFoods) appData.myFoods = [];
-    appData.myFoods.push(formattedFood);
-    saveData();
-    
-    alert(`"${formattedFood.description}" saved to My Foods!`);
-} 
 
     function showCustomFoodModal() {
         document.getElementById('customFoodModal').style.display = 'flex';
     }
 
     function saveCustomFood() {
-        const name = document.getElementById('cf-name').value;
-        
-        // 1. Validate that a name was entered
-        if (!name || name.trim() === '') {
-            alert("Please enter a valid food name.");
-            return;
-        }
-        
-        // 2. Build the new food object
+        const name = document.getElementById('cf-name').value.trim();
+        if (!name) return alert("Food Name is required.");
+
+        const brand = document.getElementById('cf-brand').value.trim();
+        const cat = document.getElementById('cf-category').value;
+        const upc = document.getElementById('cf-upc').value.trim();
+        const serving = parseFloat(document.getElementById('cf-serving').value) || 100;
+
+        const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
+        const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
+        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
+        const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
+        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
+
         const newFood = {
-            description: name, 
-            brandOwner: document.getElementById('cf-brand').value || '',
-            foodCategory: document.getElementById('cf-category').value || 'Other',
-            upc: document.getElementById('cf-upc').value || '',
-            source: 'My Foods',
-            servingSize: parseFloat(document.getElementById('cf-serving').value) || 100,
+            description: name,
+            brandOwner: brand,
+            foodCategory: cat,
+            servingSize: serving,
+            householdServingFullText: `${serving}g`,
+            upc: upc,
             foodNutrients: [
-                { nutrientId: 1008, value: parseFloat(document.getElementById('cf-cal').value) || 0 },
-                { nutrientId: 1003, value: parseFloat(document.getElementById('cf-pro').value) || 0 },
-                { nutrientId: 1004, value: parseFloat(document.getElementById('cf-fat').value) || 0 },
-                { nutrientId: 1005, value: parseFloat(document.getElementById('cf-carb').value) || 0 },
-                { nutrientId: 1079, value: parseFloat(document.getElementById('cf-fib').value) || 0 }
+                {nutrientId: 1008, value: (cal / serving) * 100}, 
+                {nutrientId: 1003, value: (pro / serving) * 100},
+                {nutrientId: 1004, value: (fat / serving) * 100},
+                {nutrientId: 1005, value: (carb / serving) * 100},
+                {nutrientId: 1079, value: (fib / serving) * 100}
             ]
         };
 
-        // 3. CRITICAL FIX: Check if myFoods array exists in appData yet. If not, create it.
-        if (!appData.myFoods) {
-            appData.myFoods = [];
-        }
+        appData.myFoods.push(newFood);
+        saveData();
+        
+        document.getElementById('customFoodModal').style.display = 'none';
+        
+        // Clear form values
+        ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
+        ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
+        document.getElementById('cf-serving').value = '100';
 
-        // 4. Push to database and save
-        try {
-            appData.myFoods.push(newFood);
-            saveData();
-            
-            // 5. Indicate entry was made and close the modal
-            alert(`"${name}" has been successfully saved to My Foods!`);
-            document.getElementById('customFoodModal').style.display = 'none';
-            
-            // 6. Clear the form inputs for the next time it's opened
-            document.getElementById('cf-name').value = '';
-            document.getElementById('cf-brand').value = '';
-            document.getElementById('cf-upc').value = '';
-            document.getElementById('cf-serving').value = '100';
-            document.getElementById('cf-cal').value = '0';
-            document.getElementById('cf-pro').value = '0';
-            document.getElementById('cf-fat').value = '0';
-            document.getElementById('cf-carb').value = '0';
-            document.getElementById('cf-fib').value = '0';
-            
-        } catch (error) {
-            console.error("Error saving custom food:", error);
-            alert("An error occurred while saving. Check the console for details.");
-        }
+        alert(`${name} saved to My Foods!`);
     }
 // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
