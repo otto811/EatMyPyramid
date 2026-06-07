@@ -298,6 +298,21 @@
             <em>Select a food to view nutritional information.</em>
         </div>
         
+        <div class="form-group">
+            <label>Food Group Assignment (override for this item)</label>
+            <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;" onchange="updatePreview()">
+                <option value="">-- Auto-detect from description --</option>
+                <option value="Fruit">Fruit</option>
+                <option value="Vegetable">Vegetable</option>
+                <option value="Animal Protein">Animal Protein</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Grain">Grain</option>
+                <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                <option value="none">Do not count in any Food Group servings</option>
+            </select>
+            <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by default.</small>
+        </div>
+        
         <div style="display: flex; gap: 10px;">
             <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
             <button onclick="saveCurrentToMyFoods()" style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save to My Foods</button>
@@ -468,7 +483,7 @@
         calorieGoal: 0, 
         wwGoal: 0, 
         // Macro targets represent percentages (30%, 30%, 40%)
-        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2 }, 
+        targets: { Calories:0, Protein:30, Fat:30, Carbs:40, Fruit:2, Vegetable:5, 'Animal Protein':1, Dairy:3, Grain:2, Water:8 }, 
         history: {},
         myFoods: [] 
     };
@@ -522,6 +537,17 @@
                     });
                 }
             }
+
+            // Seamless Migration 3: Add Water target (default 8 cups) for existing users
+            if (appData.targets.Water === undefined) {
+                appData.targets.Water = 8;
+            }
+            // Ensure all history days have Water in current
+            for (let day in appData.history) {
+                if (appData.history[day].current && appData.history[day].current.Water === undefined) {
+                    appData.history[day].current.Water = 0;
+                }
+            }
         }
         
         document.getElementById('weightInput').value = appData.weight;
@@ -550,7 +576,7 @@
         // Create an empty state for the day if it doesn't exist
         if (!appData.history[day]) {
             appData.history[day] = {
-                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, Water:0, exercisePoints:0 }, 
                 log: []
             };
         }
@@ -755,13 +781,35 @@
         let desc = String(food.description || '').toLowerCase();
         let cat = String(food.foodCategory || '').toLowerCase();
         
+        // If foodCategory is already a valid group name, use it (supports saved My Foods overrides)
+        const validGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+        if (validGroups.includes(food.foodCategory)) {
+            return food.foodCategory;
+        }
+        
         if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
         if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
         if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac')) return 'Animal Protein';
         if (cat.includes('dairy') || desc.includes('milk') || desc.includes('cheese')) return 'Dairy';
         if (cat.includes('grain') || desc.includes('bread') || desc.includes('rice')) return 'Grain';
+        if (cat.includes('water') || desc.includes('water') || desc.includes('bottled water') || desc.includes('tap water') || desc.includes('drinking water')) return 'Water';
         
         return 'Other';
+    }
+
+    function getFoodCategory(food) {
+        // Check for user override from the dropdown (for current selection before Log/Save)
+        const overrideSelect = document.getElementById('foodGroupSelect');
+        const override = overrideSelect ? overrideSelect.value : '';
+        
+        if (override && override !== '' && override !== 'none') {
+            return override;
+        }
+        if (override === 'none') {
+            return 'Other'; // 'Other' is not incremented in logFood
+        }
+        // Fallback to auto-detect (which also respects saved foodCategory in My Foods)
+        return guessCategory(food);
     }
 
     function getServingText(food) {
@@ -814,7 +862,7 @@ function updatePreview() {
 
         document.getElementById('nutritionPreview').innerHTML = `
             <strong>${food.description}</strong><br>
-            <em>Category: ${guessCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
+            <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
@@ -828,7 +876,7 @@ function updatePreview() {
 
         const food = currentSearchResults[idx];
         const nut = getAllNutrients(food);
-        const cat = guessCategory(food);
+        const cat = getFoodCategory(food);
         const multiplier = getMultiplier(food);
 
         const amountVal = parseFloat(document.getElementById('amountInput').value);
@@ -882,6 +930,10 @@ function updatePreview() {
         document.getElementById('servingInput').value = 1;
         document.getElementById('amountInput').value = '';
         document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+        
+        // Reset override select after logging
+        const fgSelect = document.getElementById('foodGroupSelect');
+        if (fgSelect) fgSelect.value = '';
     }
 
     function editItem(index) {
@@ -966,7 +1018,7 @@ function updatePreview() {
         if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
             const day = document.getElementById('daySelect').value;
             appData.history[day] = {
-                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, exercisePoints:0 }, 
+                current: { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, Water:0, exercisePoints:0 }, 
                 log: []
             };
             
@@ -1081,7 +1133,7 @@ function updatePreview() {
         };
 
         renderGroup(['Calories','Protein','Fat','Carbs'], 'macroBarometersContainer', { Calories:'#3b82f6', Protein:'#ef4444', Fat:'#f59e0b', Carbs:'#14b8a6' }, true);
-        renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain'], 'groupBarometersContainer', {}, false);
+        renderGroup(['Fruit','Vegetable','Animal Protein','Dairy','Grain','Water'], 'groupBarometersContainer', {}, false);
     }
 	function renderLog() {
 			const cont = document.getElementById('logContainer');
@@ -1265,7 +1317,7 @@ function updatePreview() {
         const customFood = {
             description: food.description,
             brandOwner: food.brandOwner || '',
-            foodCategory: guessCategory(food),
+            foodCategory: getFoodCategory(food),
             servingSize: food.servingSize || 100,
             householdServingFullText: food.householdServingFullText || '100g',
             upc: food.gtinUpc || food.upc || '',
@@ -1275,6 +1327,62 @@ function updatePreview() {
         appData.myFoods.push(customFood);
         saveData();
         alert(`${food.description} saved to My Foods! You can now search for it locally.`);
+        
+        // Reset override after save
+        const fgSelect2 = document.getElementById('foodGroupSelect');
+        if (fgSelect2) fgSelect2.value = '';
+    }
+
+    function saveLogItemToMyFoods(index, btnElement) {
+        const item = state.log[index];
+        if (!item) return;
+        
+        // Reconstruct normalized myFoods entry (only fields utilized by search/log/preview)
+        // Use per-gram densities *100 to store as per-100g nutrients (consistent with other sources)
+        const cals100 = (item.calsPerUnit || 0) * 100;
+        const prot100 = (item.protPerUnit || 0) * 100;
+        const fat100 = (item.fatPerUnit || 0) * 100;
+        const carb100 = (item.carbsPerUnit || 0) * 100;
+        const fib100 = (item.fibPerUnit || 0) * 100;
+
+        const newFood = {
+            description: item.name,
+            brandOwner: '',
+            foodCategory: item.category || 'Other',
+            servingSize: 100,
+            householdServingFullText: `${item.amount || 1} ${item.unit || 'serving'}`,
+            upc: item.upc || '',
+            foodNutrients: [
+                {nutrientId: 1008, value: cals100},
+                {nutrientId: 1003, value: prot100},
+                {nutrientId: 1004, value: fat100},
+                {nutrientId: 1005, value: carb100},
+                {nutrientId: 1079, value: fib100}
+            ]
+        };
+        
+        const exists = appData.myFoods.some(f => 
+            (f.description || '').toLowerCase() === newFood.description.toLowerCase() && 
+            (f.upc || '') === (newFood.upc || '')
+        );
+        
+        if (!exists) {
+            appData.myFoods.push(newFood);
+            saveData();
+            alert(`${item.name} saved to My Foods database!`);
+            if (btnElement) {
+                const origText = btnElement.innerText;
+                const origBg = btnElement.style.background;
+                btnElement.innerText = 'Saved!';
+                btnElement.style.background = '#10b981';
+                setTimeout(() => {
+                    btnElement.innerText = origText;
+                    btnElement.style.background = origBg;
+                }, 1500);
+            }
+        } else {
+            alert('This item is already saved in My Foods.');
+        }
     }
 
     function showCustomFoodModal() {
@@ -1292,9 +1400,9 @@ function updatePreview() {
 
         const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
-        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
+        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
-        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
+        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
 
         const newFood = {
             description: name,
