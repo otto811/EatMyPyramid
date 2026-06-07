@@ -631,104 +631,106 @@
         }
     }
 
-    // ==================== DATABASE SEARCH ====================
- async function searchDatabases() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        if (!query) return;
-        
-        const btn = document.getElementById('searchBtn');
-        btn.disabled = true; 
-        btn.textContent = 'Searching...';
-        
-        currentSearchResults = [];
-        const sel = document.getElementById('foodSelect');
-        sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
+   
+	// ==================== DATABASE SEARCH ====================
+	async function searchDatabases() {
+		const query = document.getElementById('searchInput').value.trim().toLowerCase();
+		if (!query) return;
+		
+		const btn = document.getElementById('searchBtn');
+		btn.disabled = true;
+		btn.textContent = 'Searching...';
+		
+		// Clear previous results
+		currentSearchResults = [];
+		const sel = document.getElementById('foodSelect');
+		sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-        // 1. Search Local "My Foods" Database safely
-        let localMatches = [];
-        try {
-            localMatches = appData.myFoods.filter(f => 
-                (f.description && f.description.toLowerCase().includes(query)) || 
-                (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
-                (f.upc && f.upc === query)
-            ).map(f => ({ ...f, source: 'My Foods' }));
-        } catch (e) {
-            console.error("Local search error", e);
+		// 1. Search Local "My Foods" Database SAFELY (Priority 1)
+		let localMatches = [];
+		try {
+			if (!appData.myFoods) {
+				appData.myFoods = [];
+			}
+			localMatches = appData.myFoods.filter(f => 
+				(f.description && f.description.toLowerCase().includes(query)) ||
+				(f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
+				(f.upc && f.upc === query)
+			).map(f => ({ ...f, source: 'My Foods' }));
+		} catch(e) {
+			console.error("Error searching My Foods:", e);
+		}
+
+		// 2. Fetch from Open Food Facts API (Priority 2)
+		let offMatches = [];
+		try {
+			const offResponse = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`);
+			if (offResponse.ok) {
+				const data = await offResponse.json();
+				if (data.products && data.products.length > 0) {
+					offMatches = data.products.map(p => {
+						// Standardize the OFF data shape to match your app's expectations
+						return {
+							description: p.product_name || "Unknown Product",
+							brandOwner: p.brands || "",
+							foodCategory: p.categories || "Other",
+							upc: p.code || "",
+							servingSize: parseFloat(p.serving_quantity) || 100,
+							householdServingFullText: p.serving_size || "100g",
+							source: 'Open Food Facts',
+							foodNutrients: [
+								{ nutrientId: 1008, value: p.nutriments ? p.nutriments['energy-kcal_100g'] : 0 },
+								{ nutrientId: 1003, value: p.nutriments ? p.nutriments.proteins_100g : 0 },
+								{ nutrientId: 1004, value: p.nutriments ? p.nutriments.fat_100g : 0 },
+								{ nutrientId: 1005, value: p.nutriments ? p.nutriments.carbohydrates_100g : 0 },
+								{ nutrientId: 1079, value: p.nutriments ? p.nutriments.fiber_100g : 0 }
+							]
+						};
+					});
+				}
+			}
+		} catch (e) {
+			console.error("Open Food Facts Search Error", e);
+		}
+
+    // 3. Fetch from USDA API (Priority 3)
+    let usdaMatches = [];
+    try {
+        // ---> BE SURE TO PASTE YOUR REAL USDA API KEY HERE <---
+        const usdaKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7'; 
+        const usdaResponse = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${usdaKey}&query=${encodeURIComponent(query)}&pageSize=10`);
+        if (usdaResponse.ok) {
+            const data = await usdaResponse.json();
+            usdaMatches = data.foods.map(f => ({ ...f, source: 'USDA' }));
         }
-
-        try {
-            // Helper function to fetch data and silently return null if an API fails/rate-limits
-            const fetchJSON = async (url) => {
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return await res.json();
-                } catch (e) {
-                    console.warn(`Fetch failed for ${url}:`, e);
-                    return null; 
-                }
-            };
-
-            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
-            const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
-
-            // Search both APIs simultaneously, but independently catch their errors
-            const [usdaData, offData] = await Promise.all([
-                fetchJSON(usdaUrl),
-                fetchJSON(offUrl)
-            ]);
-
-            let usdaFoods = [];
-            if (usdaData && usdaData.foods) {
-                usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
-            }
-
-            let offFoods = [];
-            if (offData && offData.products) {
-                offFoods = offData.products.map(p => ({
-                    description: p.product_name || 'Unknown Item',
-                    brandOwner: p.brands || '',
-                    foodCategory: p.categories || 'Other',
-                    servingSize: parseFloat(p.serving_quantity) || 100,
-                    householdServingFullText: p.serving_size || '100g',
-                    upc: p.code,
-                    source: 'Open Food Facts',
-                    foodNutrients: [
-                        {nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0)},
-                        {nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0)},
-                        {nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0)},
-                        {nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0)},
-                        {nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0)}
-                    ]
-                }));
-            }
-
-            // Combine all successful results
-            currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
-            
-            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-            
-            currentSearchResults.forEach((food, index) => {
-                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
-                sel.appendChild(opt);
-            });
-            
-            if(currentSearchResults.length === 0) {
-                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
-            }
-        } catch(e) { 
-            // This catch will only trigger if something catastrophically fails outside the API calls
-            console.error("Critical search error:", e);
-            sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
-            alert("Search failed. Please check your network connection."); 
-        } finally { 
-            btn.disabled = false; 
-            btn.textContent = 'Search'; 
-        }
+    } catch (e) {
+        console.error("USDA Search Error", e);
     }
+
+    // 4. Combine results: PRIORITY goes to My Foods -> Open Food Facts -> USDA
+    currentSearchResults = [...localMatches, ...offMatches, ...usdaMatches];
+
+    // 5. Populate Dropdown
+    sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+    
+    if (currentSearchResults.length === 0) {
+        sel.innerHTML = '<option value="" disabled selected>No results found.</option>';
+    } else {
+        currentSearchResults.forEach((food, index) => {
+            const isLocal = food.source === 'My Foods';
+            const brand = food.brandOwner ? ` (${food.brandOwner})` : '';
+            const prefix = isLocal ? '⭐ [My Foods]' : `[${food.source}]`; 
+            
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.textContent = `${prefix} ${food.description}${brand}`;
+            sel.appendChild(opt);
+        });
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Search';
+}
 
     // ==================== DATA PARSING HELPER FUNCTIONS ====================
     function getAllNutrients(food) {
