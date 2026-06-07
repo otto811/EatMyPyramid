@@ -1356,47 +1356,60 @@ function updatePreview() {
     }
 
     function saveCustomFood() {
-        const name = document.getElementById('cf-name').value.trim();
-        if (!name) return alert("Food Name is required.");
-
-        const brand = document.getElementById('cf-brand').value.trim();
-        const cat = document.getElementById('cf-category').value;
-        const upc = document.getElementById('cf-upc').value.trim();
-        const serving = parseFloat(document.getElementById('cf-serving').value) || 100;
-
-        const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
-        const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
-        const fat = parseFloat(document.getElementById('cf-fat').value) || 0;u
-        const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
-        const fib = parseFloat(document.getElementById('cf-fib').value) || 0;RE
-
+        const name = document.getElementById('cf-name').value;
+        
+        // 1. Validate that a name was entered
+        if (!name || name.trim() === '') {
+            alert("Please enter a valid food name.");
+            return;
+        }
+        
+        // 2. Build the new food object
         const newFood = {
-            description: name,
-            brandOwner: brand,
-            foodCategory: cat,
-            servingSize: serving,
-            householdServingFullText: `${serving}g`,
-            upc: upc,
+            description: name, 
+            brandOwner: document.getElementById('cf-brand').value || '',
+            foodCategory: document.getElementById('cf-category').value || 'Other',
+            upc: document.getElementById('cf-upc').value || '',
+            source: 'My Foods',
+            servingSize: parseFloat(document.getElementById('cf-serving').value) || 100,
             foodNutrients: [
-                {nutrientId: 1008, value: (cal / serving) * 100}, 
-                {nutrientId: 1003, value: (pro / serving) * 100},
-                {nutrientId: 1004, value: (fat / serving) * 100},
-                {nutrientId: 1005, value: (carb / serving) * 100},
-                {nutrientId: 1079, value: (fib / serving) * 100}
+                { nutrientId: 1008, value: parseFloat(document.getElementById('cf-cal').value) || 0 },
+                { nutrientId: 1003, value: parseFloat(document.getElementById('cf-pro').value) || 0 },
+                { nutrientId: 1004, value: parseFloat(document.getElementById('cf-fat').value) || 0 },
+                { nutrientId: 1005, value: parseFloat(document.getElementById('cf-carb').value) || 0 },
+                { nutrientId: 1079, value: parseFloat(document.getElementById('cf-fib').value) || 0 }
             ]
         };
 
-        appData.myFoods.push(newFood);
-        saveData();
-        
-        document.getElementById('customFoodModal').style.display = 'none';
-        
-        // Clear form values
-        ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
-        ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
-        document.getElementById('cf-serving').value = '100';
+        // 3. CRITICAL FIX: Check if myFoods array exists in appData yet. If not, create it.
+        if (!appData.myFoods) {
+            appData.myFoods = [];
+        }
 
-        alert(`${name} saved to My Foods!`);
+        // 4. Push to database and save
+        try {
+            appData.myFoods.push(newFood);
+            saveData();
+            
+            // 5. Indicate entry was made and close the modal
+            alert(`"${name}" has been successfully saved to My Foods!`);
+            document.getElementById('customFoodModal').style.display = 'none';
+            
+            // 6. Clear the form inputs for the next time it's opened
+            document.getElementById('cf-name').value = '';
+            document.getElementById('cf-brand').value = '';
+            document.getElementById('cf-upc').value = '';
+            document.getElementById('cf-serving').value = '100';
+            document.getElementById('cf-cal').value = '0';
+            document.getElementById('cf-pro').value = '0';
+            document.getElementById('cf-fat').value = '0';
+            document.getElementById('cf-carb').value = '0';
+            document.getElementById('cf-fib').value = '0';
+            
+        } catch (error) {
+            console.error("Error saving custom food:", error);
+            alert("An error occurred while saving. Check the console for details.");
+        }
     }
 // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
