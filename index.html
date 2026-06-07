@@ -355,6 +355,7 @@
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
+        <button onclick="resetWeek()" class="reset-btn" style="background:#f59e0b; margin-top:8px;">Clear Entire Week's Logs &amp; Targets (All 7 Days)</button>
     </div>
 </div>
 
@@ -657,7 +658,7 @@
     }
 
     // ==================== DATABASE SEARCH ====================
- async function searchDatabases() {
+    async function searchDatabases() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         if (!query) return;
         
@@ -669,7 +670,7 @@
         const sel = document.getElementById('foodSelect');
         sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-        // 1. Search Local "My Foods" Database safely
+        // 1. ALWAYS search Local "My Foods" Database first (guaranteed, independent of APIs)
         let localMatches = [];
         try {
             localMatches = appData.myFoods.filter(f => 
@@ -679,8 +680,24 @@
             ).map(f => ({ ...f, source: 'My Foods' }));
         } catch (e) {
             console.error("Local search error", e);
+            localMatches = [];
         }
 
+        // Populate with local matches immediately (they appear first in dropdown)
+        currentSearchResults = [...localMatches];
+        sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+        
+        if (localMatches.length > 0) {
+            localMatches.forEach((food, index) => {
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                sel.appendChild(opt);
+            });
+        }
+
+        // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
         try {
             // Helper function to fetch data and silently return null if an API fails/rate-limits
             const fetchJSON = async (url) => {
@@ -697,7 +714,6 @@
             const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
             const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
 
-            // Search both APIs simultaneously, but independently catch their errors
             const [usdaData, offData] = await Promise.all([
                 fetchJSON(usdaUrl),
                 fetchJSON(offUrl)
@@ -728,27 +744,28 @@
                 }));
             }
 
-            // Combine all successful results
-            currentSearchResults = [...localMatches, ...usdaFoods, ...offFoods];
-            
-            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-            
-            currentSearchResults.forEach((food, index) => {
+            const apiResults = [...usdaFoods, ...offFoods];
+            const apiStartIndex = currentSearchResults.length;
+            currentSearchResults.push(...apiResults);
+
+            apiResults.forEach((food, i) => {
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
-                opt.value = index;
+                opt.value = apiStartIndex + i;
                 opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
                 sel.appendChild(opt);
             });
             
-            if(currentSearchResults.length === 0) {
-                sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+            if (currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
             }
         } catch(e) { 
-            // This catch will only trigger if something catastrophically fails outside the API calls
-            console.error("Critical search error:", e);
-            sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
-            alert("Search failed. Please check your network connection."); 
+            console.error("API search error (My Foods results are still shown if any):", e);
+            if (currentSearchResults.length === 0) {
+                sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
+                alert("Search failed. Please check your network connection."); 
+            }
+            // Note: local My Foods results remain visible even on API failure
         } finally { 
             btn.disabled = false; 
             btn.textContent = 'Search'; 
@@ -917,9 +934,15 @@ function updatePreview() {
         state.current.Fat += item.fat;
         state.current.Carbs += item.carbs;
         
-        if (state.current[cat] !== undefined) {
+        // Defensive: ensure group key exists (for Water and legacy data), then increment if it's a tracked group
+        const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+        if (trackedGroups.includes(cat)) {
+            if (state.current[cat] === undefined) {
+                state.current[cat] = 0;
+            }
             state.current[cat] += 1;
         }
+        // If cat === 'Other' (from "Do not count" or unknown), we intentionally do NOT increment any group serving total
 
         saveData();
         renderLog();
@@ -1029,6 +1052,31 @@ function updatePreview() {
             saveData();
             renderLog();
             renderBarometers();
+        }
+    }
+
+    function resetWeek() {
+        if (confirm("⚠️ This will PERMANENTLY clear ALL logged foods, exercise points, and serving totals for EVERY day of the week.\n\nYour profile settings (weight, calorie goal, WW goal, macro %, custom targets) will NOT be changed.\n\nAre you sure?")) {
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const emptyCurrent = { Calories:0, Protein:0, Fat:0, Carbs:0, Fruit:0, Vegetable:0, 'Animal Protein':0, Dairy:0, Grain:0, Water:0, exercisePoints:0 };
+            
+            days.forEach(day => {
+                appData.history[day] = {
+                    current: { ...emptyCurrent },
+                    log: []
+                };
+            });
+            
+            // Refresh the currently viewed day
+            const currentDay = document.getElementById('daySelect').value;
+            state.current = appData.history[currentDay].current;
+            state.log = appData.history[currentDay].log;
+            document.getElementById('exerciseInput').value = 0;
+            
+            saveData();
+            renderLog();
+            renderBarometers();
+            alert("All 7 days have been reset.");
         }
     }
 
