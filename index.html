@@ -340,6 +340,7 @@
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
         <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
+		<button onclick="resetWeek()" class="reset-btn" style="background-color: #7f1d1d; margin-top: 10px;">Reset Week's Data (Clear All Days)</button>
     </div>
 </div>
 
@@ -1025,7 +1026,80 @@ function updatePreview() {
         }
         closeCalculatorModal();
     }
+// ==================== NEW & UPDATED FUNCTIONS ====================
 
+    function saveCustomFood() {
+        const name = document.getElementById('cf-name').value;
+        if (!name) {
+            alert("Please enter a food name.");
+            return;
+        }
+        
+        // 1. Ensure 'description' is used for the Food Name so it searches and logs correctly
+        const newFood = {
+            description: name, 
+            brandOwner: document.getElementById('cf-brand').value,
+            foodCategory: document.getElementById('cf-category').value,
+            upc: document.getElementById('cf-upc').value,
+            source: 'My Foods',
+            servingSize: parseFloat(document.getElementById('cf-serving').value) || 100,
+            foodNutrients: [
+                { nutrientId: 1008, value: parseFloat(document.getElementById('cf-cal').value) || 0 },
+                { nutrientId: 1003, value: parseFloat(document.getElementById('cf-pro').value) || 0 },
+                { nutrientId: 1004, value: parseFloat(document.getElementById('cf-fat').value) || 0 },
+                { nutrientId: 1005, value: parseFloat(document.getElementById('cf-carb').value) || 0 },
+                { nutrientId: 1079, value: parseFloat(document.getElementById('cf-fib').value) || 0 }
+            ]
+        };
+
+        // Push to database and save
+        appData.myFoods.push(newFood);
+        saveData();
+        
+        // 2. Indicate entry was made and close the modal
+        alert(`"${name}" has been successfully saved to My Foods!`);
+        document.getElementById('customFoodModal').style.display = 'none';
+        
+        // Clear the form inputs for the next time it's opened
+        document.getElementById('cf-name').value = '';
+        document.getElementById('cf-brand').value = '';
+        document.getElementById('cf-upc').value = '';
+        document.getElementById('cf-serving').value = '100';
+        document.getElementById('cf-cal').value = '0';
+        document.getElementById('cf-pro').value = '0';
+        document.getElementById('cf-fat').value = '0';
+        document.getElementById('cf-carb').value = '0';
+        document.getElementById('cf-fib').value = '0';
+    }
+
+    function resetWeek() {
+        // 4. Warning prompt before resetting all week's data
+        const warningMessage = "WARNING: This will reset all Logs and Totals for EVERY day of the week. This action cannot be undone.\n\nAre you sure you want to proceed?";
+        
+        if (confirm(warningMessage)) {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            days.forEach(day => {
+                // Reinitialize every day in the history to a clean state
+                appData.history[day] = {
+                    log: [],
+                    current: { 
+                        Calories: 0, 
+                        Protein: 0, 
+                        Fat: 0, 
+                        Carbs: 0, 
+                        exercisePoints: 0 
+                    }
+                };
+            });
+            
+            saveData();
+            loadData(); // Re-sync the active day variables
+            changeDay(); // Refresh the current view
+            
+            alert("All data for the week has been successfully reset.");
+        }
+    }
     // ==================== UI RENDERING ====================
     function renderBarometers() {
         const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
