@@ -269,6 +269,7 @@
                 <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
                 <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
                 <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
+                <button onclick="deleteMyFoods()" style="background:#ef4444; padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🗑️ Delete My Foods</button>
                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
             </div>
 <!-- //=======END MODIFICATION -->
@@ -373,13 +374,24 @@
         </div>
         <div class="form-group"><label>UPC / Barcode (Optional)</label><input type="text" id="cf-upc" placeholder="e.g. 0123456789"></div>
         
+        <div class="form-group">
+            <label>Serving Size</label>
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+                <input type="number" id="cf-serving" value="100" step="0.1" style="flex:2; padding:12px; font-size:1em;">
+                <select id="cf-serving-unit" style="flex:1; padding:12px; font-size:1em;">
+                    <option value="g">grams (g)</option>
+                    <option value="oz">ounces (oz)</option>
+                </select>
+            </div>
+            <small style="color:#6b7280; display:block; margin-top:3px;">We store everything internally in grams for consistency with searches &amp; logging.</small>
+        </div>
+        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="form-group"><label>Serving Size (g or ml)</label><input type="number" id="cf-serving" value="100"></div>
-            <div class="form-group"><label>Calories</label><input type="number" id="cf-cal" value="0"></div>
-            <div class="form-group"><label>Protein (g)</label><input type="number" id="cf-pro" value="0"></div>
-            <div class="form-group"><label>Fat (g)</label><input type="number" id="cf-fat" value="0"></div>
-            <div class="form-group"><label>Carbs (g)</label><input type="number" id="cf-carb" value="0"></div>
-            <div class="form-group"><label>Fiber (g)</label><input type="number" id="cf-fib" value="0"></div>
+            <div class="form-group"><label>Calories (per serving)</label><input type="number" id="cf-cal" value="0"></div>
+            <div class="form-group"><label>Protein (g per serving)</label><input type="number" id="cf-pro" value="0"></div>
+            <div class="form-group"><label>Fat (g per serving)</label><input type="number" id="cf-fat" value="0"></div>
+            <div class="form-group"><label>Carbs (g per serving)</label><input type="number" id="cf-carb" value="0"></div>
+            <div class="form-group"><label>Fiber (g per serving)</label><input type="number" id="cf-fib" value="0"></div>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:20px;">
@@ -1444,7 +1456,12 @@ function updatePreview() {
         const brand = document.getElementById('cf-brand').value.trim();
         const cat = document.getElementById('cf-category').value;
         const upc = document.getElementById('cf-upc').value.trim();
-        const serving = parseFloat(document.getElementById('cf-serving').value) || 100;
+        const servingVal = parseFloat(document.getElementById('cf-serving').value) || 100;
+        const servingUnit = document.getElementById('cf-serving-unit').value || 'g';
+        let servingGrams = servingVal;
+        if (servingUnit === 'oz') {
+            servingGrams = servingVal * 28.3495; // convert oz to grams for internal storage & calculations
+        }
 
         const cal = parseFloat(document.getElementById('cf-cal').value) || 0;
         const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
@@ -1452,19 +1469,22 @@ function updatePreview() {
         const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
         const fib = parseFloat(document.getElementById('cf-fib').value) || 0;
 
+        // Scale nutrients to per-100g using the actual gram weight of the serving the user entered
+        const per100gMultiplier = servingGrams > 0 ? (100 / servingGrams) : 1;
+
         const newFood = {
             description: name,
             brandOwner: brand,
             foodCategory: cat,
-            servingSize: serving,
-            householdServingFullText: `${serving}g`,
+            servingSize: servingGrams,                    // always stored in grams for compatibility with getMultiplier(), search, logging
+            householdServingFullText: `${servingVal} ${servingUnit}`,
             upc: upc,
             foodNutrients: [
-                {nutrientId: 1008, value: (cal / serving) * 100}, 
-                {nutrientId: 1003, value: (pro / serving) * 100},
-                {nutrientId: 1004, value: (fat / serving) * 100},
-                {nutrientId: 1005, value: (carb / serving) * 100},
-                {nutrientId: 1079, value: (fib / serving) * 100}
+                {nutrientId: 1008, value: cal * per100gMultiplier}, 
+                {nutrientId: 1003, value: pro * per100gMultiplier},
+                {nutrientId: 1004, value: fat * per100gMultiplier},
+                {nutrientId: 1005, value: carb * per100gMultiplier},
+                {nutrientId: 1079, value: fib * per100gMultiplier}
             ]
         };
 
@@ -1477,6 +1497,8 @@ function updatePreview() {
         ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
         ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
         document.getElementById('cf-serving').value = '100';
+        const unitSel = document.getElementById('cf-serving-unit');
+        if (unitSel) unitSel.value = 'g';
 
         alert(`${name} saved to My Foods!`);
     }
@@ -1539,6 +1561,25 @@ function updatePreview() {
             }
         };
         reader.readAsText(file);
+    }
+
+    function deleteMyFoods() {
+        if (!appData.myFoods || appData.myFoods.length === 0) {
+            return alert("Your My Foods database is already empty.");
+        }
+        
+        if (confirm("🗑️ This will PERMANENTLY delete ALL items in your My Foods database.\n\nThis action cannot be undone. Your imported/exported backups are not affected.\n\nContinue?")) {
+            appData.myFoods = [];           // reset to empty array (fully compatible with searchDatabases filter, localMatches, etc.)
+            saveData();
+            alert("My Foods database has been cleared and reset.\n\nFuture searches will no longer show any custom items until you add new ones.");
+            
+            // If a search dropdown is currently populated, clear it so user sees fresh state
+            const sel = document.getElementById('foodSelect');
+            if (sel) {
+                sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            }
+            currentSearchResults = [];
+        }
     }
 
     // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
