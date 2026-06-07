@@ -525,6 +525,7 @@
                     <select id="recipeUnitSelect" style="width:100%; padding:10px;">
                         <option value="g">grams (g)</option>
                         <option value="oz">ounces (oz)</option>
+                        <option value="serving">servings</option>
                     </select>
                 </div>
                 <button onclick="addIngredientToRecipe()" style="background:#14b8a6; padding:10px 16px; white-space:nowrap;">+ Add Ingredient</button>
@@ -1296,7 +1297,8 @@ function updatePreview() {
     }
 
     // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
-    function startBarcodeScan() {
+    function startBarcodeScan(isRecipeMode = false) {
+        recipeBarcodeMode = isRecipeMode === true;
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
@@ -1362,17 +1364,30 @@ function updatePreview() {
 
     async function fetchOpenFoodFacts(barcode) {
         const preview = document.getElementById('nutritionPreview');
-        preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+        if (!recipeBarcodeMode) {
+            preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+        } else {
+            const sel = document.getElementById('recipeFoodSelect');
+            sel.innerHTML = `<option value="" disabled selected>Looking up barcode ${barcode} securely...</option>`;
+        }
 
         // Check My Foods database first
         const localMatch = appData.myFoods.find(f => f.upc === barcode);
         if (localMatch) {
-            currentSearchResults = [{ ...localMatch, source: 'My Foods' }];
-            const sel = document.getElementById('foodSelect');
-            sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
-            document.getElementById('servingInput').value = 1; 
-            document.getElementById('amountInput').value = '';
-            updatePreview();
+            if (recipeBarcodeMode) {
+                currentRecipeSearchResults = [{ ...localMatch, source: 'My Foods' }];
+                const sel = document.getElementById('recipeFoodSelect');
+                sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
+                document.getElementById('recipeAmountInput').value = '';
+                recipeBarcodeMode = false;
+            } else {
+                currentSearchResults = [{ ...localMatch, source: 'My Foods' }];
+                const sel = document.getElementById('foodSelect');
+                sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
+                document.getElementById('servingInput').value = 1; 
+                document.getElementById('amountInput').value = '';
+                updatePreview();
+            }
             return;
         }
 
@@ -1381,7 +1396,13 @@ function updatePreview() {
             const data = await res.json();
 
             if (data.status === 0 || !data.product) {
-                preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
+                if (recipeBarcodeMode) {
+                    const sel = document.getElementById('recipeFoodSelect');
+                    sel.innerHTML = `<option value="" disabled selected>Product not found in Open Food Facts.</option>`;
+                    recipeBarcodeMode = false;
+                } else {
+                    preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
+                }
                 return;
             }
 
@@ -1420,18 +1441,30 @@ function updatePreview() {
                 ]
             };
 
-            currentSearchResults = [fakeFood];
-            const sel = document.getElementById('foodSelect');
-            sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
-
-            document.getElementById('servingInput').value = 1; 
-            document.getElementById('amountInput').value = '';
-            
-            updatePreview();
+            if (recipeBarcodeMode) {
+                currentRecipeSearchResults = [fakeFood];
+                const sel = document.getElementById('recipeFoodSelect');
+                sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
+                document.getElementById('recipeAmountInput').value = '';
+                recipeBarcodeMode = false;
+            } else {
+                currentSearchResults = [fakeFood];
+                const sel = document.getElementById('foodSelect');
+                sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
+                document.getElementById('servingInput').value = 1; 
+                document.getElementById('amountInput').value = '';
+                updatePreview();
+            }
 
         } catch (e) {
             console.error("Barcode fetch/parse error:", e);
-            preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
+            if (recipeBarcodeMode) {
+                const sel = document.getElementById('recipeFoodSelect');
+                sel.innerHTML = `<option value="" disabled selected>Error reading product data.</option>`;
+                recipeBarcodeMode = false;
+            } else {
+                preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
+            }
         }
     }
 
@@ -1771,7 +1804,16 @@ function updatePreview() {
         
         if (!amount || amount <= 0) return alert("Please enter a valid positive amount.");
         
-        const grams = unit === 'oz' ? amount * 28.3495 : amount;
+        let grams;
+        if (unit === 'oz') {
+            grams = amount * 28.3495;
+        } else if (unit === 'serving') {
+            const servingSizeGrams = parseFloat(food.servingSize) || 100;
+            grams = amount * servingSizeGrams;
+        } else {
+            grams = amount;
+        }
+        
         const multiplier = grams / 100;
         const nut = getAllNutrients(food);
         
@@ -1941,12 +1983,7 @@ function updatePreview() {
     let recipeBarcodeMode = false;
     
     function startRecipeBarcodeScan() {
-        recipeBarcodeMode = true;
-        // Reuse the main scanner but we'll intercept in fetchOpenFoodFacts or add a flag
-        // For simplicity, call the main one; user can close and the result will go to main preview.
-        // Better: make fetchOpenFoodFacts check a flag, but to keep simple, we'll use main flow and instruct user.
-        alert("Barcode scanner will open. After successful scan, the item will appear in the main search results. Then use the main 'Add to Recipe' idea or re-search in the recipe modal.\n\n(For full integration in future updates.)");
-        startBarcodeScan(); // fallback to main for now
+        startBarcodeScan(true);
     }
 
     // Note: For a more seamless barcode in recipe, we could enhance fetchOpenFoodFacts to check recipeBarcodeMode and add directly, but this keeps it working.
