@@ -273,29 +273,27 @@
 <div class="container">
     <div class="card full-width">
         <h2>Your Profile & Setup</h2>
-        <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
+        <div class="profile-bar">
             <div>
                 <label>Day of Week</label>
-                <select id="daySelect" onchange="changeDay()" style="font-weight:bold; padding: 8px; height: 38px;"></select>
+                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
-                <div>
-                    <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
-                    <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()" style="width:70px; padding: 6px 8px; height: 34px;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
-                    <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()" style="width:80px; padding: 6px 8px; height: 34px;">
-                </div>
-                <div>
-                    <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0" style="width:60px; padding: 6px 8px; height: 34px;">
-                        <button onclick="showCalculatorModal()" style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
-                    </div>
+            <div>
+                <label>Body Weight (lbs)</label>
+                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()" style="width:80px;">
+            </div>
+            <div>
+                <label>Daily Calorie Goal</label>
+                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()" style="width:80px;">
+            </div>
+            <div>
+                <label>Daily Points Goal</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0" style="width:60px;">
+                    <button onclick="showCalculatorModal()" style="background-color: var(--teal); white-space: nowrap;">Calculate Your Points</button>
                 </div>
             </div>
-            <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
+            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
                 <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
             </div>
         </div>
@@ -318,6 +316,23 @@
             <select id="foodSelect" onchange="updatePreview()"></select>
         </div>
 
+        <!-- Create & Manage My Foods dropdown -->
+        <div class="form-group">
+            <div class="dropdown-menu-wrap" style="width:100%;">
+                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)" style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                </button>
+                <div id="myFoodsDropdown" class="dropdown-menu-list">
+                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
+                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
+                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
+                    <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
+                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete My Foods</button>
+                </div>
+                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+            </div>
+        </div>
+        
         <div class="form-group">
             <label>Number of Servings (optional)</label>
             <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()">
@@ -353,26 +368,9 @@
             <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by default.</small>
         </div>
         
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <div style="display: flex; gap: 10px;">
             <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
             <button onclick="saveCurrentToMyFoods()" style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save to My Foods</button>
-        </div>
-
-        <!-- Create & Manage My Foods dropdown -->
-        <div class="form-group" style="margin-bottom: 0;">
-            <div class="dropdown-menu-wrap" style="width:100%;">
-                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)" style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
-                </button>
-                <div id="myFoodsDropdown" class="dropdown-menu-list">
-                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
-                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
-                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
-                    <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
-                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete My Foods</button>
-                </div>
-                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
         </div>
 
         <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
@@ -865,23 +863,6 @@
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
-            
-            // Prioritize exact matches and starts-with matches
-            localMatches.sort((a, b) => {
-                const aDesc = a.description.toLowerCase();
-                const bDesc = b.description.toLowerCase();
-                const aExact = aDesc === query;
-                const bExact = bDesc === query;
-                if (aExact && !bExact) return -1;
-                if (!aExact && bExact) return 1;
-                
-                const aStarts = aDesc.startsWith(query);
-                const bStarts = bDesc.startsWith(query);
-                if (aStarts && !bStarts) return -1;
-                if (!aStarts && bStarts) return 1;
-                
-                return aDesc.localeCompare(bDesc);
-            });
         } catch (e) {
             console.error("Local search error", e);
             localMatches = [];
@@ -948,14 +929,7 @@
                 }));
             }
 
-            const rawApiResults = [...usdaFoods, ...offFoods];
-            
-            // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
-            const apiResults = rawApiResults.filter(apiFood => {
-                if (!apiFood.description) return false;
-                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
-            });
-
+            const apiResults = [...usdaFoods, ...offFoods];
             const apiStartIndex = currentSearchResults.length;
             currentSearchResults.push(...apiResults);
 
@@ -1866,23 +1840,6 @@ function updatePreview() {
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
-            
-            // Prioritize exact matches and starts-with matches
-            localMatches.sort((a, b) => {
-                const aDesc = a.description.toLowerCase();
-                const bDesc = b.description.toLowerCase();
-                const aExact = aDesc === query;
-                const bExact = bDesc === query;
-                if (aExact && !bExact) return -1;
-                if (!aExact && bExact) return 1;
-                
-                const aStarts = aDesc.startsWith(query);
-                const bStarts = bDesc.startsWith(query);
-                if (aStarts && !bStarts) return -1;
-                if (!aStarts && bStarts) return 1;
-                
-                return aDesc.localeCompare(bDesc);
-            });
         } catch(e) { localMatches = []; }
 
         currentRecipeSearchResults = [...localMatches];
@@ -1931,14 +1888,7 @@ function updatePreview() {
             }
 
             const apiStart = currentRecipeSearchResults.length;
-            const rawApiResults = [...usdaFoods, ...offFoods];
-            
-            // Filter out API results that duplicate a My Foods result
-            const apiResults = rawApiResults.filter(apiFood => {
-                if (!apiFood.description) return false;
-                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
-            });
-            
+            const apiResults = [...usdaFoods, ...offFoods];
             currentRecipeSearchResults.push(...apiResults);
 
             apiResults.forEach((food, i) => {
