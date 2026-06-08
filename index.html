@@ -1015,8 +1015,15 @@
             if (currentSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
             } else {
-                sel.size = Math.min(8, currentSearchResults.length + 1);
                 sel.focus();
+                try {
+                    // Modern native dropdown (if user gesture is still active)
+                    sel.showPicker();
+                } catch(e) {
+                    // Fallback: listbox that collapses on blur
+                    sel.size = Math.min(8, currentSearchResults.length + 1);
+                    sel.onblur = function() { this.size = 1; };
+                }
             }
         } catch(e) { 
             console.error("API search error (My Foods results are still shown if any):", e);
@@ -2092,6 +2099,14 @@ function updatePreview() {
         
         if (currentRecipeSearchResults.length === 0) {
             sel.innerHTML = '<option value="" disabled selected>No results found</option>';
+        } else {
+            sel.focus();
+            try {
+                sel.showPicker();
+            } catch(e) {
+                sel.size = Math.min(8, currentRecipeSearchResults.length + 1);
+                sel.onblur = function() { this.size = 1; };
+            }
         }
     }
 
