@@ -556,6 +556,11 @@
         <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#f59e0b;">Edit Logged Item</h3>
         
         <div class="form-group" style="margin-top: 15px;">
+            <label>Name</label>
+            <input type="text" id="edit-name" style="padding:12px; font-size:1em;">
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
             <label>Amount</label>
             <div style="display:flex; gap:10px; align-items:flex-end;">
                 <input type="number" id="edit-amount" step="0.1" style="flex:2; padding:12px; font-size:1em;">
@@ -574,6 +579,13 @@
                 <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
                 <option value="Other">Do not count in any Food Group</option>
             </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+            <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+                <input type="checkbox" id="edit-save-myfoods" style="width:18px; height:18px;">
+                Save to My Foods after editing
+            </label>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:20px;">
@@ -1002,6 +1014,9 @@
             
             if (currentSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
+            } else {
+                sel.size = Math.min(8, currentSearchResults.length + 1);
+                sel.focus();
             }
         } catch(e) { 
             console.error("API search error (My Foods results are still shown if any):", e);
@@ -1109,7 +1124,9 @@
     // ==================== LOGGING & EDITING FUNCTIONS ====================
    	//============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
 function updatePreview() {
-        const idx = document.getElementById('foodSelect').value;
+        const sel = document.getElementById('foodSelect');
+        sel.size = 1;
+        const idx = sel.value;
         if (!idx) return;
         
         const food = currentSearchResults[idx];
@@ -1143,10 +1160,17 @@ function updatePreview() {
         const amountVal = parseFloat(document.getElementById('amountInput').value);
         let logAmount = amountVal;
         let logUnit = document.getElementById('unitSelect').value;
+        const servingSize = parseFloat(food.servingSize) || 100;
+        let gramsPerUnit = servingSize;
+        let foodGroupAmount = 1;
         
         if (!(amountVal > 0)) {
             logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
             logUnit = logAmount === 1 ? "serving" : "servings";
+            foodGroupAmount = logAmount;
+        } else {
+            gramsPerUnit = logUnit === 'oz' ? 28.3495 : 1;
+            foodGroupAmount = (logAmount * gramsPerUnit) / servingSize;
         }
 
         const upcCode = food.gtinUpc || food.upc || null;
@@ -1157,6 +1181,9 @@ function updatePreview() {
             amount: logAmount,
             unit: logUnit,
             category: cat,
+            servingSize: servingSize,
+            gramsPerUnit: gramsPerUnit,
+            foodGroupAmount: foodGroupAmount,
             calories: nut.calories * multiplier,
             protein: nut.protein * multiplier,
             fat: nut.fat * multiplier,
@@ -1184,7 +1211,7 @@ function updatePreview() {
             if (state.current[cat] === undefined) {
                 state.current[cat] = 0;
             }
-            state.current[cat] += 1;
+            state.current[cat] += foodGroupAmount;
         }
         // If cat === 'Other' (from "Do not count" or unknown), we intentionally do NOT increment any group serving total
 
@@ -1209,6 +1236,8 @@ function updatePreview() {
         const item = state.log[index];
         currentEditIndex = index;
         
+        document.getElementById('edit-name').value = item.name || '';
+        document.getElementById('edit-save-myfoods').checked = false;
         document.getElementById('edit-amount').value = item.amount;
         document.getElementById('edit-unit-display').textContent = item.unit || '';
         
@@ -1232,12 +1261,35 @@ function updatePreview() {
         
         const item = state.log[currentEditIndex];
         const newAmtVal = document.getElementById('edit-amount').value;
+        const newName = document.getElementById('edit-name').value;
         const newCat = document.getElementById('edit-food-group').value;
         
         if (newAmtVal === null || newAmtVal === "") return alert("Please enter an amount."); 
         
         const val = parseFloat(newAmtVal);
         if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
+        
+        // Calculate old food group servings to subtract
+        let oldFgAmount = item.foodGroupAmount || 1;
+        let oldGrams = 100;
+        if (item.unit === 'serving' || item.unit === 'servings') {
+            oldGrams = item.amount * (item.gramsPerUnit || item.servingSize || 100);
+        } else {
+            oldGrams = item.unit === 'oz' ? item.amount * 28.3495 : item.amount;
+        }
+        
+        // Calculate new food group servings and new grams
+        let newFgAmount = 1;
+        let newGrams = val;
+        
+        if (item.unit === 'serving' || item.unit === 'servings') {
+            newFgAmount = val;
+            newGrams = val * (item.gramsPerUnit || item.servingSize || 100);
+        } else {
+            newGrams = item.unit === 'oz' ? val * 28.3495 : val;
+            const sSize = item.servingSize || 100;
+            newFgAmount = newGrams / sSize;
+        }
         
         // Subtract old values from daily totals
         state.current.Calories -= item.calories;
@@ -1248,19 +1300,21 @@ function updatePreview() {
         // Adjust food group count for the OLD category
         const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
         if (trackedGroups.includes(item.category) && state.current[item.category] !== undefined && state.current[item.category] > 0) {
-            state.current[item.category] -= 1;
+            state.current[item.category] -= oldFgAmount;
+            if (state.current[item.category] < 0) state.current[item.category] = 0;
         }
 
-        // Calculate new nutrition using correct grams = val * gramsPerUnit
-        // calsPerUnit (etc.) is already the per-gram density, so no *100 needed
-        const newGrams = val * (item.gramsPerUnit || 100);
         item.amount = val;
+        if (newName) item.name = newName;
+        item.foodGroupAmount = newFgAmount;
         
-        item.calories = newGrams * (item.calsPerUnit || 0);
-        item.protein  = newGrams * (item.protPerUnit || 0);
-        item.fat      = newGrams * (item.fatPerUnit || 0);
-        item.carbs    = newGrams * (item.carbsPerUnit || 0);
-        item.fiber    = newGrams * (item.fibPerUnit || 0);
+        const ratio = newGrams / (oldGrams || 1);
+        
+        item.calories = item.calories * ratio;
+        item.protein  = item.protein * ratio;
+        item.fat      = item.fat * ratio;
+        item.carbs    = item.carbs * ratio;
+        item.fiber    = item.fiber * ratio;
         
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
         
@@ -1278,12 +1332,16 @@ function updatePreview() {
             if (state.current[item.category] === undefined) {
                 state.current[item.category] = 0;
             }
-            state.current[item.category] += 1;
+            state.current[item.category] += newFgAmount;
         }
 
         saveData(); 
         renderLog(); 
         renderBarometers();
+        
+        if (document.getElementById('edit-save-myfoods') && document.getElementById('edit-save-myfoods').checked) {
+            saveLogItemToMyFoods(currentEditIndex);
+        }
         
         closeEditModal();
     }
@@ -1297,7 +1355,8 @@ function updatePreview() {
         state.current.Carbs -= (item.carbs || 0);
         
         if (state.current[item.category] !== undefined) {
-            state.current[item.category] -= 1;
+            state.current[item.category] -= (item.foodGroupAmount || 1);
+            if (state.current[item.category] < 0) state.current[item.category] = 0;
         }
         
         state.log.splice(index, 1);
