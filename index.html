@@ -216,6 +216,51 @@
             width: 100%; 
         }
 
+        /* Dropdown menu for Create & Manage My Foods and Reset Logs */
+        .dropdown-menu-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-menu-wrap .dropdown-toggle {
+            width: 100%;
+            cursor: pointer;
+        }
+        .dropdown-menu-list {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 4px);
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 500;
+            min-width: 220px;
+            overflow: hidden;
+            animation: dropdownFadeIn 0.15s ease;
+        }
+        .dropdown-menu-list.open { display: block; }
+        .dropdown-menu-list button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            border-radius: 0;
+            padding: 11px 16px;
+            font-size: 0.9em;
+            background: white;
+            color: var(--text-main);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .dropdown-menu-list button:last-child { border-bottom: none; }
+        .dropdown-menu-list button:hover { background: #f3f4f6; }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 768px) {
             .container { 
                 grid-template-columns: 1fr; 
@@ -264,20 +309,28 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
-<!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
-<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
-                <button onclick="showRecipeModal()" style="background:#14b8a6; padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🍳 Create Recipe</button>
-                <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
-                <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
-                <button onclick="deleteMyFoods()" style="background:#ef4444; padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🗑️ Delete My Foods</button>
-                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
-<!-- //=======END MODIFICATION -->
-        
+        </div>
+
         <div class="form-group">
             <label>Search Results</label>
             <select id="foodSelect" onchange="updatePreview()"></select>
+        </div>
+
+        <!-- Create & Manage My Foods dropdown -->
+        <div class="form-group">
+            <div class="dropdown-menu-wrap" style="width:100%;">
+                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)" style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                </button>
+                <div id="myFoodsDropdown" class="dropdown-menu-list">
+                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
+                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
+                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
+                    <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
+                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete My Foods</button>
+                </div>
+                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+            </div>
         </div>
         
         <div class="form-group">
@@ -356,8 +409,17 @@
     <div class="card full-width">
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
-        <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
-        <button onclick="resetWeek()" class="reset-btn" style="background:#f59e0b; margin-top:8px;">Clear Entire Week's Logs &amp; Targets (All 7 Days)</button>
+
+        <!-- Reset Logs dropdown -->
+        <div class="dropdown-menu-wrap" style="width:100%; margin-top:15px;">
+            <button class="dropdown-toggle reset-btn" onclick="toggleDropdown('resetLogsDropdown', this)" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:0;">
+                <span>🗑️ Reset Logs</span><span id="resetLogsDropdownArrow">▼</span>
+            </button>
+            <div id="resetLogsDropdown" class="dropdown-menu-list">
+                <button onclick="resetDay(); closeDropdown('resetLogsDropdown')" style="color:#ef4444;">Reset Today's Data (Clear Log &amp; Totals)</button>
+                <button onclick="resetWeek(); closeDropdown('resetLogsDropdown')" style="color:#d97706;">Clear Entire Week's Logs &amp; Targets (All 7 Days)</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -551,6 +613,42 @@
 </div>
 
 <script>
+    // ==================== DROPDOWN MENU HELPERS ====================
+    function toggleDropdown(id, toggleBtn) {
+        const menu = document.getElementById(id);
+        const isOpen = menu.classList.contains('open');
+        // Close all open dropdowns first
+        document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
+        if (!isOpen) {
+            menu.classList.add('open');
+            // Flip arrow indicator (last span child of toggle button)
+            const arrow = toggleBtn ? toggleBtn.querySelector('span:last-child') : null;
+            if (arrow) { arrow.textContent = '▲'; arrow.classList.add('dropdown-arrow-open'); }
+        }
+    }
+
+    function closeDropdown(id) {
+        const menu = document.getElementById(id);
+        if (menu) {
+            menu.classList.remove('open');
+            // Reset arrow
+            const wrap = menu.closest('.dropdown-menu-wrap');
+            if (wrap) {
+                const arrow = wrap.querySelector('.dropdown-toggle span:last-child');
+                if (arrow) { arrow.textContent = '▼'; arrow.classList.remove('dropdown-arrow-open'); }
+            }
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-menu-wrap')) {
+            document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
+            document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
+        }
+    });
+
     // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
     const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
     let currentSearchResults = [];
