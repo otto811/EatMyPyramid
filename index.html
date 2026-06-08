@@ -865,6 +865,23 @@
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
+            
+            // Prioritize exact matches and starts-with matches
+            localMatches.sort((a, b) => {
+                const aDesc = a.description.toLowerCase();
+                const bDesc = b.description.toLowerCase();
+                const aExact = aDesc === query;
+                const bExact = bDesc === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                
+                const aStarts = aDesc.startsWith(query);
+                const bStarts = bDesc.startsWith(query);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                
+                return aDesc.localeCompare(bDesc);
+            });
         } catch (e) {
             console.error("Local search error", e);
             localMatches = [];
@@ -931,7 +948,14 @@
                 }));
             }
 
-            const apiResults = [...usdaFoods, ...offFoods];
+            const rawApiResults = [...usdaFoods, ...offFoods];
+            
+            // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
+            const apiResults = rawApiResults.filter(apiFood => {
+                if (!apiFood.description) return false;
+                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+            });
+
             const apiStartIndex = currentSearchResults.length;
             currentSearchResults.push(...apiResults);
 
@@ -1842,6 +1866,23 @@ function updatePreview() {
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
+            
+            // Prioritize exact matches and starts-with matches
+            localMatches.sort((a, b) => {
+                const aDesc = a.description.toLowerCase();
+                const bDesc = b.description.toLowerCase();
+                const aExact = aDesc === query;
+                const bExact = bDesc === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                
+                const aStarts = aDesc.startsWith(query);
+                const bStarts = bDesc.startsWith(query);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                
+                return aDesc.localeCompare(bDesc);
+            });
         } catch(e) { localMatches = []; }
 
         currentRecipeSearchResults = [...localMatches];
@@ -1890,7 +1931,14 @@ function updatePreview() {
             }
 
             const apiStart = currentRecipeSearchResults.length;
-            const apiResults = [...usdaFoods, ...offFoods];
+            const rawApiResults = [...usdaFoods, ...offFoods];
+            
+            // Filter out API results that duplicate a My Foods result
+            const apiResults = rawApiResults.filter(apiFood => {
+                if (!apiFood.description) return false;
+                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+            });
+            
             currentRecipeSearchResults.push(...apiResults);
 
             apiResults.forEach((food, i) => {
