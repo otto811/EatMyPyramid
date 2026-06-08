@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EatMyPyramid 2.1</title>
-
-    
+  
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
@@ -547,6 +546,39 @@
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button onclick="closeCalculatorModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
             <button onclick="applyCalculatedPoints()" style="background:var(--primary); flex:1; padding:12px;">Apply Goal</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== EDIT LOG MODAL ==================== -->
+<div id="editLogModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#f59e0b;">Edit Logged Item</h3>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Amount</label>
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+                <input type="number" id="edit-amount" step="0.1" style="flex:2; padding:12px; font-size:1em;">
+                <span id="edit-unit-display" style="flex:1; padding:12px; background:#f3f4f6; border-radius:6px; color:#6b7280; text-align:center; display:inline-block; height:45px; box-sizing:border-box; line-height: 21px;"></span>
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Food Group Assignment</label>
+            <select id="edit-food-group" style="width:100%; padding:10px; font-size:1em;">
+                <option value="Fruit">Fruit</option>
+                <option value="Vegetable">Vegetable</option>
+                <option value="Animal Protein">Animal Protein</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Grain">Grain</option>
+                <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                <option value="Other">Do not count in any Food Group</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="closeEditModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+            <button onclick="saveEditItem()" style="background:#f59e0b; flex:1; padding:12px; font-weight:bold; color:white;">Save</button>
         </div>
     </div>
 </div>
@@ -1171,13 +1203,40 @@ function updatePreview() {
         if (fgSelect) fgSelect.value = '';
     }
 
+    let currentEditIndex = -1;
+
     function editItem(index) {
         const item = state.log[index];
-        const newAmt = prompt(`Edit amount for ${item.name}\n(Currently ${item.amount} ${item.unit}):`, item.amount);
+        currentEditIndex = index;
         
-        if (newAmt === null || newAmt === "") return; 
+        document.getElementById('edit-amount').value = item.amount;
+        document.getElementById('edit-unit-display').textContent = item.unit || '';
         
-        const val = parseFloat(newAmt);
+        let cat = item.category || 'Other';
+        const validGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+        if (!validGroups.includes(cat)) {
+            cat = 'Other';
+        }
+        document.getElementById('edit-food-group').value = cat;
+        
+        document.getElementById('editLogModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editLogModal').style.display = 'none';
+        currentEditIndex = -1;
+    }
+
+    function saveEditItem() {
+        if (currentEditIndex < 0) return;
+        
+        const item = state.log[currentEditIndex];
+        const newAmtVal = document.getElementById('edit-amount').value;
+        const newCat = document.getElementById('edit-food-group').value;
+        
+        if (newAmtVal === null || newAmtVal === "") return alert("Please enter an amount."); 
+        
+        const val = parseFloat(newAmtVal);
         if (isNaN(val) || val <= 0) return alert("Please enter a valid positive number.");
         
         // Subtract old values from daily totals
@@ -1185,6 +1244,12 @@ function updatePreview() {
         state.current.Protein -= item.protein;
         state.current.Fat -= item.fat;
         state.current.Carbs -= (item.carbs || 0);
+
+        // Adjust food group count for the OLD category
+        const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+        if (trackedGroups.includes(item.category) && state.current[item.category] !== undefined && state.current[item.category] > 0) {
+            state.current[item.category] -= 1;
+        }
 
         // Calculate new nutrition using correct grams = val * gramsPerUnit
         // calsPerUnit (etc.) is already the per-gram density, so no *100 needed
@@ -1198,6 +1263,9 @@ function updatePreview() {
         item.fiber    = newGrams * (item.fibPerUnit || 0);
         
         item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
+        
+        // Update category
+        item.category = newCat;
 
         // Add new values back to daily totals
         state.current.Calories += item.calories;
@@ -1205,9 +1273,19 @@ function updatePreview() {
         state.current.Fat += item.fat;
         state.current.Carbs += item.carbs;
 
+        // Adjust food group count for the NEW category
+        if (trackedGroups.includes(item.category)) {
+            if (state.current[item.category] === undefined) {
+                state.current[item.category] = 0;
+            }
+            state.current[item.category] += 1;
+        }
+
         saveData(); 
         renderLog(); 
         renderBarometers();
+        
+        closeEditModal();
     }
 
     function deleteItem(index) {
