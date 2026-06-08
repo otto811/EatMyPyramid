@@ -216,6 +216,51 @@
             width: 100%; 
         }
 
+        /* Dropdown menu for Create & Manage My Foods and Reset Logs */
+        .dropdown-menu-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-menu-wrap .dropdown-toggle {
+            width: 100%;
+            cursor: pointer;
+        }
+        .dropdown-menu-list {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 4px);
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 500;
+            min-width: 220px;
+            overflow: hidden;
+            animation: dropdownFadeIn 0.15s ease;
+        }
+        .dropdown-menu-list.open { display: block; }
+        .dropdown-menu-list button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            border-radius: 0;
+            padding: 11px 16px;
+            font-size: 0.9em;
+            background: white;
+            color: var(--text-main);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .dropdown-menu-list button:last-child { border-bottom: none; }
+        .dropdown-menu-list button:hover { background: #f3f4f6; }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 768px) {
             .container { 
                 grid-template-columns: 1fr; 
@@ -228,27 +273,29 @@
 <div class="container">
     <div class="card full-width">
         <h2>Your Profile & Setup</h2>
-        <div class="profile-bar">
+        <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
             <div>
                 <label>Day of Week</label>
-                <select id="daySelect" onchange="changeDay()" style="font-weight:bold;"></select>
+                <select id="daySelect" onchange="changeDay()" style="font-weight:bold; padding: 8px; height: 38px;"></select>
             </div>
-            <div>
-                <label>Body Weight (lbs)</label>
-                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()">
-            </div>
-            <div>
-                <label>Daily Calorie Goal</label>
-                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
-            </div>
-            <div>
-                <label>Daily Points Goal</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
-                    <button onclick="showCalculatorModal()" style="background-color: var(--teal); white-space: nowrap;">Calculate Your Points</button>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
+                <div>
+                    <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
+                    <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()" style="width:70px; padding: 6px 8px; height: 34px;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
+                    <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()" style="width:80px; padding: 6px 8px; height: 34px;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0" style="width:60px; padding: 6px 8px; height: 34px;">
+                        <button onclick="showCalculatorModal()" style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
+                    </div>
                 </div>
             </div>
-            <div style="flex-grow:1; font-size:0.85em;color:#4338ca;">
+            <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
                 <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories. <strong>Data saves automatically.</strong></em>
             </div>
         </div>
@@ -264,22 +311,13 @@
                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷 Barcode</button>
             </div>
-<!-- //=========MODIFICATION 6/6/2026 11:40============== -->          
-<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="showCustomFoodModal()" style="background:var(--purple); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">+ Create Custom Food</button>
-                <button onclick="showRecipeModal()" style="background:#14b8a6; padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🍳 Create Recipe</button>
-                <button onclick="exportMyFoods()" style="background:var(--teal); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📤 Export My Foods</button>
-                <button onclick="document.getElementById('importMyFoodsInput').click()" style="background:var(--primary); padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">📥 Import My Foods</button>
-                <button onclick="deleteMyFoods()" style="background:#ef4444; padding: 8px 12px; border-radius: 6px; color: white; border: none; cursor: pointer; font-size: 0.9em;">🗑️ Delete My Foods</button>
-                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
-<!-- //=======END MODIFICATION -->
-        
+        </div>
+
         <div class="form-group">
             <label>Search Results</label>
             <select id="foodSelect" onchange="updatePreview()"></select>
         </div>
-        
+
         <div class="form-group">
             <label>Number of Servings (optional)</label>
             <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()">
@@ -315,9 +353,26 @@
             <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by default.</small>
         </div>
         
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
             <button onclick="saveCurrentToMyFoods()" style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save to My Foods</button>
+        </div>
+
+        <!-- Create & Manage My Foods dropdown -->
+        <div class="form-group" style="margin-bottom: 0;">
+            <div class="dropdown-menu-wrap" style="width:100%;">
+                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)" style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                </button>
+                <div id="myFoodsDropdown" class="dropdown-menu-list">
+                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
+                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
+                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
+                    <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
+                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete My Foods</button>
+                </div>
+                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+            </div>
         </div>
 
         <div style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
@@ -327,7 +382,7 @@
             <div class="exercise-box">
                 <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from total)</label>
                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                    <input type="number" id="exDuration" placeholder="Duration (min)" style="flex:1; padding:10px;">
+                    <input type="number" id="exDuration" placeholder="Duration (min)" style="width:72px; padding:10px;">
                     <select id="exIntensity" style="flex:1; padding:10px;">
                         <option value="Low">Low</option>
                         <option value="Moderate">Moderate</option>
@@ -337,7 +392,7 @@
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
-                    <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()" style="flex:1;">
+                    <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()" style="width:60px;">
                 </div>
             </div>
         </div>
@@ -356,8 +411,17 @@
     <div class="card full-width">
         <h2>Daily Log</h2>
         <div id="logContainer"><p style="color:gray;">No foods logged yet today.</p></div>
-        <button onclick="resetDay()" class="reset-btn">Reset Today's Data (Clear Log & Totals)</button>
-        <button onclick="resetWeek()" class="reset-btn" style="background:#f59e0b; margin-top:8px;">Clear Entire Week's Logs &amp; Targets (All 7 Days)</button>
+
+        <!-- Reset Logs dropdown -->
+        <div class="dropdown-menu-wrap" style="width:100%; margin-top:15px;">
+            <button class="dropdown-toggle reset-btn" onclick="toggleDropdown('resetLogsDropdown', this)" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:0;">
+                <span>🗑️ Reset Logs</span><span id="resetLogsDropdownArrow">▼</span>
+            </button>
+            <div id="resetLogsDropdown" class="dropdown-menu-list">
+                <button onclick="resetDay(); closeDropdown('resetLogsDropdown')" style="color:#ef4444;">Reset Today's Data (Clear Log &amp; Totals)</button>
+                <button onclick="resetWeek(); closeDropdown('resetLogsDropdown')" style="color:#d97706;">Clear Entire Week's Logs &amp; Targets (All 7 Days)</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -551,6 +615,42 @@
 </div>
 
 <script>
+    // ==================== DROPDOWN MENU HELPERS ====================
+    function toggleDropdown(id, toggleBtn) {
+        const menu = document.getElementById(id);
+        const isOpen = menu.classList.contains('open');
+        // Close all open dropdowns first
+        document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
+        if (!isOpen) {
+            menu.classList.add('open');
+            // Flip arrow indicator (last span child of toggle button)
+            const arrow = toggleBtn ? toggleBtn.querySelector('span:last-child') : null;
+            if (arrow) { arrow.textContent = '▲'; arrow.classList.add('dropdown-arrow-open'); }
+        }
+    }
+
+    function closeDropdown(id) {
+        const menu = document.getElementById(id);
+        if (menu) {
+            menu.classList.remove('open');
+            // Reset arrow
+            const wrap = menu.closest('.dropdown-menu-wrap');
+            if (wrap) {
+                const arrow = wrap.querySelector('.dropdown-toggle span:last-child');
+                if (arrow) { arrow.textContent = '▼'; arrow.classList.remove('dropdown-arrow-open'); }
+            }
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-menu-wrap')) {
+            document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
+            document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
+        }
+    });
+
     // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
     const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
     let currentSearchResults = [];
@@ -666,6 +766,12 @@
         state.current = appData.history[day].current;
         state.log = appData.history[day].log;
         
+        // Always sync Calories target to Daily Calorie Goal — fixes stale values at start of each day
+        if (appData.calorieGoal > 0 && state.targets.Calories !== appData.calorieGoal) {
+            state.targets.Calories = appData.calorieGoal;
+            saveData();
+        }
+
         document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
         
         renderLog(); 
@@ -759,6 +865,23 @@
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
+            
+            // Prioritize exact matches and starts-with matches
+            localMatches.sort((a, b) => {
+                const aDesc = a.description.toLowerCase();
+                const bDesc = b.description.toLowerCase();
+                const aExact = aDesc === query;
+                const bExact = bDesc === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                
+                const aStarts = aDesc.startsWith(query);
+                const bStarts = bDesc.startsWith(query);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                
+                return aDesc.localeCompare(bDesc);
+            });
         } catch (e) {
             console.error("Local search error", e);
             localMatches = [];
@@ -825,7 +948,14 @@
                 }));
             }
 
-            const apiResults = [...usdaFoods, ...offFoods];
+            const rawApiResults = [...usdaFoods, ...offFoods];
+            
+            // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
+            const apiResults = rawApiResults.filter(apiFood => {
+                if (!apiFood.description) return false;
+                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+            });
+
             const apiStartIndex = currentSearchResults.length;
             currentSearchResults.push(...apiResults);
 
@@ -1299,6 +1429,12 @@ function updatePreview() {
     // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
     function startBarcodeScan(isRecipeMode = false) {
         recipeBarcodeMode = isRecipeMode === true;
+
+        // If opening from inside the recipe modal, hide it so the scanner modal is visible
+        if (recipeBarcodeMode) {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
@@ -1348,9 +1484,14 @@ function updatePreview() {
     }
 
     function stopBarcodeScan() {
+        const wasRecipeMode = recipeBarcodeMode;
         document.getElementById('scannerModal').style.display = 'none';
         if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
             html5QrcodeScanner.stop().catch(err => console.error("Error stopping scanner", err));
+        }
+        // Restore the recipe modal if the scanner was opened from within it
+        if (wasRecipeMode) {
+            document.getElementById('recipeModal').style.display = 'flex';
         }
     }
 
@@ -1725,6 +1866,23 @@ function updatePreview() {
                 (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
                 (f.upc && f.upc === query)
             ).map(f => ({ ...f, source: 'My Foods' }));
+            
+            // Prioritize exact matches and starts-with matches
+            localMatches.sort((a, b) => {
+                const aDesc = a.description.toLowerCase();
+                const bDesc = b.description.toLowerCase();
+                const aExact = aDesc === query;
+                const bExact = bDesc === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                
+                const aStarts = aDesc.startsWith(query);
+                const bStarts = bDesc.startsWith(query);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                
+                return aDesc.localeCompare(bDesc);
+            });
         } catch(e) { localMatches = []; }
 
         currentRecipeSearchResults = [...localMatches];
@@ -1773,7 +1931,14 @@ function updatePreview() {
             }
 
             const apiStart = currentRecipeSearchResults.length;
-            const apiResults = [...usdaFoods, ...offFoods];
+            const rawApiResults = [...usdaFoods, ...offFoods];
+            
+            // Filter out API results that duplicate a My Foods result
+            const apiResults = rawApiResults.filter(apiFood => {
+                if (!apiFood.description) return false;
+                return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+            });
+            
             currentRecipeSearchResults.push(...apiResults);
 
             apiResults.forEach((food, i) => {
