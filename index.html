@@ -1299,6 +1299,12 @@ function updatePreview() {
     // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
     function startBarcodeScan(isRecipeMode = false) {
         recipeBarcodeMode = isRecipeMode === true;
+
+        // If opening from inside the recipe modal, hide it so the scanner modal is visible
+        if (recipeBarcodeMode) {
+            document.getElementById('recipeModal').style.display = 'none';
+        }
+
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
         document.getElementById('manualBarcode').value = '';
@@ -1348,9 +1354,14 @@ function updatePreview() {
     }
 
     function stopBarcodeScan() {
+        const wasRecipeMode = recipeBarcodeMode;
         document.getElementById('scannerModal').style.display = 'none';
         if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
             html5QrcodeScanner.stop().catch(err => console.error("Error stopping scanner", err));
+        }
+        // Restore the recipe modal if the scanner was opened from within it
+        if (wasRecipeMode) {
+            document.getElementById('recipeModal').style.display = 'flex';
         }
     }
 
