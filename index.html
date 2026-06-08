@@ -280,16 +280,16 @@
             </div>
             <div>
                 <label>Body Weight (lbs)</label>
-                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()">
+                <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()" style="width:80px;">
             </div>
             <div>
                 <label>Daily Calorie Goal</label>
-                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()">
+                <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()" style="width:80px;">
             </div>
             <div>
                 <label>Daily Points Goal</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0">
+                    <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0" style="width:60px;">
                     <button onclick="showCalculatorModal()" style="background-color: var(--teal); white-space: nowrap;">Calculate Your Points</button>
                 </div>
             </div>
@@ -380,7 +380,7 @@
             <div class="exercise-box">
                 <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from total)</label>
                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                    <input type="number" id="exDuration" placeholder="Duration (min)" style="flex:1; padding:10px;">
+                    <input type="number" id="exDuration" placeholder="Duration (min)" style="width:72px; padding:10px;">
                     <select id="exIntensity" style="flex:1; padding:10px;">
                         <option value="Low">Low</option>
                         <option value="Moderate">Moderate</option>
@@ -390,7 +390,7 @@
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
-                    <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()" style="flex:1;">
+                    <input type="number" id="exerciseInput" value="0" min="0" step="0.5" onchange="updateExercisePoints()" style="width:60px;">
                 </div>
             </div>
         </div>
@@ -764,6 +764,12 @@
         state.current = appData.history[day].current;
         state.log = appData.history[day].log;
         
+        // Always sync Calories target to Daily Calorie Goal — fixes stale values at start of each day
+        if (appData.calorieGoal > 0 && state.targets.Calories !== appData.calorieGoal) {
+            state.targets.Calories = appData.calorieGoal;
+            saveData();
+        }
+
         document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
         
         renderLog(); 
