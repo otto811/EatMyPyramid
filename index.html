@@ -365,11 +365,12 @@
                     <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
                 </button>
                 <div id="myFoodsDropdown" class="dropdown-menu-list">
+                    <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp; Manage My Foods</button>
                     <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
                     <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
                     <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
                     <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
-                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete My Foods</button>
+                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete All My Foods</button>
                 </div>
                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
             </div>
@@ -655,6 +656,19 @@
             <button onclick="closeRecipeModal()" style="background:#6b7280; flex:1; padding:12px;">Cancel</button>
             <button onclick="clearRecipeIngredients()" style="background:#f59e0b; flex:1; padding:12px;">Clear All Ingredients</button>
             <button onclick="saveRecipeToMyFoods()" style="background:#14b8a6; flex:2; padding:12px; font-weight:bold;">Save Recipe as 1 Serving in My Foods</button>
+        </div>
+    </div>
+</div>
+
+<div id="manageMyFoodsModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:9000; align-items:center; justify-content:center; overflow-y: auto;">
+    <div style="background:white; padding:25px; border-radius:12px; width:95%; max-width:600px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto; display:flex; flex-direction:column; max-height: 90vh;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
+            <h3 style="margin:0; color:#8b5cf6;">📋 Manage My Foods</h3>
+            <button onclick="closeManageMyFoodsModal()" style="background:var(--text-muted); padding:6px 12px; border-radius:4px; border:none; color:white; cursor:pointer;">Close</button>
+        </div>
+        
+        <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
+            <!-- List goes here -->
         </div>
     </div>
 </div>
@@ -1771,6 +1785,15 @@ function updatePreview() {
             foodNutrients: food.foodNutrients || [] 
         };
         
+        const exists = appData.myFoods.some(f => 
+            (f.description || '').toLowerCase() === customFood.description.toLowerCase() && 
+            (f.upc || '') === (customFood.upc || '')
+        );
+        
+        if (exists) {
+            if (!confirm(`An item named "${customFood.description}" is already saved in My Foods. Proceed to save another copy?`)) return;
+        }
+
         appData.myFoods.push(customFood);
         saveData();
         alert(`${food.description} saved to My Foods! You can now search for it locally.`);
@@ -1813,7 +1836,7 @@ function updatePreview() {
             (f.upc || '') === (newFood.upc || '')
         );
         
-        if (!exists) {
+        if (!exists || confirm(`An item named "${newFood.description}" is already saved in My Foods. Proceed to save another copy?`)) {
             appData.myFoods.push(newFood);
             saveData();
             alert(`${item.name} saved to My Foods database!`);
@@ -1827,12 +1850,52 @@ function updatePreview() {
                     btnElement.style.background = origBg;
                 }, 1500);
             }
-        } else {
-            alert('This item is already saved in My Foods.');
         }
     }
 
-    function showCustomFoodModal() {
+    let editingMyFoodIndex = -1;
+
+    function showCustomFoodModal(index = -1) {
+        editingMyFoodIndex = index;
+        if (index >= 0) {
+            const food = appData.myFoods[index];
+            document.getElementById('cf-name').value = food.description || '';
+            document.getElementById('cf-brand').value = food.brandOwner || '';
+            document.getElementById('cf-category').value = food.foodCategory || 'Other';
+            document.getElementById('cf-upc').value = food.upc || '';
+            
+            document.getElementById('cf-serving').value = food.servingSize || 100;
+            document.getElementById('cf-serving-unit').value = 'g';
+            
+            const findNut = (id) => {
+                const n = (food.foodNutrients || []).find(x => x.nutrientId === id);
+                return n ? n.value : 0;
+            };
+            const cals = findNut(1008);
+            const pro = findNut(1003);
+            const fat = findNut(1004);
+            const carb = findNut(1005);
+            const fib = findNut(1079);
+            
+            const sSize = food.servingSize || 100;
+            const multiplier = sSize / 100;
+            
+            document.getElementById('cf-cal').value = (cals * multiplier).toFixed(1);
+            document.getElementById('cf-pro').value = (pro * multiplier).toFixed(1);
+            document.getElementById('cf-fat').value = (fat * multiplier).toFixed(1);
+            document.getElementById('cf-carb').value = (carb * multiplier).toFixed(1);
+            document.getElementById('cf-fib').value = (fib * multiplier).toFixed(1);
+            
+            document.querySelector('#customFoodModal h3').innerText = 'Edit Custom Food';
+        } else {
+            // Clear form values
+            ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
+            ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
+            document.getElementById('cf-serving').value = '100';
+            const unitSel = document.getElementById('cf-serving-unit');
+            if (unitSel) unitSel.value = 'g';
+            document.querySelector('#customFoodModal h3').innerText = 'Create Custom Food';
+        }
         document.getElementById('customFoodModal').style.display = 'flex';
     }
 
@@ -1875,19 +1938,28 @@ function updatePreview() {
             ]
         };
 
-        appData.myFoods.push(newFood);
-        saveData();
+        if (editingMyFoodIndex >= 0) {
+            appData.myFoods[editingMyFoodIndex] = newFood;
+            editingMyFoodIndex = -1;
+            saveData();
+            alert(`${name} updated in My Foods!`);
+            if (document.getElementById('manageMyFoodsModal').style.display === 'flex') {
+                renderMyFoodsList();
+            }
+        } else {
+            const exists = appData.myFoods.some(f => 
+                (f.description || '').toLowerCase() === newFood.description.toLowerCase() && 
+                (f.upc || '') === (newFood.upc || '')
+            );
+            if (exists) {
+                if (!confirm(`An item named "${name}" is already saved in My Foods. Proceed to save another copy?`)) return;
+            }
+            appData.myFoods.push(newFood);
+            saveData();
+            alert(`${name} saved to My Foods!`);
+        }
         
         document.getElementById('customFoodModal').style.display = 'none';
-        
-        // Clear form values
-        ['cf-name','cf-brand','cf-upc'].forEach(id => document.getElementById(id).value = '');
-        ['cf-cal','cf-pro','cf-fat','cf-carb','cf-fib'].forEach(id => document.getElementById(id).value = '0');
-        document.getElementById('cf-serving').value = '100';
-        const unitSel = document.getElementById('cf-serving-unit');
-        if (unitSel) unitSel.value = 'g';
-
-        alert(`${name} saved to My Foods!`);
     }
 // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
@@ -1948,6 +2020,57 @@ function updatePreview() {
             }
         };
         reader.readAsText(file);
+    }
+
+    function showManageMyFoodsModal() {
+        document.getElementById('manageMyFoodsModal').style.display = 'flex';
+        renderMyFoodsList();
+    }
+    
+    function closeManageMyFoodsModal() {
+        document.getElementById('manageMyFoodsModal').style.display = 'none';
+    }
+
+    function renderMyFoodsList() {
+        const container = document.getElementById('myFoodsListContainer');
+        if (!appData.myFoods || appData.myFoods.length === 0) {
+            container.innerHTML = '<p style="color:gray;text-align:center;">Your My Foods database is empty.</p>';
+            return;
+        }
+        
+        let html = '';
+        appData.myFoods.forEach((food, index) => {
+            const findNut = (id) => {
+                const n = (food.foodNutrients || []).find(x => x.nutrientId === id);
+                return n ? n.value : 0;
+            };
+            const cals = findNut(1008);
+            const sSize = food.servingSize || 100;
+            const calsPerServing = (cals * (sSize / 100)).toFixed(0);
+            const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+            
+            html += `
+                <div style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
+                    <div style="flex-grow:1; padding-right:10px;">
+                        <strong style="color:var(--text-main);">${food.description}${brandStr}</strong><br>
+                        <small style="color:var(--text-muted);">${food.householdServingFullText || sSize + 'g'} • ${calsPerServing} cal • ${food.foodCategory || 'Other'}</small>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="showCustomFoodModal(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                        <button onclick="deleteMyFoodItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function deleteMyFoodItem(index) {
+        if (confirm(`Are you sure you want to delete "${appData.myFoods[index].description}" from your My Foods database?`)) {
+            appData.myFoods.splice(index, 1);
+            saveData();
+            renderMyFoodsList();
+        }
     }
 
     function deleteMyFoods() {
