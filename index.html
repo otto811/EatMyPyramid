@@ -330,6 +330,15 @@
                     <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories.
                         <strong>Data saves automatically.</strong></em>
                 </div>
+
+                <!-- USDA API Key Button -->
+                <div style="flex-basis: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                    <button onclick="showUsdaApiKeyModal()"
+                        style="background:#6b7280; color:white; padding:6px 14px; font-size:0.82em; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        🔑 USDA API Key
+                    </button>
+                    <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
+                </div>
             </div>
         </div>
 
@@ -469,7 +478,7 @@
             <div class="dropdown-menu-wrap" style="width:100%; margin-top:15px;">
                 <button class="dropdown-toggle reset-btn" onclick="toggleDropdown('resetLogsDropdown', this)"
                     style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:0;">
-                    <span>🗑️ Reset Logs</span><span id="resetLogsDropdownArrow">▼</span>
+                    <span>🗑️ Reset Daily Logs</span><span id="resetLogsDropdownArrow">▼</span>
                 </button>
                 <div id="resetLogsDropdown" class="dropdown-menu-list">
                     <button onclick="resetDay(); closeDropdown('resetLogsDropdown')" style="color:#ef4444;">Reset
@@ -629,6 +638,41 @@
                     style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
                 <button onclick="applyCalculatedPoints()" style="background:var(--primary); flex:1; padding:12px;">Apply
                     Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== USDA API KEY MODAL ==================== -->
+    <div id="usdaApiKeyModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:90%; max-width:420px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#6b7280;">🔑 USDA FoodData Central API Key</h3>
+
+            <p style="font-size:0.9em; color:#4b5563; line-height:1.4;">
+                The app uses a shared demo key by default. For higher rate limits or personal usage, enter your own free API key from 
+                <a href="https://fdc.nal.usda.gov/api-key-signup.html" target="_blank" style="color:#3b82f6;">USDA FoodData Central</a>.
+            </p>
+
+            <div class="form-group" style="margin-top:15px;">
+                <label style="font-weight:600;">Your USDA API Key</label>
+                <input type="text" id="usdaApiKeyInput" placeholder="e.g. abc123def456ghi789jkl0" 
+                    style="width:100%; padding:12px; font-family:monospace; font-size:0.95em;">
+                <small style="color:#6b7280; display:block; margin-top:4px;">Leave blank to use the built-in demo key. Your key is saved only in this browser.</small>
+            </div>
+
+            <div id="usdaApiKeyCurrent"
+                style="margin:12px 0; padding:10px; background:#f3f4f6; border-radius:6px; font-size:0.85em; color:#374151;">
+                Current key in use: <strong id="currentApiKeyDisplay">Loading...</strong>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeUsdaApiKeyModal()"
+                    style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+                <button onclick="clearUsdaApiKey()"
+                    style="background:#f59e0b; flex:1; padding:12px; color:white;">Use Demo Key</button>
+                <button onclick="saveUsdaApiKey()"
+                    style="background:#10b981; flex:1.3; padding:12px; color:white; font-weight:600;">Save &amp; Use Key</button>
             </div>
         </div>
     </div>
@@ -818,7 +862,7 @@
         });
 
         // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
-        const API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
+        let API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';  // Can be overridden by user's personal USDA API key
         let currentSearchResults = [];
         let html5QrcodeScanner = null;
 
@@ -830,6 +874,7 @@
             weight: 0,
             calorieGoal: 0,
             wwGoal: 0,
+            usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
             // Macro targets represent percentages (30%, 30%, 40%)
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
@@ -896,6 +941,16 @@
                         appData.history[day].current.Water = 0;
                     }
                 }
+
+                // Migration 4: Ensure usdaApiKey exists (use default if first run or old save)
+                if (!appData.usdaApiKey || appData.usdaApiKey.trim() === '') {
+                    appData.usdaApiKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
+                }
+            }
+
+            // Sync the effective API key (user's custom one takes precedence if set)
+            if (appData.usdaApiKey && appData.usdaApiKey.trim() !== '') {
+                API_KEY = appData.usdaApiKey.trim();
             }
 
             document.getElementById('weightInput').value = appData.weight;
@@ -916,6 +971,9 @@
             // Listen for Enter key presses on search inputs
             document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
             document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
+
+            // Show USDA API key status in profile bar
+            updateApiKeyStatus();
         }
 
         function changeDay() {
@@ -1601,6 +1659,96 @@
                 }
             }
             closeCalculatorModal();
+        }
+
+        // ==================== USDA API KEY FUNCTIONS ====================
+        function updateApiKeyStatus() {
+            const statusEl = document.getElementById('apiKeyStatus');
+            if (!statusEl) return;
+
+            const key = appData.usdaApiKey || API_KEY;
+            if (key && key !== 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7') {
+                // Custom key is active - show masked version (last 4 chars)
+                const last4 = key.slice(-4);
+                statusEl.innerHTML = `✓ Custom key active (…${last4})`;
+                statusEl.style.color = '#059669';
+            } else {
+                statusEl.innerHTML = 'Demo key';
+                statusEl.style.color = '#6b7280';
+            }
+        }
+
+        function showUsdaApiKeyModal() {
+            const modal = document.getElementById('usdaApiKeyModal');
+            const input = document.getElementById('usdaApiKeyInput');
+            const display = document.getElementById('currentApiKeyDisplay');
+
+            // Show current effective key (masked)
+            const currentKey = appData.usdaApiKey || API_KEY;
+            if (currentKey) {
+                const masked = currentKey.length > 8 ? currentKey.substring(0, 4) + '••••••••' + currentKey.slice(-4) : '••••••••••••';
+                display.innerHTML = `<span style="font-family:monospace;">${masked}</span> <small style="color:#6b7280;">(last 4: ${currentKey.slice(-4)})</small>`;
+            } else {
+                display.textContent = 'Using demo key';
+            }
+
+            // Pre-fill input with current custom key if any (or leave blank to indicate demo)
+            input.value = (appData.usdaApiKey && appData.usdaApiKey !== 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7') ? appData.usdaApiKey : '';
+
+            modal.style.display = 'flex';
+            input.focus();
+            input.select();
+        }
+
+        function closeUsdaApiKeyModal() {
+            document.getElementById('usdaApiKeyModal').style.display = 'none';
+        }
+
+        function saveUsdaApiKey() {
+            const input = document.getElementById('usdaApiKeyInput');
+            const newKey = (input.value || '').trim();
+
+            if (!newKey) {
+                // If blank, revert to demo
+                return clearUsdaApiKey();
+            }
+
+            // Basic validation: USDA keys are usually 20-40 alphanumeric chars
+            if (newKey.length < 10) {
+                alert("That doesn't look like a valid USDA API key (too short). Please double-check.");
+                return;
+            }
+
+            appData.usdaApiKey = newKey;
+            API_KEY = newKey;   // Update the live variable used in searches
+            saveData();
+
+            updateApiKeyStatus();
+            closeUsdaApiKeyModal();
+
+            // Optional: show brief confirmation
+            const statusEl = document.getElementById('apiKeyStatus');
+            if (statusEl) {
+                const origText = statusEl.innerHTML;
+                statusEl.innerHTML = '✓ Key saved!';
+                setTimeout(() => {
+                    updateApiKeyStatus();
+                }, 1800);
+            }
+        }
+
+        function clearUsdaApiKey() {
+            // Revert to the original demo key
+            appData.usdaApiKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
+            API_KEY = appData.usdaApiKey;
+            saveData();
+
+            updateApiKeyStatus();
+            closeUsdaApiKeyModal();
+
+            // Clear the input field too
+            const input = document.getElementById('usdaApiKeyInput');
+            if (input) input.value = '';
         }
 
         // ==================== UI RENDERING ====================
