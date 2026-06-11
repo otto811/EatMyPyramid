@@ -946,6 +946,27 @@
                 if (!appData.usdaApiKey || appData.usdaApiKey.trim() === '') {
                     appData.usdaApiKey = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';
                 }
+
+                // Migration 5: Sanitize My Foods items to ensure all stored entries comply with search filter expectations
+                // (description/brandOwner/upc as strings; fixes legacy items from barcode saves that stored arrays for brandOwner)
+                if (appData.myFoods && Array.isArray(appData.myFoods)) {
+                    appData.myFoods = appData.myFoods.map(f => {
+                        const cleanNutrients = Array.isArray(f.foodNutrients) ? f.foodNutrients.map(n => ({
+                            nutrientId: parseInt(n.nutrientId || (n.nutrient && n.nutrient.id) || 0) || 0,
+                            value: parseFloat(n.value !== undefined ? n.value : (n.amount !== undefined ? n.amount : 0)) || 0
+                        })) : [];
+                        return {
+                            ...f,
+                            description: String(f.description || 'Unnamed Food'),
+                            brandOwner: String(f.brandOwner || ''),
+                            upc: String(f.upc || ''),
+                            foodCategory: String(f.foodCategory || 'Other'),
+                            servingSize: parseFloat(f.servingSize) || 100,
+                            householdServingFullText: String(f.householdServingFullText || `${parseFloat(f.servingSize) || 100}g`),
+                            foodNutrients: cleanNutrients
+                        };
+                    }).filter(f => f.description && f.description.trim() !== 'Unnamed Food' || f.upc);
+                }
             }
 
             // Sync the effective API key (user's custom one takes precedence if set)
@@ -1084,16 +1105,17 @@
             // 1. ALWAYS search Local "My Foods" Database first (guaranteed, independent of APIs)
             let localMatches = [];
             try {
-                localMatches = appData.myFoods.filter(f =>
-                    (f.description && f.description.toLowerCase().includes(query)) ||
-                    (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
-                    (f.upc && f.upc === query)
-                ).map(f => ({ ...f, source: 'My Foods' }));
+                localMatches = appData.myFoods.filter(f => {
+                    const desc = String(f.description || '').toLowerCase();
+                    const brand = String(f.brandOwner || '').toLowerCase();
+                    const upcMatch = f.upc && String(f.upc) === query;
+                    return desc.includes(query) || brand.includes(query) || upcMatch;
+                }).map(f => ({ ...f, source: 'My Foods' }));
 
-                // Prioritize exact matches and starts-with matches
+                // Prioritize exact matches and starts-with matches (safe for any legacy bad items)
                 localMatches.sort((a, b) => {
-                    const aDesc = a.description.toLowerCase();
-                    const bDesc = b.description.toLowerCase();
+                    const aDesc = String(a.description || '').toLowerCase();
+                    const bDesc = String(b.description || '').toLowerCase();
                     const aExact = aDesc === query;
                     const bExact = bDesc === query;
                     if (aExact && !bExact) return -1;
@@ -1973,7 +1995,6 @@
 
                 const name = p.product_name || `Scanned Item (${barcode})`;
                 const brandText = String(p.brands || "Open Food Facts");
-                const brand = brandText.split(',');
                 const catText = String(p.categories || "Other");
 
                 const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
@@ -1981,8 +2002,8 @@
 
                 const fakeFood = {
                     description: name,
-                    brandOwner: brand,
-                    foodCategory: catText.split(','),
+                    brandOwner: brandText,
+                    foodCategory: catText,
                     servingSize: sQuantity,
                     householdServingFullText: sSizeText,
                     upc: barcode,
@@ -1999,13 +2020,13 @@
                 if (recipeBarcodeMode) {
                     currentRecipeSearchResults = [fakeFood];
                     const sel = document.getElementById('recipeFoodSelect');
-                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
+                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brandText})</option>`;
                     document.getElementById('recipeAmountInput').value = '';
                     recipeBarcodeMode = false;
                 } else {
                     currentSearchResults = [fakeFood];
                     const sel = document.getElementById('foodSelect');
-                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brand})</option>`;
+                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brandText})</option>`;
                     document.getElementById('servingInput').value = 1;
                     document.getElementById('amountInput').value = '';
                     updatePreview();
@@ -2031,8 +2052,8 @@
             const food = currentSearchResults[idx];
 
             const customFood = {
-                description: food.description,
-                brandOwner: food.brandOwner || '',
+                description: String(food.description || 'Unnamed Food'),
+                brandOwner: String(food.brandOwner || ''),
                 foodCategory: getFoodCategory(food),
                 servingSize: food.servingSize || 100,
                 householdServingFullText: food.householdServingFullText || '100g',
