@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EatMyPyramid 2.2</title>
+    <title>EatMyPyramid 2.3.3 - Hide &amp; Reveal Sections</title>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
@@ -297,8 +297,13 @@
 
     <div class="container">
         <div class="card full-width">
-            <h2>Your Profile & Setup</h2>
-            <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2 style="margin:0;">Your Profile & Setup</h2>
+                <button id="profile-toggle" onclick="toggleSection('profile')" 
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="profile-content">
+                <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
                 <div>
                     <label>Day of Week</label>
                     <select id="daySelect" onchange="changeDay()"
@@ -340,10 +345,16 @@
                     <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
                 </div>
             </div>
+            </div> <!-- end profile-content (collapsible) -->
         </div>
 
         <div class="card">
-            <h2>Search & Log Food</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2 style="margin:0;">Search & Log Food</h2>
+                <button id="search-toggle" onclick="toggleSection('search')" 
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="search-content">
 
             <div class="form-group">
                 <label>Search Databases (USDA, Open Food Facts, My Foods)</label>
@@ -455,10 +466,16 @@
                     </div>
                 </div>
             </div>
+            </div> <!-- end search-content (collapsible) -->
         </div>
 
         <div class="card">
-            <h2>Daily Targets</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2 style="margin:0;">Daily Targets</h2>
+                <button id="targets-toggle" onclick="toggleSection('targets')" 
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="targets-content">
 
             <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;">Macros & Energy</h3>
             <div id="macroBarometersContainer"></div>
@@ -466,10 +483,16 @@
             <h3 style="font-size:1em;border-bottom:1px solid #eee;padding-bottom:5px;margin-top:20px;">Food Groups
                 (Servings)</h3>
             <div id="groupBarometersContainer"></div>
+            </div> <!-- end targets-content (collapsible) -->
         </div>
 
         <div class="card full-width">
-            <h2>Daily Log</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2 style="margin:0;">Daily Log</h2>
+                <button id="log-toggle" onclick="toggleSection('log')" 
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="log-content">
             <div id="logContainer">
                 <p style="color:gray;">No foods logged yet today.</p>
             </div>
@@ -487,6 +510,7 @@
                         Entire Week's Logs &amp; Targets (All 7 Days)</button>
                 </div>
             </div>
+            </div> <!-- end log-content (collapsible) -->
         </div>
     </div>
 
@@ -861,6 +885,38 @@
             }
         });
 
+        // ==================== HIDE / REVEAL SECTION FUNCTIONS (new in v2.3.3) ====================
+        function toggleSection(section) {
+            const content = document.getElementById(section + '-content');
+            const btn = document.getElementById(section + '-toggle');
+            if (!content || !btn) return;
+
+            const isHidden = content.style.display === 'none';
+            if (isHidden) {
+                content.style.display = 'block';
+                btn.textContent = '−';
+                if (appData.visibility) appData.visibility[section] = true;
+            } else {
+                content.style.display = 'none';
+                btn.textContent = '+';
+                if (appData.visibility) appData.visibility[section] = false;
+            }
+            saveData();
+        }
+
+        function applyVisibility() {
+            const sections = ['profile', 'search', 'targets', 'log'];
+            sections.forEach(key => {
+                const content = document.getElementById(key + '-content');
+                const btn = document.getElementById(key + '-toggle');
+                if (content && btn && appData.visibility) {
+                    const isVisible = appData.visibility[key] !== false;
+                    content.style.display = isVisible ? 'block' : 'none';
+                    btn.textContent = isVisible ? '−' : '+';
+                }
+            });
+        }
+
         // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
         let API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';  // Can be overridden by user's personal USDA API key
         let currentSearchResults = [];
@@ -878,7 +934,8 @@
             // Macro targets represent percentages (30%, 30%, 40%)
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
-            myFoods: []
+            myFoods: [],
+            visibility: { profile: true, search: true, targets: true, log: true }
         };
 
         let state = {
@@ -969,6 +1026,17 @@
                 }
             }
 
+            // Migration 6: Ensure visibility toggles exist for collapsible sections (hide/reveal)
+            if (!appData.visibility || typeof appData.visibility !== 'object') {
+                appData.visibility = { profile: true, search: true, targets: true, log: true };
+            } else {
+                // Ensure all keys exist for forward compatibility
+                if (appData.visibility.profile === undefined) appData.visibility.profile = true;
+                if (appData.visibility.search === undefined) appData.visibility.search = true;
+                if (appData.visibility.targets === undefined) appData.visibility.targets = true;
+                if (appData.visibility.log === undefined) appData.visibility.log = true;
+            }
+
             // Sync the effective API key (user's custom one takes precedence if set)
             if (appData.usdaApiKey && appData.usdaApiKey.trim() !== '') {
                 API_KEY = appData.usdaApiKey.trim();
@@ -995,6 +1063,9 @@
 
             // Show USDA API key status in profile bar
             updateApiKeyStatus();
+
+            // Apply saved hide/reveal state for the four main sections
+            applyVisibility();
         }
 
         function changeDay() {
