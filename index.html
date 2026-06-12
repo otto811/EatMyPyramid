@@ -124,7 +124,7 @@
             border-radius: 6px;
             font-size: 0.9em;
             border: 1px dashed #d1d5db;
-            min-height: 80px;
+            min-height: 120px;
         }
 
         .barometer-container {
@@ -441,31 +441,6 @@
                 </div>
             </div>
 
-            <div
-                style="margin-top:20px; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
-                <strong style="color:var(--purple);">Daily WW Points</strong>
-                <div class="barometer-container" id="wwBarometer"></div>
-
-                <div class="exercise-box">
-                    <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from
-                        total daily points used)(Time = minutes)</label>
-                    <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                        <input type="number" id="exDuration" placeholder="Time"
-                            style="width:72px; padding:10px;">
-                        <select id="exIntensity" style="flex:1; padding:10px;">
-                            <option value="Low">Low</option>
-                            <option value="Moderate">Moderate</option>
-                            <option value="High">High</option>
-                        </select>
-                        <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
-                        <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
-                            onchange="updateExercisePoints()" style="width:60px;">
-                    </div>
-                </div>
-            </div>
             </div> <!-- end search-content (collapsible) -->
         </div>
 
@@ -484,6 +459,41 @@
                 (Servings)</h3>
             <div id="groupBarometersContainer"></div>
             </div> <!-- end targets-content (collapsible) -->
+        </div>
+
+        <!-- New WW Daily Points Tracker Section -->
+        <div class="card full-width">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h2 style="margin:0;">WW Daily Points Tracker</h2>
+                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')" 
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="wwTracker-content">
+                <div style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
+                    <strong style="color:var(--purple);">Daily WW Points</strong>
+                    <div class="barometer-container" id="wwBarometer"></div>
+
+                    <div class="exercise-box">
+                        <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from
+                            total daily points used)(Time = minutes)</label>
+                        <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                            <input type="number" id="exDuration" placeholder="Time"
+                                style="width:72px; padding:10px;">
+                            <select id="exIntensity" style="flex:1; padding:10px;">
+                                <option value="Low">Low</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="High">High</option>
+                            </select>
+                            <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
+                            <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
+                                onchange="updateExercisePoints()" style="width:60px;">
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- end wwTracker-content (collapsible) -->
         </div>
 
         <div class="card full-width">
@@ -905,7 +915,7 @@
         }
 
         function applyVisibility() {
-            const sections = ['profile', 'search', 'targets', 'log'];
+            const sections = ['profile', 'search', 'targets', 'log', 'wwTracker'];
             sections.forEach(key => {
                 const content = document.getElementById(key + '-content');
                 const btn = document.getElementById(key + '-toggle');
@@ -935,7 +945,7 @@
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
             myFoods: [],
-            visibility: { profile: true, search: true, targets: true, log: true }
+            visibility: { profile: true, search: true, targets: true, log: true, wwTracker: true }
         };
 
         let state = {
@@ -1035,6 +1045,7 @@
                 if (appData.visibility.search === undefined) appData.visibility.search = true;
                 if (appData.visibility.targets === undefined) appData.visibility.targets = true;
                 if (appData.visibility.log === undefined) appData.visibility.log = true;
+                if (appData.visibility.wwTracker === undefined) appData.visibility.wwTracker = true;
             }
 
             // Sync the effective API key (user's custom one takes precedence if set)
