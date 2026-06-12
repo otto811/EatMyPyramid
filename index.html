@@ -303,17 +303,15 @@
 
 <body>
 
-    <!-- Non-intrusive app title -->
-    <div style="text-align: center; margin-bottom: 12px; padding: 6px 0; font-size: 1.05em; color: #64748b; font-weight: 600; letter-spacing: 0.4px; opacity: 0.9;">
-        (EatMyPyramid v2.3.3)
-    </div>
-
     <div class="container">
         <div class="card full-width">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">Your Profile & Setup</h2>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                <div>
+                    <h2 style="margin:0;">Your Profile & Setup</h2>
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.3)</div>
+                </div>
                 <button id="profile-toggle" onclick="toggleSection('profile')" 
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
             </div>
             <div id="profile-content">
                 <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
