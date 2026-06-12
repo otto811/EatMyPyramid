@@ -2250,7 +2250,8 @@
 
             const a = document.createElement('a');
             a.href = url;
-            a.download = `MyFoods_Export_${new Date().toISOString().split('T')}.json`;
+            // Fixed: clean filename without comma from split('T')
+            a.download = `MyFoods_Export_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
             document.body.appendChild(a);
             a.click();
 
@@ -2259,7 +2260,7 @@
         }
 
         function importMyFoods(event) {
-            const file = event.target.files;
+            const file = event.target.files[0];   // FIXED: Get the actual File, not the FileList
             if (!file) return;
 
             const reader = new FileReader();
@@ -2273,10 +2274,20 @@
 
                     importedFoods.forEach(newFood => {
                         if (newFood.description && newFood.foodNutrients) {
-                            const exists = appData.myFoods.some(existing =>
-                                existing.description.toLowerCase() === newFood.description.toLowerCase() &&
-                                existing.upc === newFood.upc
-                            );
+                            // IMPROVED duplicate check:
+                            // - If UPC exists on both, require description + UPC match
+                            // - If UPC is empty (common for custom foods/recipes), also check brandOwner
+                            const exists = appData.myFoods.some(existing => {
+                                const sameDesc = existing.description.toLowerCase() === newFood.description.toLowerCase();
+                                const sameUpc = (existing.upc || '') === (newFood.upc || '');
+                                const sameBrand = (existing.brandOwner || '').toLowerCase() === (newFood.brandOwner || '').toLowerCase();
+
+                                if (sameUpc && newFood.upc) {
+                                    return sameDesc;           // strong match when UPC is present
+                                }
+                                return sameDesc && sameBrand;  // fallback for custom items without UPC
+                            });
+
                             if (!exists) {
                                 appData.myFoods.push(newFood);
                                 importedCount++;
