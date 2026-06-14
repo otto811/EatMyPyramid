@@ -384,51 +384,17 @@
 
             <div class="form-group">
                 <label>Number of Servings (optional)</label>
-                <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()">
-            </div>
-
-            <div class="form-group">
-                <label>Consumed Amount (overrides servings)</label>
-                <div class="amount-row">
-                    <input type="number" id="amountInput" placeholder="e.g. 250 or 8" onchange="updatePreview()">
-                    <select id="unitSelect" onchange="updatePreview()">
-                        <option value="g">grams (g)</option>
-                        <option value="oz">ounces (oz)</option>
-                    </select>
+                <div style="display: flex; gap: 10px; align-items: stretch;">
+                    <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()" style="width: 80px; flex: none;">
+                    <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em; margin: 0;">Log Food</button>
+                    <button onclick="saveCurrentToMyFoods()"
+                        style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white; margin: 0;">⭐ Save
+                        to My Foods</button>
                 </div>
             </div>
 
-            <div class="form-group preview-box" id="nutritionPreview">
-                <em>Select a food to view nutritional information.</em>
-            </div>
-
-            <div class="form-group">
-                <label>Food Group Assignment (override for this item)</label>
-                <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
-                    onchange="updatePreview()">
-                    <option value="">-- Auto-detect from description --</option>
-                    <option value="Fruit">Fruit</option>
-                    <option value="Vegetable">Vegetable</option>
-                    <option value="Animal Protein">Animal Protein</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Grain">Grain</option>
-                    <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
-                    <option value="none">Do not count in any Food Group servings</option>
-                </select>
-                <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like
-                    snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by
-                    default.</small>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button onclick="logFood()" style="flex: 2; padding: 14px; font-size: 1.05em;">Log Food</button>
-                <button onclick="saveCurrentToMyFoods()"
-                    style="flex: 1; background: var(--warning); padding: 14px; font-size: 0.9em; color: white;">⭐ Save
-                    to My Foods</button>
-            </div>
-
             <!-- Create & Manage My Foods dropdown -->
-            <div class="form-group" style="margin-bottom: 0;">
+            <div class="form-group">
                 <div class="dropdown-menu-wrap" style="width:100%;">
                     <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
                         style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -450,6 +416,39 @@
                     <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
                         onchange="importMyFoods(event)">
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label>Consumed Amount (overrides servings)</label>
+                <div class="amount-row">
+                    <input type="number" id="amountInput" placeholder="e.g. 250 or 8" onchange="updatePreview()">
+                    <select id="unitSelect" onchange="updatePreview()">
+                        <option value="g">grams (g)</option>
+                        <option value="oz">ounces (oz)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group preview-box" id="nutritionPreview">
+                <em>Select a food to view nutritional information.</em>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Food Group Assignment (override for this item)</label>
+                <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
+                    onchange="updatePreview()">
+                    <option value="">-- Auto-detect from description --</option>
+                    <option value="Fruit">Fruit</option>
+                    <option value="Vegetable">Vegetable</option>
+                    <option value="Animal Protein">Animal Protein</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Grain">Grain</option>
+                    <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                    <option value="none">Do not count in any Food Group servings</option>
+                </select>
+                <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like
+                    snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by
+                    default.</small>
             </div>
 
             </div> <!-- end search-content (collapsible) -->
