@@ -52,7 +52,7 @@
         }
 
         .card.collapsed {
-            background-color: #f8fafc !important;
+            background-color: #f8fafc;
             border: 1px dashed #94a3b8;
             box-shadow: none;
             opacity: 0.92;
@@ -304,7 +304,7 @@
 <body>
 
     <div class="container">
-        <div class="card full-width" style="background-color: #f0fdfa;">
+        <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
@@ -361,7 +361,7 @@
             </div> <!-- end profile-content (collapsible) -->
         </div>
 
-        <div class="card" style="background-color: #eff6ff;">
+        <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Search & Log Food</h2>
                 <button id="search-toggle" onclick="toggleSection('search')"
@@ -386,15 +386,13 @@
 
                 <div class="form-group">
                     <label>Number of Servings (optional)</label>
-                    <div style="display: flex; gap: 10px; align-items: stretch;">
+                    <div style="display: flex; gap: 8px; align-items: flex-start; justify-content: flex-start;">
                         <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
-                            style="width: 80px; flex: none; padding: 6px; height: auto;">
+                            style="width: 55px; flex: none; padding: 2px 4px; font-size: 0.85em; height: 24px; box-sizing: border-box;">
                         <button onclick="logFood()"
-                            style="flex: 2; padding: 7px; font-size: 1.05em; margin: 0; height: auto;">Log Food</button>
+                            style="flex: none; padding: 2px 12px; font-size: 0.85em; margin: 0; height: 24px; line-height: 1;">Log Food</button>
                         <button onclick="saveCurrentToMyFoods()"
-                            style="flex: 1; background: var(--warning); padding: 7px; font-size: 0.9em; color: white; margin: 0; height: auto;">⭐
-                            Save
-                            to My Foods</button>
+                            style="flex: none; background: var(--warning); padding: 2px 12px; font-size: 0.8em; color: white; margin: 0; height: 24px; line-height: 1;">⭐ Save to My Foods</button>
                     </div>
                 </div>
 
@@ -432,30 +430,30 @@
                         default.</small>
                 </div>
 
+                <!-- Create & Manage My Foods dropdown -->
+                <div class="form-group" style="margin-top: 15px;">
+                    <div class="dropdown-menu-wrap" style="width:100%;">
+                        <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
+                            style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                        </button>
+                        <div id="myFoodsDropdown" class="dropdown-menu-list">
+                            <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp; Manage My Foods</button>
+                            <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
+                            <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
+                            <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
+                            <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
+                            <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete All My Foods</button>
+                        </div>
+                        <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
+                    </div>
+                </div>
+
             </div> <!-- end search-content (collapsible) -->
         </div>
 
-        <!-- Create & Manage My Foods Section -->
-        <div class="card full-width" style="background-color: #fdf4ff;">
-            <div class="dropdown-menu-wrap" style="width:100%;">
-                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
-                    style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
-                </button>
-                <div id="myFoodsDropdown" class="dropdown-menu-list">
-                    <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp; Manage My Foods</button>
-                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom Food</button>
-                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
-                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
-                    <button onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥 Import My Foods</button>
-                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️ Delete All My Foods</button>
-                </div>
-                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;" onchange="importMyFoods(event)">
-            </div>
-        </div>
-
         <!-- Macros & Energy Section (split from old Daily Targets) -->
-        <div class="card" style="background-color: #fefce8;">
+        <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Macros &amp; Energy</h2>
                 <button id="macros-toggle" onclick="toggleSection('macros')"
@@ -467,7 +465,7 @@
         </div>
 
         <!-- Food Groups (Servings) Section (split from old Daily Targets) -->
-        <div class="card" style="background-color: #f0fdf4;">
+        <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Food Groups (Servings)</h2>
                 <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
@@ -479,7 +477,7 @@
         </div>
 
         <!-- New WW Daily Points Tracker Section -->
-        <div class="card full-width" style="background-color: #faf5ff;">
+        <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">WW Daily Points Tracker</h2>
                 <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
@@ -513,7 +511,7 @@
             </div> <!-- end wwTracker-content (collapsible) -->
         </div>
 
-        <div class="card full-width" style="background-color: #fff1f2;">
+        <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Daily Log</h2>
                 <button id="log-toggle" onclick="toggleSection('log')"
