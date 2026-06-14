@@ -308,148 +308,157 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.3)</div>
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.3)
+                    </div>
                 </div>
-                <button id="profile-toggle" onclick="toggleSection('profile')" 
+                <button id="profile-toggle" onclick="toggleSection('profile')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
             </div>
             <div id="profile-content">
                 <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
-                <div>
-                    <label>Day of Week</label>
-                    <select id="daySelect" onchange="changeDay()"
-                        style="font-weight:bold; padding: 8px; height: 38px;"></select>
-                </div>
-                <div
-                    style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
                     <div>
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
-                        <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()"
-                            style="width:70px; padding: 6px 8px; height: 34px;">
+                        <label>Day of Week</label>
+                        <select id="daySelect" onchange="changeDay()"
+                            style="font-weight:bold; padding: 8px; height: 38px;"></select>
                     </div>
-                    <div>
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
-                        <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()"
-                            style="width:80px; padding: 6px 8px; height: 34px;">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"
-                                style="width:60px; padding: 6px 8px; height: 34px;">
-                            <button onclick="showCalculatorModal()"
-                                style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
+                    <div
+                        style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
+                            <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()"
+                                style="width:70px; padding: 6px 8px; height: 34px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
+                            <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()"
+                                style="width:80px; padding: 6px 8px; height: 34px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"
+                                    style="width:60px; padding: 6px 8px; height: 34px;">
+                                <button onclick="showCalculatorModal()"
+                                    style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
-                    <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories.
-                        <strong>Data saves automatically.</strong></em>
-                </div>
+                    <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
+                        <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories.
+                            <strong>Data saves automatically.</strong></em>
+                    </div>
 
-                <!-- USDA API Key Button -->
-                <div style="flex-basis: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                    <button onclick="showUsdaApiKeyModal()"
-                        style="background:#6b7280; color:white; padding:6px 14px; font-size:0.82em; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        🔑 USDA API Key
-                    </button>
-                    <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
+                    <!-- USDA API Key Button -->
+                    <div
+                        style="flex-basis: 100%; margin-top: 8px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                        <button onclick="showUsdaApiKeyModal()"
+                            style="background:#6b7280; color:white; padding:6px 14px; font-size:0.82em; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            🔑 USDA API Key
+                        </button>
+                        <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
+                    </div>
                 </div>
-            </div>
             </div> <!-- end profile-content (collapsible) -->
         </div>
 
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Search & Log Food</h2>
-                <button id="search-toggle" onclick="toggleSection('search')" 
+                <button id="search-toggle" onclick="toggleSection('search')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="search-content">
 
-            <div class="form-group">
-                <label>Search Databases (USDA, Open Food Facts, My Foods)</label>
-                <div class="search-row">
-                    <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
-                    <button id="searchBtn" onclick="searchDatabases()">Search</button>
-                    <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
-                        Barcode</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Search Results</label>
-                <select id="foodSelect" onchange="updatePreview()"></select>
-            </div>
-
-            <div class="form-group">
-                <label>Number of Servings (optional)</label>
-                <div style="display: flex; gap: 10px; align-items: stretch;">
-                    <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()" style="width: 80px; flex: none; padding: 6px; height: auto;">
-                    <button onclick="logFood()" style="flex: 2; padding: 7px; font-size: 1.05em; margin: 0; height: auto;">Log Food</button>
-                    <button onclick="saveCurrentToMyFoods()"
-                        style="flex: 1; background: var(--warning); padding: 7px; font-size: 0.9em; color: white; margin: 0; height: auto;">⭐ Save
-                        to My Foods</button>
-                </div>
-            </div>
-
-            <!-- Create & Manage My Foods dropdown -->
-            <div class="form-group">
-                <div class="dropdown-menu-wrap" style="width:100%;">
-                    <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
-                        style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                        <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
-                    </button>
-                    <div id="myFoodsDropdown" class="dropdown-menu-list">
-                        <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp;
-                            Manage My Foods</button>
-                        <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom
-                            Food</button>
-                        <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create Recipe</button>
-                        <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My Foods</button>
-                        <button
-                            onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
-                            Import My Foods</button>
-                        <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')" style="color:#ef4444;">🗑️
-                            Delete All My Foods</button>
+                <div class="form-group">
+                    <label>Search Databases (USDA, Open Food Facts, My Foods)</label>
+                    <div class="search-row">
+                        <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
+                        <button id="searchBtn" onclick="searchDatabases()">Search</button>
+                        <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
+                            Barcode</button>
                     </div>
-                    <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
-                        onchange="importMyFoods(event)">
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label>Consumed Amount (overrides servings)</label>
-                <div class="amount-row">
-                    <input type="number" id="amountInput" placeholder="e.g. 250 or 8" onchange="updatePreview()">
-                    <select id="unitSelect" onchange="updatePreview()">
-                        <option value="g">grams (g)</option>
-                        <option value="oz">ounces (oz)</option>
+                <div class="form-group">
+                    <label>Search Results</label>
+                    <select id="foodSelect" onchange="updatePreview()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Number of Servings (optional)</label>
+                    <div style="display: flex; gap: 10px; align-items: stretch;">
+                        <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
+                            style="width: 80px; flex: none; padding: 6px; height: auto;">
+                        <button onclick="logFood()"
+                            style="flex: 2; padding: 7px; font-size: 1.05em; margin: 0; height: auto;">Log Food</button>
+                        <button onclick="saveCurrentToMyFoods()"
+                            style="flex: 1; background: var(--warning); padding: 7px; font-size: 0.9em; color: white; margin: 0; height: auto;">⭐
+                            Save
+                            to My Foods</button>
+                    </div>
+                </div>
+
+                <!-- Create & Manage My Foods dropdown -->
+                <div class="form-group">
+                    <div class="dropdown-menu-wrap" style="width:100%;">
+                        <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
+                            style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                        </button>
+                        <div id="myFoodsDropdown" class="dropdown-menu-list">
+                            <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp;
+                                Manage My Foods</button>
+                            <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom
+                                Food</button>
+                            <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create
+                                Recipe</button>
+                            <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My
+                                Foods</button>
+                            <button
+                                onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
+                                Import My Foods</button>
+                            <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')"
+                                style="color:#ef4444;">🗑️
+                                Delete All My Foods</button>
+                        </div>
+                        <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
+                            onchange="importMyFoods(event)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Consumed Amount (overrides servings)</label>
+                    <div class="amount-row">
+                        <input type="number" id="amountInput" placeholder="e.g. 250 or 8" onchange="updatePreview()">
+                        <select id="unitSelect" onchange="updatePreview()">
+                            <option value="g">grams (g)</option>
+                            <option value="oz">ounces (oz)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group preview-box" id="nutritionPreview">
+                    <em>Select a food to view nutritional information.</em>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Food Group Assignment (override for this item)</label>
+                    <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
+                        onchange="updatePreview()">
+                        <option value="">-- Auto-detect from description --</option>
+                        <option value="Fruit">Fruit</option>
+                        <option value="Vegetable">Vegetable</option>
+                        <option value="Animal Protein">Animal Protein</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Grain">Grain</option>
+                        <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                        <option value="none">Do not count in any Food Group servings</option>
                     </select>
+                    <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like
+                        snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day
+                        by
+                        default.</small>
                 </div>
-            </div>
-
-            <div class="form-group preview-box" id="nutritionPreview">
-                <em>Select a food to view nutritional information.</em>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label>Food Group Assignment (override for this item)</label>
-                <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
-                    onchange="updatePreview()">
-                    <option value="">-- Auto-detect from description --</option>
-                    <option value="Fruit">Fruit</option>
-                    <option value="Vegetable">Vegetable</option>
-                    <option value="Animal Protein">Animal Protein</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Grain">Grain</option>
-                    <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
-                    <option value="none">Do not count in any Food Group servings</option>
-                </select>
-                <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like
-                    snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day by
-                    default.</small>
-            </div>
 
             </div> <!-- end search-content (collapsible) -->
         </div>
@@ -458,7 +467,7 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Macros &amp; Energy</h2>
-                <button id="macros-toggle" onclick="toggleSection('macros')" 
+                <button id="macros-toggle" onclick="toggleSection('macros')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="macros-content">
@@ -470,7 +479,7 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Food Groups (Servings)</h2>
-                <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')" 
+                <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="foodgroups-content">
@@ -482,11 +491,12 @@
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">WW Daily Points Tracker</h2>
-                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')" 
+                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="wwTracker-content">
-                <div style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
+                <div
+                    style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
                     <strong style="color:var(--purple);">Daily WW Points</strong>
                     <div class="barometer-container" id="wwBarometer"></div>
 
@@ -494,8 +504,7 @@
                         <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from
                             total daily points used)(Time = minutes)</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                            <input type="number" id="exDuration" placeholder="Time"
-                                style="width:72px; padding:10px;">
+                            <input type="number" id="exDuration" placeholder="Time" style="width:72px; padding:10px;">
                             <select id="exIntensity" style="flex:1; padding:10px;">
                                 <option value="Low">Low</option>
                                 <option value="Moderate">Moderate</option>
@@ -516,27 +525,27 @@
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Daily Log</h2>
-                <button id="log-toggle" onclick="toggleSection('log')" 
+                <button id="log-toggle" onclick="toggleSection('log')"
                     style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="log-content">
-            <div id="logContainer">
-                <p style="color:gray;">No foods logged yet today.</p>
-            </div>
-
-            <!-- Reset Logs dropdown -->
-            <div class="dropdown-menu-wrap" style="width:100%; margin-top:15px;">
-                <button class="dropdown-toggle reset-btn" onclick="toggleDropdown('resetLogsDropdown', this)"
-                    style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:0;">
-                    <span>🗑️ Reset Daily Logs</span><span id="resetLogsDropdownArrow">▼</span>
-                </button>
-                <div id="resetLogsDropdown" class="dropdown-menu-list">
-                    <button onclick="resetDay(); closeDropdown('resetLogsDropdown')" style="color:#ef4444;">Reset
-                        Today's Data (Clear Log &amp; Totals)</button>
-                    <button onclick="resetWeek(); closeDropdown('resetLogsDropdown')" style="color:#d97706;">Clear
-                        Entire Week's Logs &amp; Targets (All 7 Days)</button>
+                <div id="logContainer">
+                    <p style="color:gray;">No foods logged yet today.</p>
                 </div>
-            </div>
+
+                <!-- Reset Logs dropdown -->
+                <div class="dropdown-menu-wrap" style="width:100%; margin-top:15px;">
+                    <button class="dropdown-toggle reset-btn" onclick="toggleDropdown('resetLogsDropdown', this)"
+                        style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:0;">
+                        <span>🗑️ Reset Daily Logs</span><span id="resetLogsDropdownArrow">▼</span>
+                    </button>
+                    <div id="resetLogsDropdown" class="dropdown-menu-list">
+                        <button onclick="resetDay(); closeDropdown('resetLogsDropdown')" style="color:#ef4444;">Reset
+                            Today's Data (Clear Log &amp; Totals)</button>
+                        <button onclick="resetWeek(); closeDropdown('resetLogsDropdown')" style="color:#d97706;">Clear
+                            Entire Week's Logs &amp; Targets (All 7 Days)</button>
+                    </div>
+                </div>
             </div> <!-- end log-content (collapsible) -->
         </div>
     </div>
@@ -698,18 +707,22 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:420px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#6b7280;">🔑 USDA FoodData Central API Key</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#6b7280;">🔑 USDA FoodData
+                Central API Key</h3>
 
             <p style="font-size:0.9em; color:#4b5563; line-height:1.4;">
-                The app uses a shared demo key by default. For higher rate limits or personal usage, enter your own free API key from 
-                <a href="https://fdc.nal.usda.gov/api-key-signup.html" target="_blank" style="color:#3b82f6;">USDA FoodData Central</a>.
+                The app uses a shared demo key by default. For higher rate limits or personal usage, enter your own free
+                API key from
+                <a href="https://fdc.nal.usda.gov/api-key-signup.html" target="_blank" style="color:#3b82f6;">USDA
+                    FoodData Central</a>.
             </p>
 
             <div class="form-group" style="margin-top:15px;">
                 <label style="font-weight:600;">Your USDA API Key</label>
-                <input type="text" id="usdaApiKeyInput" placeholder="e.g. abc123def456ghi789jkl0" 
+                <input type="text" id="usdaApiKeyInput" placeholder="e.g. abc123def456ghi789jkl0"
                     style="width:100%; padding:12px; font-family:monospace; font-size:0.95em;">
-                <small style="color:#6b7280; display:block; margin-top:4px;">Leave blank to use the built-in demo key. Your key is saved only in this browser.</small>
+                <small style="color:#6b7280; display:block; margin-top:4px;">Leave blank to use the built-in demo key.
+                    Your key is saved only in this browser.</small>
             </div>
 
             <div id="usdaApiKeyCurrent"
@@ -720,10 +733,11 @@
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="closeUsdaApiKeyModal()"
                     style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
-                <button onclick="clearUsdaApiKey()"
-                    style="background:#f59e0b; flex:1; padding:12px; color:white;">Use Demo Key</button>
+                <button onclick="clearUsdaApiKey()" style="background:#f59e0b; flex:1; padding:12px; color:white;">Use
+                    Demo Key</button>
                 <button onclick="saveUsdaApiKey()"
-                    style="background:#10b981; flex:1.3; padding:12px; color:white; font-weight:600;">Save &amp; Use Key</button>
+                    style="background:#10b981; flex:1.3; padding:12px; color:white; font-weight:600;">Save &amp; Use
+                    Key</button>
             </div>
         </div>
     </div>
