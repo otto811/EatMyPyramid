@@ -308,7 +308,7 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.3)
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.5)
                     </div>
                 </div>
                 <button id="profile-toggle" onclick="toggleSection('profile')"
@@ -327,6 +327,16 @@
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
                             <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()"
                                 style="width:70px; padding: 6px 8px; height: 34px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Goal Weight (lbs)</label>
+                            <input type="number" id="goalWeightInput" value="0" onchange="saveGoalWeight()"
+                                style="width:70px; padding: 6px 8px; height: 34px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">By Date</label>
+                            <input type="date" id="goalDateInput" onchange="saveGoalDate()"
+                                style="padding: 6px 8px; height: 34px; font-size: 0.85em;">
                         </div>
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
@@ -1039,12 +1049,19 @@
         let currentSearchResults = [];
         let html5QrcodeScanner = null;
 
+        // Search result pagination state
+        const SEARCH_INITIAL_COUNT = 5;  // number of closest matches shown initially
+        const SEARCH_MORE_STEP = 5;      // how many more to reveal per "Show More" click
+        let searchVisibleCount = SEARCH_INITIAL_COUNT;
+
         // Recipe builder state
         let currentRecipeSearchResults = [];
         let currentRecipeIngredients = [];   // {food, amount, unit, grams, nutrients: {calories, protein, fat, carbs, fiber}}
 
         let appData = {
             weight: 0,
+            goalWeight: 0,
+            goalDate: '',
             calorieGoal: 0,
             wwGoal: 0,
             usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
@@ -1162,7 +1179,13 @@
                 API_KEY = appData.usdaApiKey.trim();
             }
 
+            // Ensure goal weight / goal date fields exist (forward migration)
+            if (appData.goalWeight === undefined) appData.goalWeight = 0;
+            if (appData.goalDate === undefined) appData.goalDate = '';
+
             document.getElementById('weightInput').value = appData.weight;
+            document.getElementById('goalWeightInput').value = appData.goalWeight || '';
+            document.getElementById('goalDateInput').value = appData.goalDate || '';
             document.getElementById('calorieGoalInput').value = appData.calorieGoal;
             document.getElementById('wwGoalInput').value = appData.wwGoal;
         }
@@ -1215,6 +1238,16 @@
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
+        function saveGoalWeight() {
+            appData.goalWeight = parseFloat(document.getElementById('goalWeightInput').value) || 0;
+            saveData();
+        }
+
+        function saveGoalDate() {
+            appData.goalDate = document.getElementById('goalDateInput').value || '';
+            saveData();
+        }
+
         function updateWWGoal() {
             appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value) || 0;
             saveData();
@@ -1281,6 +1314,71 @@
         }
 
         // ==================== DATABASE SEARCH ====================
+
+        // Score how closely a food description matches the query (lower = closer match)
+        function scoreMatch(description, query) {
+            const desc = String(description || '').toLowerCase();
+            if (desc === query) return 0;                    // exact match
+            if (desc.startsWith(query)) return 1;           // starts with
+            if (desc.includes(` ${query}`) || desc.includes(`(${query}`)) return 2; // word boundary
+            if (desc.includes(query)) return 3;             // substring
+            return 4;                                       // brand / category match
+        }
+
+        // Rebuild the visible search results dropdown based on searchVisibleCount
+        function renderSearchDropdown() {
+            const sel = document.getElementById('foodSelect');
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            // Remove existing options except the placeholder
+            while (sel.options.length > 1) sel.remove(1);
+
+            // Remove old Show More / count footer if present
+            const old = document.getElementById('searchShowMoreRow');
+            if (old) old.remove();
+
+            if (currentSearchResults.length === 0) return;
+
+            const visible = Math.min(searchVisibleCount, currentSearchResults.length);
+            for (let i = 0; i < visible; i++) {
+                const food = currentSearchResults[i];
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                sel.appendChild(opt);
+            }
+
+            // Inject a Show More / result count row below the select
+            const remaining = currentSearchResults.length - visible;
+            const wrap = sel.parentElement;
+
+            // Remove any old footer first
+            const existingFooter = document.getElementById('searchShowMoreRow');
+            if (existingFooter) existingFooter.remove();
+
+            const footer = document.createElement('div');
+            footer.id = 'searchShowMoreRow';
+            footer.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-top:4px; font-size:0.82em; color:#6b7280;';
+
+            const countSpan = document.createElement('span');
+            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length} results`;
+            footer.appendChild(countSpan);
+
+            if (remaining > 0) {
+                const moreBtn = document.createElement('button');
+                moreBtn.textContent = `Show ${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
+                moreBtn.style.cssText = 'background:none; color:#3b82f6; border:none; padding:2px 6px; font-size:0.9em; cursor:pointer; font-weight:600; text-decoration:underline;';
+                moreBtn.onclick = () => {
+                    searchVisibleCount += SEARCH_MORE_STEP;
+                    renderSearchDropdown();
+                };
+                footer.appendChild(moreBtn);
+            }
+
+            wrap.appendChild(footer);
+        }
+
         async function searchDatabases() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) return;
@@ -1290,8 +1388,14 @@
             btn.textContent = 'Searching...';
 
             currentSearchResults = [];
+            searchVisibleCount = SEARCH_INITIAL_COUNT;  // reset pagination on each new search
+
             const sel = document.getElementById('foodSelect');
             sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
+
+            // Remove any previous Show More footer
+            const oldFooter = document.getElementById('searchShowMoreRow');
+            if (oldFooter) oldFooter.remove();
 
             // 1. ALWAYS search Local "My Foods" Database first (guaranteed, independent of APIs)
             let localMatches = [];
@@ -1305,38 +1409,18 @@
 
                 // Prioritize exact matches and starts-with matches (safe for any legacy bad items)
                 localMatches.sort((a, b) => {
-                    const aDesc = String(a.description || '').toLowerCase();
-                    const bDesc = String(b.description || '').toLowerCase();
-                    const aExact = aDesc === query;
-                    const bExact = bDesc === query;
-                    if (aExact && !bExact) return -1;
-                    if (!aExact && bExact) return 1;
-
-                    const aStarts = aDesc.startsWith(query);
-                    const bStarts = bDesc.startsWith(query);
-                    if (aStarts && !bStarts) return -1;
-                    if (!aStarts && bStarts) return 1;
-
-                    return aDesc.localeCompare(bDesc);
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
                 });
             } catch (e) {
                 console.error("Local search error", e);
                 localMatches = [];
             }
 
-            // Populate with local matches immediately (they appear first in dropdown)
             currentSearchResults = [...localMatches];
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-
-            if (localMatches.length > 0) {
-                localMatches.forEach((food, index) => {
-                    const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
-                    const opt = document.createElement('option');
-                    opt.value = index;
-                    opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
-                    sel.appendChild(opt);
-                });
-            }
 
             // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
             try {
@@ -1387,33 +1471,32 @@
 
                 const rawApiResults = [...usdaFoods, ...offFoods];
 
+                // Sort API results by closeness of match before filtering duplicates
+                rawApiResults.sort((a, b) => {
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
+                });
+
                 // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
                 });
 
-                const apiStartIndex = currentSearchResults.length;
                 currentSearchResults.push(...apiResults);
-
-                apiResults.forEach((food, i) => {
-                    const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
-                    const opt = document.createElement('option');
-                    opt.value = apiStartIndex + i;
-                    opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
-                    sel.appendChild(opt);
-                });
 
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                 } else {
+                    // Render only the first SEARCH_INITIAL_COUNT closest results
+                    renderSearchDropdown();
                     sel.focus();
                     try {
-                        // Modern native dropdown (if user gesture is still active)
                         sel.showPicker();
                     } catch (e) {
-                        // Fallback: listbox that collapses on blur
-                        sel.size = Math.min(8, currentSearchResults.length + 1);
+                        sel.size = Math.min(8, Math.min(searchVisibleCount, currentSearchResults.length) + 1);
                         sel.onblur = function () { this.size = 1; };
                     }
                 }
@@ -1422,6 +1505,8 @@
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
                     alert("Search failed. Please check your network connection.");
+                } else {
+                    renderSearchDropdown();
                 }
                 // Note: local My Foods results remain visible even on API failure
             } finally {
@@ -2646,6 +2731,7 @@
                         <small style="color:var(--text-muted);">${food.householdServingFullText || sSize + 'g'} • ${calsPerServing} cal • ${food.foodCategory || 'Other'}</small>
                     </div>
                     <div style="display:flex; gap:8px;">
+                        <button onclick="copyMyFoodName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
                         <button onclick="showCustomFoodModal(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
                         <button onclick="deleteMyFoodItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
                     </div>
@@ -2653,6 +2739,23 @@
             `;
             });
             container.innerHTML = html;
+        }
+
+        function copyMyFoodName(index, btnElement) {
+            const foodName = appData.myFoods[index].description;
+            navigator.clipboard.writeText(foodName).then(() => {
+                const originalText = btnElement.innerText;
+                const originalBg = btnElement.style.background;
+                btnElement.innerText = 'Copied!';
+                btnElement.style.background = '#10b981';
+                setTimeout(() => {
+                    btnElement.innerText = originalText;
+                    btnElement.style.background = originalBg;
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy text. Your browser may not support this feature.');
+            });
         }
 
         function deleteMyFoodItem(index) {
