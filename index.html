@@ -389,7 +389,7 @@
                     <div style="display: flex; gap: 8px; align-items: flex-start; justify-content: flex-start;">
                         <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
                             style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
-                        <button onclick="logFood()"
+                        <button onclick="showLogFoodModal()"
                             style="flex: none; padding: 0 12px; font-size: 0.85em; margin: 0; height: 48px;">Log Food</button>
                         <button onclick="saveCurrentToMyFoods()"
                             style="flex: none; background: var(--warning); padding: 0 12px; font-size: 0.8em; color: white; margin: 0; height: 48px;">⭐ Save to My Foods</button>
@@ -767,6 +767,17 @@
             </div>
 
             <div class="form-group" style="margin-top: 15px;">
+                <label>Meal Classification</label>
+                <select id="edit-meal" style="width:100%; padding:10px; font-size:1em;">
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Discretionary">Discretionary / Snack</option>
+                    <option value="Other">Other / Unclassified</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
                 <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
                     <input type="checkbox" id="edit-save-myfoods" style="width:18px; height:18px;">
                     Save to My Foods after editing
@@ -778,6 +789,48 @@
                     style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
                 <button onclick="saveEditItem()"
                     style="background:#f59e0b; flex:1; padding:12px; font-weight:bold; color:white;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MEAL CLASSIFICATION MODAL ==================== -->
+    <div id="logFoodModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--primary);">Select Meal</h3>
+            <p style="color:var(--text-muted); font-size:0.95em; margin-bottom:20px;">Which meal is this food for?</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button onclick="logFood('Breakfast')" style="background:#f59e0b; padding:12px; font-size:1.05em;">Breakfast</button>
+                <button onclick="logFood('Lunch')" style="background:#3b82f6; padding:12px; font-size:1.05em;">Lunch</button>
+                <button onclick="logFood('Dinner')" style="background:#8b5cf6; padding:12px; font-size:1.05em;">Dinner</button>
+                <button onclick="logFood('Discretionary')" style="background:#14b8a6; padding:12px; font-size:1.05em;">Discretionary / Snack</button>
+            </div>
+            <button onclick="closeLogFoodModal()" style="background:var(--text-muted); width:100%; margin-top:20px; padding:12px; font-size:1.05em; color:white; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ==================== COPY TO DAY MODAL ==================== -->
+    <div id="copyToDayModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--primary);">Copy Item to Day</h3>
+            <p style="color:var(--text-muted); font-size:0.95em; margin-bottom:15px;">Select which day to copy this item to:</p>
+            <div class="form-group">
+                <select id="copyToDaySelect" style="width:100%; padding:12px; font-size:1.05em;">
+                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeCopyToDayModal()" style="background:var(--text-muted); flex:1; padding:12px; color:white; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Cancel</button>
+                <button onclick="confirmCopyItemToDay()" style="background:#3b82f6; flex:1; padding:12px; color:white; font-weight:bold; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Copy</button>
             </div>
         </div>
     </div>
@@ -1474,7 +1527,18 @@
         }
         //===============LOG FOOD FUNCTION=======================
 
-        function logFood() {
+        function showLogFoodModal() {
+            const idx = document.getElementById('foodSelect').value;
+            if (!idx) return alert("Please select a food from the dropdown first.");
+            document.getElementById('logFoodModal').style.display = 'flex';
+        }
+
+        function closeLogFoodModal() {
+            document.getElementById('logFoodModal').style.display = 'none';
+        }
+
+        function logFood(meal) {
+            closeLogFoodModal();
             const idx = document.getElementById('foodSelect').value;
             if (!idx) return alert("Please select a food from the dropdown first.");
 
@@ -1516,6 +1580,7 @@
                 carbs: nut.carbs * multiplier,
                 fiber: nut.fiber * multiplier,
                 wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
+                meal: meal,
 
                 calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
                 protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
@@ -1596,6 +1661,8 @@
             }
             document.getElementById('edit-food-group').value = cat;
 
+            document.getElementById('edit-meal').value = item.meal || 'Other';
+
             document.getElementById('editLogModal').style.display = 'flex';
         }
 
@@ -1611,6 +1678,7 @@
             const newAmtVal = document.getElementById('edit-amount').value;
             const newName = document.getElementById('edit-name').value;
             const newCat = document.getElementById('edit-food-group').value;
+            const newMeal = document.getElementById('edit-meal').value;
 
             if (newAmtVal === null || newAmtVal === "") return alert("Please enter an amount.");
 
@@ -1666,8 +1734,9 @@
 
             item.wwPoints = calculateWWPoints(item.calories, item.fat, item.fiber);
 
-            // Update category
+            // Update category and meal
             item.category = newCat;
+            item.meal = newMeal;
 
             // Add new values back to daily totals
             state.current.Calories += item.calories;
@@ -1979,27 +2048,101 @@
             }
 
             cont.innerHTML = '';
-            state.log.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'log-item';
+            const meals = ['Breakfast', 'Lunch', 'Dinner', 'Discretionary', 'Other'];
+            
+            meals.forEach(meal => {
+                const mealItems = state.log.filter(item => (item.meal || 'Other') === meal);
+                
+                if (mealItems.length > 0) {
+                    const mealHeader = document.createElement('h3');
+                    mealHeader.style.marginTop = '15px';
+                    mealHeader.style.marginBottom = '5px';
+                    mealHeader.style.color = 'var(--text-muted)';
+                    mealHeader.innerText = meal;
+                    cont.appendChild(mealHeader);
+                    
+                    mealItems.forEach(item => {
+                        const index = state.log.indexOf(item);
+                        const div = document.createElement('div');
+                        div.className = 'log-item';
 
-                // Format the UPC for display if it exists in the saved item data
-                const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
+                        // Format the UPC for display if it exists in the saved item data
+                        const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
 
-                div.innerHTML = `
-					<div style="flex-grow:1; padding-right:10px;">
-						<strong>${item.name}</strong><br>
-						<small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
-					</div>
-					<div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
-						<button onclick="copyItemName(${index}, this)" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
-						<button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
-						<button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
-						<button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
-					</div>
-				`;
-                cont.appendChild(div);
+                        div.innerHTML = `
+                            <div style="flex-grow:1; padding-right:10px;">
+                                <strong>${item.name}</strong><br>
+                                <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
+                            </div>
+                            <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+                                <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
+                                <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
+                                <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                                <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
+                            </div>
+                        `;
+                        cont.appendChild(div);
+                    });
+                }
             });
+        }
+
+        let currentCopyIndex = -1;
+
+        function showCopyToDayModal(index) {
+            currentCopyIndex = index;
+            document.getElementById('copyToDayModal').style.display = 'flex';
+        }
+
+        function closeCopyToDayModal() {
+            document.getElementById('copyToDayModal').style.display = 'none';
+            currentCopyIndex = -1;
+        }
+
+        function confirmCopyItemToDay() {
+            if (currentCopyIndex < 0) return;
+            const targetDay = document.getElementById('copyToDaySelect').value;
+            const itemToCopy = state.log[currentCopyIndex];
+            
+            if (!appData.history[targetDay]) {
+                appData.history[targetDay] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                };
+            }
+            
+            const targetCurrent = appData.history[targetDay].current;
+            const targetLog = appData.history[targetDay].log;
+            
+            // Clone the item
+            const clonedItem = JSON.parse(JSON.stringify(itemToCopy));
+            targetLog.push(clonedItem);
+            
+            // Add values to target day's totals
+            targetCurrent.Calories += clonedItem.calories;
+            targetCurrent.Protein += clonedItem.protein;
+            targetCurrent.Fat += clonedItem.fat;
+            targetCurrent.Carbs += (clonedItem.carbs || 0);
+
+            const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            if (trackedGroups.includes(clonedItem.category)) {
+                if (targetCurrent[clonedItem.category] === undefined) {
+                    targetCurrent[clonedItem.category] = 0;
+                }
+                targetCurrent[clonedItem.category] += (clonedItem.foodGroupAmount || 1);
+            }
+            
+            saveData();
+            
+            // If copying to the currently selected day, re-render immediately
+            const currentSelectedDay = document.getElementById('daySelect').value;
+            if (currentSelectedDay === targetDay) {
+                renderLog();
+                renderBarometers();
+            }
+            
+            alert(`${clonedItem.name} copied to ${targetDay}!`);
+            closeCopyToDayModal();
         }
 
         // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
@@ -2492,7 +2635,6 @@
             container.innerHTML = html;
         }
 
-		
         function deleteMyFoodItem(index) {
             if (confirm(`Are you sure you want to delete "${appData.myFoods[index].description}" from your My Foods database?`)) {
                 appData.myFoods.splice(index, 1);
