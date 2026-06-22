@@ -380,7 +380,7 @@
             <div id="search-content">
 
                 <div class="form-group">
-                    <label>Search Databases (USDA, Open Food Facts, My Foods)</label>
+                    <label>Search Databases (My Foods, USDA, Open Food Facts)</label>
                     <div class="search-row">
                         <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
                         <button id="searchBtn" onclick="searchDatabases()">Search</button>
@@ -841,8 +841,11 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-            <h3 id="copyToDayTitle" style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--primary);">Copy Item to Day</h3>
-            <p id="copyToDayDesc" style="color:var(--text-muted); font-size:0.95em; margin-bottom:15px;">Select which day to copy this item to:</p>
+            <h3 id="copyToDayTitle"
+                style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:var(--primary);">Copy Item
+                to Day</h3>
+            <p id="copyToDayDesc" style="color:var(--text-muted); font-size:0.95em; margin-bottom:15px;">Select which
+                day to copy this item to:</p>
             <div class="form-group">
                 <label style="font-size:0.9em; font-weight:600; margin-bottom:5px;">Day</label>
                 <select id="copyToDaySelect" style="width:100%; padding:12px; font-size:1.05em;">
@@ -870,7 +873,8 @@
                 <button onclick="closeCopyToDayModal()"
                     style="background:var(--text-muted); flex:1; padding:12px; color:white; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Cancel</button>
                 <button onclick="confirmCopyItemToDay()"
-                    style="background:#3b82f6; flex:1; padding:12px; color:white; font-weight:bold; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Log to Day</button>
+                    style="background:#3b82f6; flex:1; padding:12px; color:white; font-weight:bold; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Log
+                    to Day</button>
             </div>
         </div>
     </div>
@@ -2098,6 +2102,15 @@
             if (input) input.value = '';
         }
 
+        // ==================== WATER QUICK-ADJUST ====================
+        function adjustWaterServings(delta) {
+            if (!state.current) return;
+            if (state.current.Water === undefined) state.current.Water = 0;
+            state.current.Water = Math.max(0, state.current.Water + delta);
+            saveData();
+            renderBarometers();
+        }
+
         // ==================== UI RENDERING ====================
         function renderBarometers() {
             const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
@@ -2135,9 +2148,15 @@
                     const div = document.createElement('div');
 
                     div.className = 'barometer-container';
+                    const waterBtns = cat === 'Water' ? `
+                        <button onclick="adjustWaterServings(-1)" title="Remove 1 cup" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
+                        <button onclick="adjustWaterServings(1)" title="Add 1 cup" style="background:#0ea5e9; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
+                    ` : '';
                     div.innerHTML = `
                     <div class="barometer-header">
-                        <strong>${cat}</strong>
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            ${waterBtns}<strong>${cat}</strong>
+                        </div>
                         <div style="display:flex; align-items:center;">
                             <input type="number" value="${target}" style="width:60px; padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
                             <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
@@ -2222,7 +2241,7 @@
             // My Foods items need a meal selection
             document.getElementById('copyMealGroup').style.display = 'block';
             document.getElementById('copyToDayTitle').textContent = 'Log My Food to Day';
-            document.getElementById('copyToDayDesc').textContent = 'Choose a day and meal to log this food to (1 serving):'; 
+            document.getElementById('copyToDayDesc').textContent = 'Choose a day and meal to log this food to (1 serving):';
             document.getElementById('copyToDayModal').style.display = 'flex';
         }
 
@@ -2268,26 +2287,26 @@
                     servingSize: servingSize,
                     gramsPerUnit: servingSize,
                     foodGroupAmount: 1,
-                    calories:  nut.calories  * multiplier,
-                    protein:   nut.protein   * multiplier,
-                    fat:       nut.fat       * multiplier,
-                    carbs:     nut.carbs     * multiplier,
-                    fiber:     nut.fiber     * multiplier,
-                    wwPoints:  calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
+                    calories: nut.calories * multiplier,
+                    protein: nut.protein * multiplier,
+                    fat: nut.fat * multiplier,
+                    carbs: nut.carbs * multiplier,
+                    fiber: nut.fiber * multiplier,
+                    wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
                     meal: meal,
-                    calsPerUnit:  nut.calories  / servingSize,
-                    protPerUnit:  nut.protein   / servingSize,
-                    fatPerUnit:   nut.fat       / servingSize,
-                    carbsPerUnit: nut.carbs     / servingSize,
-                    fibPerUnit:   nut.fiber     / servingSize
+                    calsPerUnit: nut.calories / servingSize,
+                    protPerUnit: nut.protein / servingSize,
+                    fatPerUnit: nut.fat / servingSize,
+                    carbsPerUnit: nut.carbs / servingSize,
+                    fibPerUnit: nut.fiber / servingSize
                 };
 
                 targetLog.push(item);
 
                 targetCurrent.Calories += item.calories;
-                targetCurrent.Protein  += item.protein;
-                targetCurrent.Fat      += item.fat;
-                targetCurrent.Carbs    += item.carbs;
+                targetCurrent.Protein += item.protein;
+                targetCurrent.Fat += item.fat;
+                targetCurrent.Carbs += item.carbs;
 
                 if (trackedGroups.includes(category)) {
                     if (targetCurrent[category] === undefined) targetCurrent[category] = 0;
@@ -2313,9 +2332,9 @@
                 targetLog.push(clonedItem);
 
                 targetCurrent.Calories += clonedItem.calories;
-                targetCurrent.Protein  += clonedItem.protein;
-                targetCurrent.Fat      += clonedItem.fat;
-                targetCurrent.Carbs    += (clonedItem.carbs || 0);
+                targetCurrent.Protein += clonedItem.protein;
+                targetCurrent.Fat += clonedItem.fat;
+                targetCurrent.Carbs += (clonedItem.carbs || 0);
 
                 if (trackedGroups.includes(clonedItem.category)) {
                     if (targetCurrent[clonedItem.category] === undefined) targetCurrent[clonedItem.category] = 0;
