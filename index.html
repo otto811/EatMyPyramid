@@ -1588,15 +1588,7 @@
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                     sel.size = 1;
                 } else {
-                    // Render only the first SEARCH_INITIAL_COUNT closest results
                     renderSearchDropdown();
-                    
-                    const remaining = currentSearchResults.length - searchVisibleCount;
-                    const optionCount = Math.min(searchVisibleCount, currentSearchResults.length) + (remaining > 0 ? 2 : 1);
-                    sel.size = Math.min(10, optionCount);
-                    sel.focus();
-                    
-                    sel.onblur = function () { this.size = 1; };
                 }
             } catch (e) {
                 console.error("API search error (My Foods results are still shown if any):", e);
@@ -1606,10 +1598,45 @@
                 } else {
                     renderSearchDropdown();
                 }
-                // Note: local My Foods results remain visible even on API failure
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Search';
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Search';
+
+            if (currentSearchResults.length > 0) {
+                const remaining = currentSearchResults.length - searchVisibleCount;
+                const optionCount = Math.min(searchVisibleCount, currentSearchResults.length) + (remaining > 0 ? 2 : 1);
+                
+                const wrap = sel.parentElement;
+                wrap.style.position = 'relative';
+                
+                let spacer = document.getElementById('foodSelectSpacer');
+                if (!spacer) {
+                    spacer = document.createElement('div');
+                    spacer.id = 'foodSelectSpacer';
+                    spacer.style.height = '43px'; // Keeps layout stable
+                    wrap.insertBefore(spacer, sel);
+                }
+
+                sel.size = Math.min(10, optionCount);
+                sel.style.position = 'absolute';
+                sel.style.zIndex = '1000';
+                sel.style.width = '100%';
+                sel.style.top = spacer.offsetTop + 'px';
+                sel.style.left = '0';
+                sel.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+                
+                sel.focus();
+                
+                sel.onblur = function () { 
+                    setTimeout(() => {
+                        this.size = 1;
+                        this.style.position = '';
+                        this.style.zIndex = '';
+                        this.style.boxShadow = '';
+                        if (spacer) spacer.remove();
+                    }, 150);
+                };
             }
         }
 
@@ -1722,7 +1749,14 @@
                 return;
             }
 
+            // Close the floating dropdown
             sel.size = 1;
+            sel.style.position = '';
+            sel.style.zIndex = '';
+            sel.style.boxShadow = '';
+            const spacer = document.getElementById('foodSelectSpacer');
+            if (spacer) spacer.remove();
+
             const idx = val;
             if (!idx || idx === "") return;
 
@@ -3145,19 +3179,53 @@
                 console.warn("Recipe API search partial failure (local results still available)");
             }
 
+            if (searchBtn) {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+
             if (currentRecipeSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
                 sel.size = 1;
             } else {
-                sel.size = Math.min(10, currentRecipeSearchResults.length + 1);
-                sel.focus();
-                sel.onblur = function () { this.size = 1; };
-                sel.onchange = function () { this.size = 1; };
-            }
+                const wrap = sel.parentElement;
+                wrap.style.position = 'relative';
+                
+                let spacer = document.getElementById('recipeFoodSelectSpacer');
+                if (!spacer) {
+                    spacer = document.createElement('div');
+                    spacer.id = 'recipeFoodSelectSpacer';
+                    spacer.style.height = '43px';
+                    wrap.insertBefore(spacer, sel);
+                }
 
-            if (searchBtn) {
-                searchBtn.disabled = false;
-                searchBtn.textContent = 'Search';
+                sel.size = Math.min(10, currentRecipeSearchResults.length + 1);
+                sel.style.position = 'absolute';
+                sel.style.zIndex = '1000';
+                sel.style.width = '100%';
+                sel.style.top = spacer.offsetTop + 'px';
+                sel.style.left = '0';
+                sel.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+                
+                sel.focus();
+                
+                sel.onblur = function () { 
+                    setTimeout(() => {
+                        this.size = 1;
+                        this.style.position = '';
+                        this.style.zIndex = '';
+                        this.style.boxShadow = '';
+                        if (spacer) spacer.remove();
+                    }, 150);
+                };
+                
+                sel.onchange = function () { 
+                    this.size = 1;
+                    this.style.position = '';
+                    this.style.zIndex = '';
+                    this.style.boxShadow = '';
+                    if (spacer) spacer.remove();
+                };
             }
         }
 
