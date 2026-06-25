@@ -563,26 +563,8 @@
                     <div class="barometer-container" id="wwBarometer"></div>
 
                     <div class="exercise-box">
-                        <label style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                            <strong>Exercise Points Earned</strong>&nbsp;(subtracts from total daily points used)
-                            <span class="fg-info-wrap">
-                                <span style="white-space:nowrap;">(Time = minutes)</span>
-                                <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
-                                    onclick="toggleExIntensityInfo(event)" aria-label="Exercise intensity info">ℹ</button>
-                                <div class="fg-info-popup" id="exIntensityInfoPopup" style="min-width:280px; max-width:340px;">
-                                    <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise Intensity Guide</strong>
-                                    <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual walking.<br>
-                                    You can talk or sing comfortably, your breathing remains regular, and you do not sweat.</p>
-                                    <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex. Brisk walking.<br>
-                                    Your breathing becomes deep and frequent. You begin to sweat after about 10 minutes. You can speak in short sentences but cannot carry on a full conversation or sing.</p>
-                                    <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex. Running, jumping rope.<br>
-                                    You experience heavy, rapid breathing and begin sweating within 3 to 5 minutes. You can only speak briefly and cannot sing at all.</p>
-                                    <hr style="border:none; border-top:1px solid #475569; margin:6px 0;">
-                                    <p style="margin:0 0 3px;"><strong>Points Plus Factor:</strong> 0.00117</p>
-                                    <p style="margin:0;"><strong>Calorie Equivalent:</strong> Approximately 1 point for every ~30–35 calories burned (significantly higher point yield per minute due to the steep factor increase).</p>
-                                </div>
-                            </span>
-                        </label>
+                        <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from
+                            total daily points used)(Time = minutes)</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
                             <input type="number" id="exDuration" placeholder="Time" style="width:72px; padding:10px;">
                             <select id="exIntensity" style="flex:1; padding:10px;">
@@ -1081,19 +1063,7 @@
                 document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
                 document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
             }
-            // Close exercise intensity info popup when clicking outside
-            if (!e.target.closest('#exIntensityInfoBtn') && !e.target.closest('#exIntensityInfoPopup')) {
-                const popup = document.getElementById('exIntensityInfoPopup');
-                if (popup) popup.classList.remove('open');
-            }
         });
-
-        function toggleExIntensityInfo(e) {
-            e.stopPropagation();
-            const popup = document.getElementById('exIntensityInfoPopup');
-            if (popup) popup.classList.toggle('open');
-        }
-
 
         // ==================== HIDE / REVEAL SECTION FUNCTIONS (new in v2.3.3) ====================
         function toggleSection(section) {
@@ -1147,7 +1117,7 @@
         let html5QrcodeScanner = null;
 
         // Search result pagination state
-        const SEARCH_INITIAL_COUNT = 10;  // number of closest matches shown initially
+        const SEARCH_INITIAL_COUNT = 5;  // number of closest matches shown initially
         const SEARCH_MORE_STEP = 5;      // how many more to reveal per "Show More" click
         let searchVisibleCount = SEARCH_INITIAL_COUNT;
 
@@ -1428,7 +1398,7 @@
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
             // Remove existing options except the placeholder
-            sel.options.length = 1;
+            while (sel.options.length > 1) sel.remove(1);
 
             // Remove old Show More / count footer if present
             const old = document.getElementById('searchShowMoreRow');
@@ -1437,30 +1407,6 @@
             if (currentSearchResults.length === 0) return;
 
             const visible = Math.min(searchVisibleCount, currentSearchResults.length);
-            const remaining = currentSearchResults.length - visible;
-
-            // Optional footer to just show the count
-            const wrap = sel.parentElement;
-            const footer = document.createElement('div');
-            footer.id = 'searchShowMoreRow';
-            footer.style.cssText = 'display:flex; align-items:center; justify-content:flex-end; margin-bottom:4px; font-size:0.82em; color:#6b7280;';
-            const countSpan = document.createElement('span');
-            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length} results`;
-            footer.appendChild(countSpan);
-            wrap.insertBefore(footer, sel);
-
-            // Inject the "Show More" option at the top of the list if there are remaining results
-            if (remaining > 0) {
-                const moreOpt = document.createElement('option');
-                moreOpt.value = 'SHOW_MORE';
-                moreOpt.textContent = `➕ Show ${Math.min(SEARCH_MORE_STEP, remaining)} more results...`;
-                moreOpt.style.fontWeight = 'bold';
-                moreOpt.style.color = '#1d4ed8'; // Darker blue
-                moreOpt.style.backgroundColor = '#eff6ff'; // Light blue background
-                moreOpt.style.padding = '4px';
-                sel.appendChild(moreOpt);
-            }
-
             for (let i = 0; i < visible; i++) {
                 const food = currentSearchResults[i];
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
@@ -1469,15 +1415,43 @@
                 opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
                 sel.appendChild(opt);
             }
+
+            // Inject a Show More / result count row ABOVE the select so it stays visible
+            const remaining = currentSearchResults.length - visible;
+            const wrap = sel.parentElement;
+
+            // Remove any old header first
+            const existingFooter = document.getElementById('searchShowMoreRow');
+            if (existingFooter) existingFooter.remove();
+
+            const footer = document.createElement('div');
+            footer.id = 'searchShowMoreRow';
+            footer.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:0.82em; color:#6b7280;';
+
+            const countSpan = document.createElement('span');
+            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length} results`;
+            footer.appendChild(countSpan);
+
+            if (remaining > 0) {
+                const moreBtn = document.createElement('button');
+                moreBtn.textContent = `Show ${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
+                moreBtn.style.cssText = 'background:none; color:#3b82f6; border:none; padding:2px 6px; font-size:0.9em; cursor:pointer; font-weight:600; text-decoration:underline;';
+                moreBtn.onclick = () => {
+                    searchVisibleCount += SEARCH_MORE_STEP;
+                    renderSearchDropdown();
+                };
+                footer.appendChild(moreBtn);
+            }
+
+            // Insert BEFORE the select so it appears above the dropdown
+            wrap.insertBefore(footer, sel);
         }
 
         async function searchDatabases() {
-            const btn = document.getElementById('searchBtn');
-            if (btn.disabled) return; // Prevent concurrent searches
-
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) return;
 
+            const btn = document.getElementById('searchBtn');
             btn.disabled = true;
             btn.textContent = 'Searching...';
 
@@ -1521,10 +1495,7 @@
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
                 const fetchJSON = async (url) => {
                     try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-                        const res = await fetch(url, { signal: controller.signal });
-                        clearTimeout(timeoutId);
+                        const res = await fetch(url);
                         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                         return await res.json();
                     } catch (e) {
@@ -1586,9 +1557,16 @@
 
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
-                    sel.size = 1;
                 } else {
+                    // Render only the first SEARCH_INITIAL_COUNT closest results
                     renderSearchDropdown();
+                    sel.focus();
+                    try {
+                        sel.showPicker();
+                    } catch (e) {
+                        sel.size = Math.min(8, Math.min(searchVisibleCount, currentSearchResults.length) + 1);
+                        sel.onblur = function () { this.size = 1; };
+                    }
                 }
             } catch (e) {
                 console.error("API search error (My Foods results are still shown if any):", e);
@@ -1598,48 +1576,10 @@
                 } else {
                     renderSearchDropdown();
                 }
-            }
-            
-            btn.disabled = false;
-            btn.textContent = 'Search';
-
-            if (currentSearchResults.length > 0) {
-                const remaining = currentSearchResults.length - searchVisibleCount;
-                const optionCount = Math.min(searchVisibleCount, currentSearchResults.length) + (remaining > 0 ? 2 : 1);
-                
-                const wrap = sel.parentElement;
-                wrap.style.position = 'relative';
-                
-                let spacer = document.getElementById('foodSelectSpacer');
-                if (!spacer) {
-                    spacer = document.createElement('div');
-                    spacer.id = 'foodSelectSpacer';
-                    spacer.style.height = '43px'; // Keeps layout stable
-                    wrap.insertBefore(spacer, sel);
-                }
-
-                sel.size = Math.min(10, optionCount);
-                sel.style.position = 'absolute';
-                sel.style.zIndex = '1000';
-                sel.style.width = '100%';
-                sel.style.top = spacer.offsetTop + 'px';
-                sel.style.left = '0';
-                sel.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
-                
-                sel.focus();
-                
-                if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
-                sel._closeHandler = function(e) {
-                    if (!sel.contains(e.target)) {
-                        sel.size = 1;
-                        sel.style.position = '';
-                        sel.style.zIndex = '';
-                        sel.style.boxShadow = '';
-                        if (spacer) spacer.remove();
-                        document.removeEventListener('mousedown', sel._closeHandler);
-                    }
-                };
-                setTimeout(() => document.addEventListener('mousedown', sel._closeHandler), 10);
+                // Note: local My Foods results remain visible even on API failure
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Search';
             }
         }
 
@@ -1737,32 +1677,9 @@
         //============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
         function updatePreview() {
             const sel = document.getElementById('foodSelect');
-            const val = sel.value;
-
-            if (val === 'SHOW_MORE') {
-                searchVisibleCount += SEARCH_MORE_STEP;
-                renderSearchDropdown();
-                
-                const remaining = currentSearchResults.length - searchVisibleCount;
-                const optionCount = Math.min(searchVisibleCount, currentSearchResults.length) + (remaining > 0 ? 2 : 1);
-                sel.size = Math.min(10, optionCount);
-                sel.focus();
-                
-                document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
-                return;
-            }
-
-            // Close the floating dropdown
             sel.size = 1;
-            sel.style.position = '';
-            sel.style.zIndex = '';
-            sel.style.boxShadow = '';
-            const spacer = document.getElementById('foodSelectSpacer');
-            if (spacer) spacer.remove();
-            if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
-
-            const idx = val;
-            if (!idx || idx === "") return;
+            const idx = sel.value;
+            if (!idx) return;
 
             const food = currentSearchResults[idx];
             const nut = getAllNutrients(food);
@@ -2630,10 +2547,7 @@
             }
 
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
                 const data = await res.json();
 
                 if (data.status === 0 || !data.product) {
@@ -3071,16 +2985,8 @@
         }
 
         async function searchRecipeIngredients() {
-            const searchBtn = document.querySelector('button[onclick="searchRecipeIngredients()"]');
-            if (searchBtn && searchBtn.disabled) return;
-
             const query = document.getElementById('recipeSearchInput').value.trim().toLowerCase();
             if (!query) return;
-
-            if (searchBtn) {
-                searchBtn.disabled = true;
-                searchBtn.textContent = 'Searching...';
-            }
 
             const sel = document.getElementById('recipeFoodSelect');
             sel.innerHTML = '<option value="" disabled selected>Searching...</option>';
@@ -3128,10 +3034,7 @@
             try {
                 const fetchJSON = async (url) => {
                     try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 10000);
-                        const res = await fetch(url, { signal: controller.signal });
-                        clearTimeout(timeoutId);
+                        const res = await fetch(url);
                         return res.ok ? await res.json() : null;
                     } catch { return null; }
                 };
@@ -3183,57 +3086,16 @@
                 console.warn("Recipe API search partial failure (local results still available)");
             }
 
-            if (searchBtn) {
-                searchBtn.disabled = false;
-                searchBtn.textContent = 'Search';
-            }
-
             if (currentRecipeSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
-                sel.size = 1;
             } else {
-                const wrap = sel.parentElement;
-                wrap.style.position = 'relative';
-                
-                let spacer = document.getElementById('recipeFoodSelectSpacer');
-                if (!spacer) {
-                    spacer = document.createElement('div');
-                    spacer.id = 'recipeFoodSelectSpacer';
-                    spacer.style.height = '43px';
-                    wrap.insertBefore(spacer, sel);
-                }
-
-                sel.size = Math.min(10, currentRecipeSearchResults.length + 1);
-                sel.style.position = 'absolute';
-                sel.style.zIndex = '1000';
-                sel.style.width = '100%';
-                sel.style.top = spacer.offsetTop + 'px';
-                sel.style.left = '0';
-                sel.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
-                
                 sel.focus();
-                
-                if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
-                sel._closeHandler = function(e) {
-                    if (!sel.contains(e.target)) {
-                        sel.size = 1;
-                        sel.style.position = '';
-                        sel.style.zIndex = '';
-                        sel.style.boxShadow = '';
-                        if (spacer) spacer.remove();
-                        document.removeEventListener('mousedown', sel._closeHandler);
-                    }
-                };
-                setTimeout(() => document.addEventListener('mousedown', sel._closeHandler), 10);
-                
-                sel.onchange = function () { 
-                    this.size = 1;
-                    this.style.position = '';
-                    this.style.zIndex = '';
-                    this.style.boxShadow = '';
-                    if (spacer) spacer.remove();
-                    if (this._closeHandler) document.removeEventListener('mousedown', this._closeHandler);
-                };
+                try {
+                    sel.showPicker();
+                } catch (e) {
+                    sel.size = Math.min(8, currentRecipeSearchResults.length + 1);
+                    sel.onblur = function () { this.size = 1; };
+                }
             }
         }
 
