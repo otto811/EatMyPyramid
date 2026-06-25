@@ -1147,7 +1147,7 @@
         let html5QrcodeScanner = null;
 
         // Search result pagination state
-        const SEARCH_INITIAL_COUNT = 5;  // number of closest matches shown initially
+        const SEARCH_INITIAL_COUNT = 10;  // number of closest matches shown initially
         const SEARCH_MORE_STEP = 5;      // how many more to reveal per "Show More" click
         let searchVisibleCount = SEARCH_INITIAL_COUNT;
 
@@ -1628,15 +1628,18 @@
                 
                 sel.focus();
                 
-                sel.onblur = function () { 
-                    setTimeout(() => {
-                        this.size = 1;
-                        this.style.position = '';
-                        this.style.zIndex = '';
-                        this.style.boxShadow = '';
+                if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
+                sel._closeHandler = function(e) {
+                    if (!sel.contains(e.target)) {
+                        sel.size = 1;
+                        sel.style.position = '';
+                        sel.style.zIndex = '';
+                        sel.style.boxShadow = '';
                         if (spacer) spacer.remove();
-                    }, 150);
+                        document.removeEventListener('mousedown', sel._closeHandler);
+                    }
                 };
+                setTimeout(() => document.addEventListener('mousedown', sel._closeHandler), 10);
             }
         }
 
@@ -1756,6 +1759,7 @@
             sel.style.boxShadow = '';
             const spacer = document.getElementById('foodSelectSpacer');
             if (spacer) spacer.remove();
+            if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
 
             const idx = val;
             if (!idx || idx === "") return;
@@ -3209,15 +3213,18 @@
                 
                 sel.focus();
                 
-                sel.onblur = function () { 
-                    setTimeout(() => {
-                        this.size = 1;
-                        this.style.position = '';
-                        this.style.zIndex = '';
-                        this.style.boxShadow = '';
+                if (sel._closeHandler) document.removeEventListener('mousedown', sel._closeHandler);
+                sel._closeHandler = function(e) {
+                    if (!sel.contains(e.target)) {
+                        sel.size = 1;
+                        sel.style.position = '';
+                        sel.style.zIndex = '';
+                        sel.style.boxShadow = '';
                         if (spacer) spacer.remove();
-                    }, 150);
+                        document.removeEventListener('mousedown', sel._closeHandler);
+                    }
                 };
+                setTimeout(() => document.addEventListener('mousedown', sel._closeHandler), 10);
                 
                 sel.onchange = function () { 
                     this.size = 1;
@@ -3225,6 +3232,7 @@
                     this.style.zIndex = '';
                     this.style.boxShadow = '';
                     if (spacer) spacer.remove();
+                    if (this._closeHandler) document.removeEventListener('mousedown', this._closeHandler);
                 };
             }
         }
