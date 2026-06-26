@@ -1539,9 +1539,16 @@
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
                 const fetchJSON = async (url) => {
                     try {
-                        const res = await fetch(url);
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                        return await res.json();
+                        const controller = new AbortController();
+                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) {
+                            clearTimeout(id);
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        const data = await res.json();
+                        clearTimeout(id);
+                        return data;
                     } catch (e) {
                         console.warn(`Fetch failed for ${url}:`, e);
                         return null;
@@ -3082,8 +3089,16 @@
             try {
                 const fetchJSON = async (url) => {
                     try {
-                        const res = await fetch(url);
-                        return res.ok ? await res.json() : null;
+                        const controller = new AbortController();
+                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) {
+                            clearTimeout(id);
+                            return null;
+                        }
+                        const data = await res.json();
+                        clearTimeout(id);
+                        return data;
                     } catch { return null; }
                 };
 
