@@ -313,22 +313,25 @@
             line-height: 1.5;
             padding: 10px 14px;
             border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
             max-width: 320px;
             min-width: 220px;
             white-space: normal;
             pointer-events: none;
             animation: dropdownFadeIn 0.15s ease;
         }
+
         .fg-info-popup.open {
             display: block;
             pointer-events: auto;
         }
+
         .fg-info-wrap {
             position: relative;
             display: inline-flex;
             align-items: center;
         }
+
         .fg-info-btn {
             background: #e0f2fe;
             color: #0369a1;
@@ -348,6 +351,7 @@
             flex-shrink: 0;
             transition: background 0.15s;
         }
+
         .fg-info-btn:hover {
             background: #bae6fd;
         }
@@ -568,15 +572,25 @@
                             <span class="fg-info-wrap">
                                 <span style="white-space:nowrap;">(Time = minutes)</span>
                                 <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
-                                    onclick="toggleExIntensityInfo(event)" aria-label="Exercise intensity info">ℹ</button>
-                                <div class="fg-info-popup" id="exIntensityInfoPopup" style="min-width:280px; max-width:340px;">
-                                    <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise Intensity Guide</strong>
-                                    <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual walking.<br>
-                                    You can talk or sing comfortably, your breathing remains regular, and you do not sweat.</p>
-                                    <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex. Brisk walking.<br>
-                                    Your breathing becomes deep and frequent. You begin to sweat after about 10 minutes. You can speak in short sentences but cannot carry on a full conversation or sing.</p>
-                                    <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex. Running, jumping rope.<br>
-                                    You experience heavy, rapid breathing and begin sweating within 3 to 5 minutes. You can only speak briefly and cannot sing at all.</p>
+                                    onclick="toggleExIntensityInfo(event)"
+                                    aria-label="Exercise intensity info">ℹ</button>
+                                <div class="fg-info-popup" id="exIntensityInfoPopup"
+                                    style="min-width:280px; max-width:340px;">
+                                    <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise
+                                        Intensity Guide</strong>
+                                    <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual
+                                        walking.<br>
+                                        You can talk or sing comfortably, your breathing remains regular, and you do not
+                                        sweat.</p>
+                                    <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex. Brisk
+                                        walking.<br>
+                                        Your breathing becomes deep and frequent. You begin to sweat after about 10
+                                        minutes. You can speak in short sentences but cannot carry on a full
+                                        conversation or sing.</p>
+                                    <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex. Running,
+                                        jumping rope.<br>
+                                        You experience heavy, rapid breathing and begin sweating within 3 to 5 minutes.
+                                        You can only speak briefly and cannot sing at all.</p>
                                 </div>
                             </span>
                         </label>
@@ -2188,12 +2202,12 @@
 
         // ==================== FOOD GROUP INFO ====================
         const FOOD_GROUP_INFO = {
-            'Fruit':          '1 cup of raw or frozen fruit, 1 cup of 100% fruit juice, or ½ cup of dried fruit counts as one cup equivalent.',
-            'Vegetable':      '1 cup of raw or cooked vegetables or 100% vegetable juice, 2 cups of raw leafy greens, or ½ cup of chopped raw vegetables counts as one cup equivalent.',
+            'Fruit': '1 cup of raw or frozen fruit, 1 cup of 100% fruit juice, or ½ cup of dried fruit counts as one cup equivalent.',
+            'Vegetable': '1 cup of raw or cooked vegetables or 100% vegetable juice, 2 cups of raw leafy greens, or ½ cup of chopped raw vegetables counts as one cup equivalent.',
             'Animal Protein': '1 ounce of lean meat, poultry, or seafood counts as one ounce equivalent.',
-            'Dairy':          '1 cup of fluid milk, yogurt, or calcium-fortified soy milk, or 1.5 ounces of natural cheese (e.g., Cheddar) counts as one cup equivalent.',
-            'Grain':          '½ cup of cooked rice, pasta, or cooked cereal; 1 ounce of dry pasta or rice; 1 slice of bread; or 1 cup of ready-to-eat cereal counts as one ounce equivalent.',
-            'Water':          'Equivalent to 8 oz of water, milk, juice, coffee, tea, or soda. Approximately 20% of daily water intake typically comes from food, particularly fruits and vegetables (e.g., watermelon, spinach, cucumbers) which have high water content.'
+            'Dairy': '1 cup of fluid milk, yogurt, or calcium-fortified soy milk, or 1.5 ounces of natural cheese (e.g., Cheddar) counts as one cup equivalent.',
+            'Grain': '½ cup of cooked rice, pasta, or cooked cereal; 1 ounce of dry pasta or rice; 1 slice of bread; or 1 cup of ready-to-eat cereal counts as one ounce equivalent.',
+            'Water': 'Equivalent to 8 oz of water, milk, juice, coffee, tea, or soda. Approximately 20% of daily water intake typically comes from food, particularly fruits and vegetables (e.g., watermelon, spinach, cucumbers) which have high water content.'
         };
 
         function showFoodGroupInfo(btnEl, cat) {
@@ -2206,7 +2220,7 @@
         }
 
         // Close info popups when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.classList.contains('fg-info-btn')) {
                 document.querySelectorAll('.fg-info-popup.open').forEach(p => p.classList.remove('open'));
             }
