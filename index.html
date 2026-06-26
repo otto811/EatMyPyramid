@@ -563,8 +563,23 @@
                     <div class="barometer-container" id="wwBarometer"></div>
 
                     <div class="exercise-box">
-                        <label style="margin-bottom: 8px;"><strong>Exercise Points Earned</strong> (subtracts from
-                            total daily points used)(Time = minutes)</label>
+                        <label style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                            <strong>Exercise Points Earned</strong>&nbsp;(subtracts from total daily points used)
+                            <span class="fg-info-wrap">
+                                <span style="white-space:nowrap;">(Time = minutes)</span>
+                                <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
+                                    onclick="toggleExIntensityInfo(event)" aria-label="Exercise intensity info">ℹ</button>
+                                <div class="fg-info-popup" id="exIntensityInfoPopup" style="min-width:280px; max-width:340px;">
+                                    <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise Intensity Guide</strong>
+                                    <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual walking.<br>
+                                    You can talk or sing comfortably, your breathing remains regular, and you do not sweat.</p>
+                                    <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex. Brisk walking.<br>
+                                    Your breathing becomes deep and frequent. You begin to sweat after about 10 minutes. You can speak in short sentences but cannot carry on a full conversation or sing.</p>
+                                    <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex. Running, jumping rope.<br>
+                                    You experience heavy, rapid breathing and begin sweating within 3 to 5 minutes. You can only speak briefly and cannot sing at all.</p>
+                                </div>
+                            </span>
+                        </label>
                         <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
                             <input type="number" id="exDuration" placeholder="Time" style="width:72px; padding:10px;">
                             <select id="exIntensity" style="flex:1; padding:10px;">
@@ -1063,7 +1078,19 @@
                 document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
                 document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
             }
+            // Close exercise intensity info popup when clicking outside
+            if (!e.target.closest('#exIntensityInfoBtn') && !e.target.closest('#exIntensityInfoPopup')) {
+                const popup = document.getElementById('exIntensityInfoPopup');
+                if (popup) popup.classList.remove('open');
+            }
         });
+
+        function toggleExIntensityInfo(e) {
+            e.stopPropagation();
+            const popup = document.getElementById('exIntensityInfoPopup');
+            if (popup) popup.classList.toggle('open');
+        }
+
 
         // ==================== HIDE / REVEAL SECTION FUNCTIONS (new in v2.3.3) ====================
         function toggleSection(section) {
@@ -1482,6 +1509,9 @@
                     if (aScore !== bScore) return aScore - bScore;
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
+
+                // Filter out zero-calorie items (except water)
+                localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
             } catch (e) {
                 console.error("Local search error", e);
                 localMatches = [];
@@ -1550,6 +1580,7 @@
                 // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
+                    if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
                     return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
                 });
 
@@ -3017,6 +3048,9 @@
 
                     return aDesc.localeCompare(bDesc);
                 });
+
+                // Filter out zero-calorie items (except water)
+                localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
             } catch (e) { localMatches = []; }
 
             currentRecipeSearchResults = [...localMatches];
@@ -3070,6 +3104,7 @@
                 // Filter out API results that duplicate a My Foods result
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
+                    if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
                     return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
                 });
 
