@@ -1438,6 +1438,13 @@
             const sel = document.getElementById('foodSelect');
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
+            // Save previously selected result index (if any) so we can restore it after re-render
+            // This allows background API results to be appended without losing a quick local selection
+            let prevSelected = -1;
+            if (sel.selectedIndex > 0 && sel.value !== '') {
+                prevSelected = parseInt(sel.value, 10);
+            }
+
             // Remove existing options except the placeholder
             while (sel.options.length > 1) sel.remove(1);
 
@@ -1455,6 +1462,11 @@
                 opt.value = i;
                 opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
                 sel.appendChild(opt);
+            }
+
+            // Restore previous selection if it is still a valid index in the (possibly expanded) results array
+            if (prevSelected >= 0 && prevSelected < currentSearchResults.length) {
+                sel.value = prevSelected;
             }
 
             // Inject a Show More / result count row ABOVE the select so it stays visible
@@ -1500,7 +1512,7 @@
             searchVisibleCount = SEARCH_INITIAL_COUNT;  // reset pagination on each new search
 
             const sel = document.getElementById('foodSelect');
-            sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
 
             // Remove any previous Show More footer
             const oldFooter = document.getElementById('searchShowMoreRow');
@@ -1534,7 +1546,16 @@
             currentSearchResults = [...localMatches];
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
 
+            // IMMEDIATE: Make local My Foods hits selectable right away (before waiting for slower USDA/OFF APIs)
+            if (currentSearchResults.length > 0) {
+                renderSearchDropdown();
+            } else {
+                // No local hits — indicate that external search is still running in background
+                if (sel.options[0]) sel.options[0].textContent = 'No local matches — searching external databases...';
+            }
+
             // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
+            // This runs in the background; results are appended live as they arrive without blocking the UI
             try {
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
                 const fetchJSON = async (url) => {
@@ -1610,7 +1631,9 @@
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                 } else {
-                    // Render only the first SEARCH_INITIAL_COUNT closest results
+                    // Reset placeholder text (in case it was changed to "No local matches...")
+                    if (sel.options[0]) sel.options[0].textContent = 'Select a food...';
+                    // Render (now includes any newly appended API results)
                     renderSearchDropdown();
                     sel.focus();
                     try {
@@ -1626,6 +1649,8 @@
                     sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
                     alert("Search failed. Please check your network connection.");
                 } else {
+                    // Reset placeholder text (in case it was changed to "No local matches...")
+                    if (sel.options[0]) sel.options[0].textContent = 'Select a food...';
                     renderSearchDropdown();
                 }
                 // Note: local My Foods results remain visible even on API failure
