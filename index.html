@@ -1157,77 +1157,6 @@
         let currentSearchResults = [];
         let html5QrcodeScanner = null;
 
-        // ==================== OPEN FOOD FACTS INTEGRATION (Improved June 2026) ====================
-        const OFF_BASE_URL = 'https://world.openfoodfacts.org';
-        const OFF_USER_AGENT = 'EatMyPyramid/2.3.7 (app@eatmy-pyramid.app)'; // Identifies the app to OFF (required best practice)
-
-        // Simple in-memory + localStorage cache for OFF barcode lookups (24h TTL)
-        let offBarcodeCache = {};
-        const OFF_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-        function loadOffCache() {
-            try {
-                const saved = localStorage.getItem('offBarcodeCache');
-                if (saved) offBarcodeCache = JSON.parse(saved);
-            } catch (e) { offBarcodeCache = {}; }
-        }
-
-        function saveOffCache() {
-            try {
-                localStorage.setItem('offBarcodeCache', JSON.stringify(offBarcodeCache));
-            } catch (e) { /* ignore quota errors */ }
-        }
-
-        // Helper to fetch from Open Food Facts with proper User-Agent, rate limit handling, and caching
-        async function fetchFromOFF(endpoint, useCache = true) {
-            const url = endpoint.startsWith('http') ? endpoint : `${OFF_BASE_URL}${endpoint}`;
-            const cacheKey = url;
-
-            // Check cache first (for barcode lookups)
-            if (useCache && offBarcodeCache[cacheKey]) {
-                const cached = offBarcodeCache[cacheKey];
-                if (Date.now() - cached.timestamp < OFF_CACHE_TTL_MS) {
-                    return cached.data;
-                } else {
-                    delete offBarcodeCache[cacheKey];
-                }
-            }
-
-            try {
-                const res = await fetch(url, {
-                    headers: {
-                        'User-Agent': OFF_USER_AGENT,
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (res.status === 429 || res.status === 503) {
-                    console.warn('Open Food Facts rate limit hit');
-                    const err = new Error('Open Food Facts is temporarily rate-limiting requests. Please wait a moment and try again.');
-                    err.isRateLimit = true;
-                    throw err;
-                }
-
-                if (!res.ok) {
-                    throw new Error(`Open Food Facts API returned ${res.status}`);
-                }
-
-                const data = await res.json();
-
-                // Cache successful barcode/product responses
-                if (useCache && url.includes('/api/v2/product/')) {
-                    offBarcodeCache[cacheKey] = { data, timestamp: Date.now() };
-                    saveOffCache();
-                }
-
-                return data;
-            } catch (e) {
-                if (e.isRateLimit) throw e;
-                console.warn('Open Food Facts fetch error:', e.message);
-                throw e;
-            }
-        }
-
         // Search result pagination state
         const SEARCH_INITIAL_COUNT = 10;  // number of closest matches shown initially
         const SEARCH_MORE_STEP = 10;      // how many more to reveal per "Show More" click
@@ -1371,8 +1300,6 @@
 
         function init() {
             loadData();
-            loadOffCache(); // Load Open Food Facts barcode cache
-
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const daySelect = document.getElementById('daySelect');
 
@@ -1610,22 +1537,13 @@
             // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
             try {
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
-                // Now includes required User-Agent for Open Food Facts
                 const fetchJSON = async (url) => {
                     try {
                         const controller = new AbortController();
                         const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
-                        const isOFF = url.includes('openfoodfacts.org');
-                        const res = await fetch(url, {
-                            signal: controller.signal,
-                            headers: isOFF ? { 'User-Agent': OFF_USER_AGENT } : {}
-                        });
+                        const res = await fetch(url, { signal: controller.signal });
                         if (!res.ok) {
                             clearTimeout(id);
-                            // Surface rate limit info
-                            if (res.status === 429 || res.status === 503) {
-                                console.warn('Open Food Facts rate limit encountered during search');
-                            }
                             throw new Error(`HTTP error! status: ${res.status}`);
                         }
                         const data = await res.json();
@@ -1638,8 +1556,7 @@
                 };
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
-                // Migrated from legacy cgi/search.pl to modern v2 structured search endpoint (better supported, field selection possible)
-                const offUrl = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(query)}&page_size=15&json=true&fields=code,product_name,brands,categories,serving_quantity,serving_size,nutriments`;
+                const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
 
                 const [usdaData, offData] = await Promise.all([
                     fetchJSON(usdaUrl),
@@ -1681,11 +1598,12 @@
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
 
-                // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
+                // Keep all valid API results (do not exclude items that have the same name as a My Foods entry).
+                // My Foods results are still shown first (priority order preserved), followed by USDA + Open Food Facts results.
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
-                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+                    return true; // include even if name matches a local My Foods item
                 });
 
                 currentSearchResults.push(...apiResults);
@@ -1825,16 +1743,12 @@
             // Check for UPC from either Open Food Facts or USDA format
             const upcText = (food.gtinUpc || food.upc) ? ` | <strong>UPC:</strong> ${food.gtinUpc || food.upc}` : '';
 
-            const sourceNote = food.source === 'Open Food Facts' 
-                ? `<br><small style="color:#6b7280;">Data from Open Food Facts (open database)</small>` 
-                : '';
             document.getElementById('nutritionPreview').innerHTML = `
             <strong>${food.description}</strong><br>
             <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
-            ${sourceNote}
         `;
         }
         //===============LOG FOOD FUNCTION=======================
@@ -2686,10 +2600,8 @@
             }
 
             try {
-                // Use improved helper with User-Agent, caching, and rate-limit handling.
-                // Request only the fields we actually use to reduce payload size.
-                const fields = 'product_name,brands,categories,serving_quantity,serving_size,nutriments';
-                const data = await fetchFromOFF(`/api/v2/product/${barcode}?fields=${fields}`);
+                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}`);
+                const data = await res.json();
 
                 if (data.status === 0 || !data.product) {
                     if (recipeBarcodeMode) {
@@ -2753,13 +2665,12 @@
 
             } catch (e) {
                 console.error("Barcode fetch/parse error:", e);
-                const isRateLimit = e.isRateLimit || e.message.includes('rate-limit');
                 if (recipeBarcodeMode) {
                     const sel = document.getElementById('recipeFoodSelect');
-                    sel.innerHTML = `<option value="" disabled selected>${isRateLimit ? 'Open Food Facts rate limit reached. Try again soon.' : 'Error reading product data.'}</option>`;
+                    sel.innerHTML = `<option value="" disabled selected>Error reading product data.</option>`;
                     recipeBarcodeMode = false;
                 } else {
-                    preview.innerHTML = `<span style="color:#ef4444;"><strong>${isRateLimit ? 'Open Food Facts is rate-limiting requests.' : 'Error reading product data.'}</strong></span><br>${isRateLimit ? 'Please wait a minute and try again.' : 'The database returned an unexpected format. Please manually search for this item.'}`;
+                    preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
                 }
             }
         }
@@ -3181,11 +3092,7 @@
                     try {
                         const controller = new AbortController();
                         const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
-                        const isOFF = url.includes('openfoodfacts.org');
-                        const res = await fetch(url, {
-                            signal: controller.signal,
-                            headers: isOFF ? { 'User-Agent': OFF_USER_AGENT } : {}
-                        });
+                        const res = await fetch(url, { signal: controller.signal });
                         if (!res.ok) {
                             clearTimeout(id);
                             return null;
@@ -3197,8 +3104,7 @@
                 };
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=10`;
-                // Migrated to modern v2 search endpoint (consistent with main search)
-                const offUrl = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(query)}&page_size=10&json=true&fields=code,product_name,brands,categories,serving_quantity,serving_size,nutriments`;
+                const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`;
 
                 const [usdaData, offData] = await Promise.all([fetchJSON(usdaUrl), fetchJSON(offUrl)]);
 
@@ -3225,11 +3131,12 @@
                 const apiStart = currentRecipeSearchResults.length;
                 const rawApiResults = [...usdaFoods, ...offFoods];
 
-                // Filter out API results that duplicate a My Foods result
+                // Keep all valid API results (do not exclude items that have the same name as a My Foods entry).
+                // My Foods results are still shown first (priority order preserved), followed by USDA + Open Food Facts results.
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
-                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+                    return true; // include even if name matches a local My Foods item
                 });
 
                 currentRecipeSearchResults.push(...apiResults);
