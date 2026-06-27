@@ -1534,6 +1534,14 @@
             currentSearchResults = [...localMatches];
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
 
+            // IMMEDIATE RENDER: Show local "My Foods" results right away so user can select them instantly.
+            // USDA + Open Food Facts search continues in the background and appends results when ready.
+            if (currentSearchResults.length > 0) {
+                renderSearchDropdown();
+            } else {
+                if (sel.options[0]) sel.options[0].textContent = 'No local matches — searching external databases...';
+            }
+
             // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
             try {
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
@@ -1598,12 +1606,11 @@
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
 
-                // Keep all valid API results (do not exclude items that have the same name as a My Foods entry).
-                // My Foods results are still shown first (priority order preserved), followed by USDA + Open Food Facts results.
+                // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
-                    return true; // include even if name matches a local My Foods item
+                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
                 });
 
                 currentSearchResults.push(...apiResults);
@@ -3131,12 +3138,11 @@
                 const apiStart = currentRecipeSearchResults.length;
                 const rawApiResults = [...usdaFoods, ...offFoods];
 
-                // Keep all valid API results (do not exclude items that have the same name as a My Foods entry).
-                // My Foods results are still shown first (priority order preserved), followed by USDA + Open Food Facts results.
+                // Filter out API results that duplicate a My Foods result
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
-                    return true; // include even if name matches a local My Foods item
+                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
                 });
 
                 currentRecipeSearchResults.push(...apiResults);
