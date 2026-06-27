@@ -1488,94 +1488,153 @@
             wrap.insertBefore(footer, sel);
         }
 
-async function searchDatabases() {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    const foodSelect = document.getElementById('foodSelect');
-    const searchBtn = document.getElementById('searchBtn');
-    const previewBox = document.getElementById('nutritionPreview');
+        async function searchDatabases() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!query) return;
 
-    if (!query) {
-        alert("Please enter a food to search.");
-        return;
-    }
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
 
-    // 1. Prepare UI for progressive loading
-    foodSelect.innerHTML = '<option value="">Searching... (results will appear as found)</option>';
-    searchBtn.disabled = true;
-    searchBtn.innerText = 'Searching...';
+            currentSearchResults = [];
+            searchVisibleCount = SEARCH_INITIAL_COUNT;  // reset pagination on each new search
 
-    // Clear the active search results array (assuming 'appData.currentSearchResults' is used to store current hits)
-    appData.currentSearchResults = []; 
-    let firstResultPopulated = false;
+            const sel = document.getElementById('foodSelect');
+            sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
 
-    // 2. Create a handler to append results as soon as a database responds
-    const handleResults = (results, sourceName) => {
-        if (!results || results.length === 0) return;
+            // Remove any previous Show More footer
+            const oldFooter = document.getElementById('searchShowMoreRow');
+            if (oldFooter) oldFooter.remove();
 
-        // Clear the "Searching..." placeholder when the very first batch of hits arrives
-        if (!firstResultPopulated) {
-            foodSelect.innerHTML = '';
-            firstResultPopulated = true;
+            // 1. ALWAYS search Local "My Foods" Database first (guaranteed, independent of APIs)
+            let localMatches = [];
+            try {
+                localMatches = appData.myFoods.filter(f => {
+                    const desc = String(f.description || '').toLowerCase();
+                    const brand = String(f.brandOwner || '').toLowerCase();
+                    const upcMatch = f.upc && String(f.upc) === query;
+                    return desc.includes(query) || brand.includes(query) || upcMatch;
+                }).map(f => ({ ...f, source: 'My Foods' }));
+
+                // Prioritize exact matches and starts-with matches (safe for any legacy bad items)
+                localMatches.sort((a, b) => {
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
+                });
+
+                // Filter out zero-calorie items (except water)
+                localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
+            } catch (e) {
+                console.error("Local search error", e);
+                localMatches = [];
+            }
+
+            currentSearchResults = [...localMatches];
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+
+            // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
+            try {
+                // Helper function to fetch data and silently return null if an API fails/rate-limits
+                const fetchJSON = async (url) => {
+                    try {
+                        const controller = new AbortController();
+                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) {
+                            clearTimeout(id);
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        const data = await res.json();
+                        clearTimeout(id);
+                        return data;
+                    } catch (e) {
+                        console.warn(`Fetch failed for ${url}:`, e);
+                        return null;
+                    }
+                };
+
+                const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
+                const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
+
+                const [usdaData, offData] = await Promise.all([
+                    fetchJSON(usdaUrl),
+                    fetchJSON(offUrl)
+                ]);
+
+                let usdaFoods = [];
+                if (usdaData && usdaData.foods) {
+                    usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
+                }
+
+                let offFoods = [];
+                if (offData && offData.products) {
+                    offFoods = offData.products.map(p => ({
+                        description: p.product_name || 'Unknown Item',
+                        brandOwner: p.brands || '',
+                        foodCategory: p.categories || 'Other',
+                        servingSize: parseFloat(p.serving_quantity) || 100,
+                        householdServingFullText: p.serving_size || '100g',
+                        upc: p.code,
+                        source: 'Open Food Facts',
+                        foodNutrients: [
+                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
+                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
+                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
+                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
+                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
+                        ]
+                    }));
+                }
+
+                const rawApiResults = [...usdaFoods, ...offFoods];
+
+                // Sort API results by closeness of match before filtering duplicates
+                rawApiResults.sort((a, b) => {
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
+                });
+
+                // Filter out API results that duplicate a My Foods result to prioritize user's custom entries
+                const apiResults = rawApiResults.filter(apiFood => {
+                    if (!apiFood.description) return false;
+                    if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
+                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+                });
+
+                currentSearchResults.push(...apiResults);
+
+                if (currentSearchResults.length === 0) {
+                    sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
+                } else {
+                    // Render only the first SEARCH_INITIAL_COUNT closest results
+                    renderSearchDropdown();
+                    sel.focus();
+                    try {
+                        sel.showPicker();
+                    } catch (e) {
+                        sel.size = Math.min(8, Math.min(searchVisibleCount, currentSearchResults.length) + 1);
+                        sel.onblur = function () { this.size = 1; };
+                    }
+                }
+            } catch (e) {
+                console.error("API search error (My Foods results are still shown if any):", e);
+                if (currentSearchResults.length === 0) {
+                    sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
+                    alert("Search failed. Please check your network connection.");
+                } else {
+                    renderSearchDropdown();
+                }
+                // Note: local My Foods results remain visible even on API failure
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Search';
+            }
         }
 
-        // Store the starting index so the option values map correctly to the array
-        const startIndex = appData.currentSearchResults.length;
-        
-        // Append new items to the state array
-        appData.currentSearchResults.push(...results);
-
-        // Instantly add the new results to the dropdown UI
-        results.forEach((item, i) => {
-            const actualIndex = startIndex + i;
-            const opt = document.createElement('option');
-            opt.value = actualIndex; 
-            
-            // Format the text label (adjust properties if your item object structure differs slightly)
-            const brand = item.brand ? ` [${item.brand}]` : '';
-            opt.text = `${item.description}${brand} (${item.calories || 0} kcal) - ${sourceName}`;
-            foodSelect.appendChild(opt);
-        });
-
-        // Trigger the preview box to show the first item immediately
-        if (startIndex === 0) {
-            updatePreview();
-        }
-    };
-
-    // 3. Fire all searches simultaneously and handle them individually
-    try {
-        // Execute the searches concurrently. 
-        // We attach .then() to process results immediately without blocking the other searches.
-        const searchPromises = [
-            searchMyFoods(query)
-                .then(res => handleResults(res, 'My Foods'))
-                .catch(e => console.error("My Foods search error:", e)),
-                
-            searchUSDA(query)
-                .then(res => handleResults(res, 'USDA'))
-                .catch(e => console.error("USDA search error:", e)),
-                
-            searchOpenFoodFacts(query)
-                .then(res => handleResults(res, 'Open Food Facts'))
-                .catch(e => console.error("Open Food Facts search error:", e))
-        ];
-
-        // Wait in the background for ALL of them to finish (success or fail) to reset the button state
-        await Promise.allSettled(searchPromises);
-
-    } catch (error) {
-        console.error("Search processing error:", error);
-    } finally {
-        // 4. Wrap up UI state when all background searching completes
-        if (!firstResultPopulated) {
-            foodSelect.innerHTML = '<option value="">No results found</option>';
-            previewBox.innerHTML = '<em>No results found.</em>';
-        }
-        
-        searchBtn.disabled = false;
-        searchBtn.innerText = 'Search';
-    }
-}
         // ==================== DATA PARSING HELPER FUNCTIONS ====================
         function getAllNutrients(food) {
             let nut = { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 };
@@ -2982,7 +3041,7 @@ async function searchDatabases() {
             if (!query) return;
 
             const sel = document.getElementById('recipeFoodSelect');
-            sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
+            sel.innerHTML = '<option value="" disabled selected>Searching...</option>';
             currentRecipeSearchResults = [];
 
             // Local My Foods first (priority)
@@ -3017,26 +3076,14 @@ async function searchDatabases() {
 
             currentRecipeSearchResults = [...localMatches];
 
-            if (currentRecipeSearchResults.length === 0) {
-                sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
-            } else {
-                sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-                localMatches.forEach((food, index) => {
-                    const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
-                    const opt = document.createElement('option');
-                    opt.value = index;
-                    opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
-                    sel.appendChild(opt);
-                });
-
-                sel.focus();
-                try {
-                    sel.showPicker();
-                } catch (e) {
-                    sel.size = Math.min(8, currentRecipeSearchResults.length + 1);
-                    sel.onblur = function () { this.size = 1; };
-                }
-            }
+            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            localMatches.forEach((food, index) => {
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                sel.appendChild(opt);
+            });
 
             // Then external APIs (append)
             try {
@@ -3092,10 +3139,6 @@ async function searchDatabases() {
 
                 currentRecipeSearchResults.push(...apiResults);
 
-                if (localMatches.length === 0) {
-                    sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
-                }
-
                 apiResults.forEach((food, i) => {
                     const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                     const opt = document.createElement('option');
@@ -3109,8 +3152,7 @@ async function searchDatabases() {
 
             if (currentRecipeSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
-                sel.size = 1;
-            } else if (localMatches.length === 0) {
+            } else {
                 sel.focus();
                 try {
                     sel.showPicker();
