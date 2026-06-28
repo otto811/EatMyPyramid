@@ -1534,23 +1534,6 @@
             currentSearchResults = [...localMatches];
             sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
 
-            // IMMEDIATE: Show My Foods results right away (user can select immediately)
-            if (currentSearchResults.length > 0) {
-                renderSearchDropdown();
-            } else {
-                if (sel.options[0]) sel.options[0].textContent = 'No local matches — searching external databases...';
-            }
-
-            // Show temporary loading indicator while external search runs in background
-            const loadingFooter = document.createElement('div');
-            loadingFooter.id = 'searchLoadingRow';
-            loadingFooter.style.cssText = 'font-size:0.78em; color:#64748b; margin: 4px 0 2px; font-style: italic;';
-            loadingFooter.textContent = '⏳ Searching USDA & Open Food Facts...';
-            const wrapEl = sel.parentElement;
-            const oldLoading = document.getElementById('searchLoadingRow');
-            if (oldLoading) oldLoading.remove();
-            wrapEl.appendChild(loadingFooter);
-
             // 2. Then fetch from USDA + Open Food Facts and append (My Foods stay at top)
             try {
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
@@ -1615,8 +1598,7 @@
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
 
-                // Include ALL valid results from USDA and Open Food Facts.
-                // My Foods items appear first (priority), external results are appended even if names overlap.
+                // Include results from USDA and Open Food Facts even if names overlap with My Foods.
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
@@ -1624,18 +1606,12 @@
                 });
 
                 currentSearchResults.push(...apiResults);
-                console.log(`[Search] Local results: ${localMatches.length}, API results added: ${apiResults.length}, Total: ${currentSearchResults.length}`);
-
-                // Remove loading indicator
-                const loadRow = document.getElementById('searchLoadingRow');
-                if (loadRow) loadRow.remove();
 
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                 } else {
+                    // Render only the first SEARCH_INITIAL_COUNT closest results
                     renderSearchDropdown();
-                    // On some mobile browsers, you may need to close and re-open the dropdown
-                    // to see newly added external results.
                     sel.focus();
                     try {
                         sel.showPicker();
@@ -1646,15 +1622,13 @@
                 }
             } catch (e) {
                 console.error("API search error (My Foods results are still shown if any):", e);
-                const loadRow = document.getElementById('searchLoadingRow');
-                if (loadRow) loadRow.remove();
-
                 if (currentSearchResults.length === 0) {
                     sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
                     alert("Search failed. Please check your network connection.");
                 } else {
                     renderSearchDropdown();
                 }
+                // Note: local My Foods results remain visible even on API failure
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Search';
@@ -3156,11 +3130,11 @@
                 const apiStart = currentRecipeSearchResults.length;
                 const rawApiResults = [...usdaFoods, ...offFoods];
 
-                // Filter out API results that duplicate a My Foods result
+                // Include results from USDA and Open Food Facts even if names overlap with My Foods.
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
-                    return !localMatches.some(local => local.description.toLowerCase() === apiFood.description.toLowerCase());
+                    return true;
                 });
 
                 currentRecipeSearchResults.push(...apiResults);
