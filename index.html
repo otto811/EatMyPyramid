@@ -362,14 +362,20 @@
 
     <div class="container">
         <div class="card full-width">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
                     <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.7)
                     </div>
                 </div>
-                <button id="profile-toggle" onclick="toggleSection('profile')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
+                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    <button id="recall-week-btn" onclick="showRecallWeekModal()"
+                        style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅 Recall a Week</button>
+                    <button id="return-week-btn" onclick="returnToCurrentWeek()"
+                        style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">← Return to Live</button>
+                    <button id="profile-toggle" onclick="toggleSection('profile')"
+                        style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
+                </div>
             </div>
             <div id="profile-content">
                 <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
@@ -1057,6 +1063,39 @@
         </div>
     </div>
 
+    <!-- ==================== RECALL A WEEK MODAL (new feature) ==================== -->
+    <div id="recallWeekModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:95%; max-width:480px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin:20px auto; max-height:92vh;">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#8b5cf6;">📅 Recall a Week's Tracking History</h3>
+
+            <p style="font-size:0.9em; color:#374151; line-height:1.45; margin-bottom:12px;">
+                Pick a date (or use the dropdown) from any past week. The Day selector, Daily Log, Macros, Food Groups, and WW Points will switch to show that week's saved data for browsing.
+            </p>
+
+            <div class="form-group">
+                <label style="font-weight:600; display:block; margin-bottom:4px;">Pick a date inside the desired week:</label>
+                <input type="date" id="recallDateInput" style="width:100%; padding:12px; font-size:1.05em; border:1px solid #d1d5db; border-radius:6px;">
+            </div>
+
+            <div id="availableWeeksList" style="margin:12px 0 8px 0; font-size:0.9em; color:#374151;">
+                <!-- Populated dynamically with quick-select dropdown of archived weeks -->
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:18px;">
+                <button onclick="closeRecallWeekModal()"
+                    style="background:var(--text-muted); flex:1; padding:12px; font-size:1em;">Cancel</button>
+                <button onclick="loadSelectedWeek()"
+                    style="background:#8b5cf6; flex:1.1; padding:12px; color:white; font-weight:bold; font-size:1em;">Load Week for Viewing</button>
+            </div>
+
+            <p style="font-size:0.78em; color:#6b7280; margin-top:16px; background:#f8fafc; padding:8px 10px; border-radius:6px;">
+                <strong>Tip:</strong> While viewing a past week you can browse every day but <strong>logging, editing, exercise points, and resets are disabled</strong> (to protect your history). Click the ← Return to Live button (appears when active) or re-select the current week to resume normal tracking.
+            </p>
+        </div>
+    </div>
+
     <script>
         // ==================== DROPDOWN MENU HELPERS ====================
         function toggleDropdown(id, toggleBtn) {
@@ -1166,6 +1205,8 @@
         let currentRecipeSearchResults = [];
         let currentRecipeIngredients = [];   // {food, amount, unit, grams, nutrients: {calories, protein, fat, carbs, fiber}}
 
+        let recalledWeekData = null;  // Recall a Week feature: holds {weekStart, history} copy when viewing a past/archived week; null = live current week
+
         let appData = {
             weight: 0,
             goalWeight: 0,
@@ -1192,6 +1233,16 @@
         }
 
         function saveData() {
+            // Always keep a fresh snapshot of the *live current week* in archivedWeeks.
+            // This ensures "Recall a Week" can retrieve the latest data for the ongoing week too,
+            // and past weeks remain untouched until a new week rollover occurs.
+            if (appData.currentWeekStart && appData.history) {
+                if (!appData.archivedWeeks) appData.archivedWeeks = {};
+                appData.archivedWeeks[appData.currentWeekStart] = {
+                    history: JSON.parse(JSON.stringify(appData.history)),
+                    savedAt: new Date().toISOString()
+                };
+            }
             localStorage.setItem('foodTrackerData', JSON.stringify(appData));
         }
 
@@ -1291,6 +1342,15 @@
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
 
+            // Migration 7: Ensure archivedWeeks and currentWeekStart exist for Recall a Week feature (non-breaking)
+            if (!appData.archivedWeeks || typeof appData.archivedWeeks !== 'object') {
+                appData.archivedWeeks = {};
+            }
+            if (!appData.currentWeekStart) {
+                // Will be properly set in init() based on today's date
+                appData.currentWeekStart = null;
+            }
+
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
             document.getElementById('goalDateInput').value = appData.goalDate || '';
@@ -1298,8 +1358,54 @@
             document.getElementById('wwGoalInput').value = appData.wwGoal;
         }
 
+        // ==================== WEEK ARCHIVING / RECALL A WEEK HELPER ====================
+        function getWeekStartDate(date = new Date()) {
+            const d = new Date(date);
+            const dayOfWeek = d.getDay(); // 0 = Sunday
+            d.setDate(d.getDate() - dayOfWeek);
+            d.setHours(0, 0, 0, 0);
+            return d.toISOString().split('T')[0];
+        }
+
         function init() {
             loadData();
+
+            // ==================== ROLLOVER & AUTO-ARCHIVE LOGIC FOR RECALL A WEEK ====================
+            // This runs once on app start. If the week has changed since last use, the previous week's
+            // tracking data (history + logs) is automatically saved into archivedWeeks for later recall.
+            // Current week always gets snapshotted on every saveData() call.
+            if (!appData.currentWeekStart) {
+                appData.currentWeekStart = getWeekStartDate();
+            }
+            const todayWeekStart = getWeekStartDate();
+            if (appData.currentWeekStart !== todayWeekStart) {
+                // Week rollover detected — preserve the old week's data (whatever is currently in appData.history)
+                const hasAnyData = Object.values(appData.history || {}).some(dayData =>
+                    (dayData.log && dayData.log.length > 0) ||
+                    (dayData.current && (dayData.current.Calories > 0 || dayData.current.exercisePoints > 0))
+                );
+                if (hasAnyData && appData.currentWeekStart) {
+                    if (!appData.archivedWeeks) appData.archivedWeeks = {};
+                    appData.archivedWeeks[appData.currentWeekStart] = {
+                        history: JSON.parse(JSON.stringify(appData.history)),
+                        savedAt: new Date().toISOString()
+                    };
+                }
+                // Reset history to a clean new week (pre-create all days to avoid partial state)
+                const emptyDay = () => ({
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                });
+                appData.history = {
+                    'Sunday': emptyDay(), 'Monday': emptyDay(), 'Tuesday': emptyDay(),
+                    'Wednesday': emptyDay(), 'Thursday': emptyDay(), 'Friday': emptyDay(), 'Saturday': emptyDay()
+                };
+                appData.currentWeekStart = todayWeekStart;
+                saveData(); // persist archive + fresh history
+            }
+            // Ensure archivedWeeks always exists
+            if (!appData.archivedWeeks) appData.archivedWeeks = {};
+
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const daySelect = document.getElementById('daySelect');
 
@@ -1322,16 +1428,22 @@
         function changeDay() {
             const day = document.getElementById('daySelect').value;
 
-            // Create an empty state for the day if it doesn't exist
-            if (!appData.history[day]) {
-                appData.history[day] = {
+            // Support Recall a Week: use archived history copy when active, otherwise live appData.history
+            let histSource = appData.history;
+            if (recalledWeekData && recalledWeekData.history) {
+                histSource = recalledWeekData.history;
+            }
+
+            // Create an empty state for the day if it doesn't exist (works for both live and recalled)
+            if (!histSource[day]) {
+                histSource[day] = {
                     current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
                     log: []
                 };
             }
 
-            state.current = appData.history[day].current;
-            state.log = appData.history[day].log;
+            state.current = histSource[day].current;
+            state.log = histSource[day].log;
 
             // Always sync Calories target to Daily Calorie Goal — fixes stale values at start of each day
             if (appData.calorieGoal > 0 && state.targets.Calories !== appData.calorieGoal) {
@@ -1343,6 +1455,7 @@
 
             renderLog();
             renderBarometers();
+            updateWeekViewUI();  // show/hide the "Return to Live" button when in recalled mode
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
@@ -1363,12 +1476,22 @@
         }
 
         function updateExercisePoints() {
+            if (recalledWeekData) {
+                // Revert input to the (read-only) value from the archived week
+                document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+                alert("Exercise points cannot be modified while viewing an archived week.");
+                return;
+            }
             state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
             saveData();
             renderBarometers();
         }
 
         function addExercisePoints() {
+            if (recalledWeekData) {
+                alert("Cannot add exercise points while viewing an archived week. Return to live tracking first.");
+                return;
+            }
             const duration = parseFloat(document.getElementById('exDuration').value);
             const intensityText = document.getElementById('exIntensity').value;
 
@@ -1830,6 +1953,10 @@
 
         function logFood(meal) {
             closeLogFoodModal();
+            if (recalledWeekData) {
+                alert("You are viewing an archived week. Logging new foods is disabled.\nClick the '← Return to Live' button (top right) to resume normal tracking.");
+                return;
+            }
             const idx = document.getElementById('foodSelect').value;
             if (!idx) return alert("Please select a food from the dropdown first.");
 
@@ -1937,6 +2064,10 @@
         let currentEditIndex = -1;
 
         function editItem(index) {
+            if (recalledWeekData) {
+                alert("Editing logged items is disabled while viewing an archived week.");
+                return;
+            }
             const item = state.log[index];
             currentEditIndex = index;
 
@@ -1963,6 +2094,11 @@
         }
 
         function saveEditItem() {
+            if (recalledWeekData) {
+                alert("Saving edits is disabled while viewing an archived week.");
+                closeEditModal();
+                return;
+            }
             if (currentEditIndex < 0) return;
 
             const item = state.log[currentEditIndex];
@@ -2055,6 +2191,10 @@
         }
 
         function deleteItem(index) {
+            if (recalledWeekData) {
+                alert("Deleting items is disabled while viewing an archived week.");
+                return;
+            }
             const item = state.log[index];
 
             state.current.Calories -= item.calories;
@@ -2095,6 +2235,10 @@
         }
 
         function resetDay() {
+            if (recalledWeekData) {
+                alert("Reset is disabled while viewing an archived week. Return to live tracking to modify data.");
+                return;
+            }
             if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
                 const day = document.getElementById('daySelect').value;
                 appData.history[day] = {
@@ -2113,6 +2257,10 @@
         }
 
         function resetWeek() {
+            if (recalledWeekData) {
+                alert("Reset Week is disabled while viewing an archived week.");
+                return;
+            }
             if (confirm("⚠️ This will PERMANENTLY clear ALL logged foods, exercise points, and serving totals for EVERY day of the week.\n\nYour profile settings (weight, calorie goal, WW goal, macro %, custom targets) will NOT be changed.\n\nAre you sure?")) {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const emptyCurrent = { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 };
@@ -3430,6 +3578,148 @@
         // (added below for completeness)
 
         // ==================== END RECIPE BUILDER ====================
+
+        // ==================== RECALL A WEEK FEATURE FUNCTIONS ====================
+        function updateWeekViewUI() {
+            const returnBtn = document.getElementById('return-week-btn');
+            if (!returnBtn) return;
+            returnBtn.style.display = (recalledWeekData && recalledWeekData.history) ? 'inline-block' : 'none';
+        }
+
+        function showRecallWeekModal() {
+            const modal = document.getElementById('recallWeekModal');
+            const dateInput = document.getElementById('recallDateInput');
+            const listContainer = document.getElementById('availableWeeksList');
+
+            // Set max date to today so users pick past/present weeks only
+            const todayStr = new Date().toISOString().split('T')[0];
+            dateInput.max = todayStr;
+            dateInput.value = '';  // clear previous
+
+            // Build quick-select dropdown of all archived weeks (newest first)
+            listContainer.innerHTML = '<strong style="display:block; margin-bottom:4px;">Quick pick from saved weeks:</strong>';
+            const archivedKeys = Object.keys(appData.archivedWeeks || {}).sort().reverse();
+
+            if (archivedKeys.length === 0) {
+                const note = document.createElement('div');
+                note.style.cssText = 'font-size:0.85em; color:#6b7280; padding:6px 0;';
+                note.innerHTML = '<em>No past weeks have been archived yet. As you continue using the app, each week\'s data is automatically saved when a new week begins.</em>';
+                listContainer.appendChild(note);
+            } else {
+                const sel = document.createElement('select');
+                sel.id = 'recallWeekQuickSelect';
+                sel.style.cssText = 'width:100%; padding:10px; font-size:0.95em; border:1px solid #d1d5db; border-radius:6px;';
+                sel.innerHTML = '<option value="">-- Choose a saved week --</option>';
+
+                archivedKeys.forEach(weekStart => {
+                    const startDate = new Date(weekStart + 'T00:00:00');
+                    const endDate = new Date(startDate);
+                    endDate.setDate(endDate.getDate() + 6);
+                    const label = `Week of ${startDate.toLocaleDateString(undefined, {month:'short', day:'numeric'})} – ${endDate.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
+                    const opt = document.createElement('option');
+                    opt.value = weekStart;
+                    opt.textContent = label;
+                    sel.appendChild(opt);
+                });
+
+                sel.onchange = function() {
+                    if (this.value) {
+                        // Pre-fill the date input with the week's start date for consistency
+                        dateInput.value = this.value;
+                    }
+                };
+                listContainer.appendChild(sel);
+            }
+
+            modal.style.display = 'flex';
+            // Optional: focus the date input
+            setTimeout(() => dateInput.focus(), 300);
+        }
+
+        function closeRecallWeekModal() {
+            document.getElementById('recallWeekModal').style.display = 'none';
+        }
+
+        function loadSelectedWeek() {
+            const dateVal = document.getElementById('recallDateInput').value;
+            let targetWeekStart = null;
+
+            if (dateVal) {
+                const picked = new Date(dateVal + 'T00:00:00');
+                targetWeekStart = getWeekStartDate(picked);
+            } else {
+                // Fallback to quick select dropdown if date not picked
+                const quickSel = document.getElementById('recallWeekQuickSelect');
+                if (quickSel && quickSel.value) {
+                    targetWeekStart = quickSel.value;
+                }
+            }
+
+            if (!targetWeekStart) {
+                alert("Please pick a date from the calendar or select a week from the dropdown.");
+                return;
+            }
+
+            loadRecalledWeek(targetWeekStart);
+        }
+
+        function loadRecalledWeek(weekStart) {
+            closeRecallWeekModal();
+
+            if (!weekStart) return;
+
+            const isCurrentWeek = (weekStart === appData.currentWeekStart);
+
+            if (isCurrentWeek) {
+                recalledWeekData = null;
+                alert("Now viewing your current live week (latest data).");
+            } else if (appData.archivedWeeks && appData.archivedWeeks[weekStart]) {
+                // Load a deep copy so viewing doesn't risk mutating the stored archive
+                recalledWeekData = {
+                    weekStart: weekStart,
+                    history: JSON.parse(JSON.stringify(appData.archivedWeeks[weekStart].history))
+                };
+                const startD = new Date(weekStart + 'T00:00:00');
+                const endD = new Date(startD);
+                endD.setDate(endD.getDate() + 6);
+                alert(`Loaded archived week of ${startD.toLocaleDateString()} – ${endD.toLocaleDateString()}.\n\nUse the Day of Week selector to browse each day. Logging & editing are blocked while in view-only mode.`);
+            } else {
+                alert("No tracking data found for that week. It may not have been used or was before archiving began.");
+                recalledWeekData = null;
+                return;
+            }
+
+            // Refresh the UI (day selector + all barometers/logs) to reflect the chosen week's data
+            changeDay();
+        }
+
+        function returnToCurrentWeek() {
+            if (!recalledWeekData) {
+                alert("You are already viewing the current live week.");
+                return;
+            }
+            recalledWeekData = null;
+            changeDay();
+            // Subtle confirmation
+            const btn = document.getElementById('return-week-btn');
+            if (btn) {
+                const origText = btn.textContent;
+                btn.textContent = '✓ Returned';
+                setTimeout(() => {
+                    if (btn) btn.textContent = origText;
+                }, 1200);
+            }
+        }
+
+        // ==================== GUARDS FOR VIEW-ONLY MODE (protect archived data) ====================
+        // These prevent accidental modification while a past week is loaded for viewing.
+        // Normal functionality for the live current week is completely unchanged.
+
+        // Wrap the original logFood to add guard
+        const _origLogFood = window.logFood || function(){};
+        // We will edit the function body instead of wrapping to keep line numbers and references intact.
+
+        // (Guards are inserted directly into the relevant function bodies below)
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
         init();
