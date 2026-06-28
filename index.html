@@ -1574,12 +1574,16 @@
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
 
-                // Use Search-a-licious for improved full-text search from Open Food Facts
+                // Primary: Search-a-licious (modern full-text search)
                 const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=15`;
 
-                const [usdaData, searchALData] = await Promise.all([
+                // Fallback: Legacy Open Food Facts search (more reliable when Search-a-licious is blocked by CORS)
+                const legacyOffUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
+
+                const [usdaData, searchALData, legacyOffData] = await Promise.all([
                     fetchJSON(usdaUrl),
-                    fetchJSON(searchALUrl)
+                    fetchJSON(searchALUrl),
+                    fetchJSON(legacyOffUrl)
                 ]);
 
                 let usdaFoods = [];
@@ -1588,26 +1592,64 @@
                 }
 
                 let searchALFoods = [];
-                if (searchALData && searchALData.hits) {
-                    searchALFoods = searchALData.hits.map(p => ({
-                        description: p.product_name || p.name || 'Unknown Item',
-                        brandOwner: p.brands || p.brand || '',
-                        foodCategory: p.categories || p.category || 'Other',
-                        servingSize: parseFloat(p.serving_quantity || p.serving_size || 100),
-                        householdServingFullText: p.serving_size || p.serving || '100g',
-                        upc: p.code || p.barcode || '',
-                        source: 'Search-a-licious',
+                if (searchALData && searchALData.hits && searchALData.hits.length > 0) {
+                    console.log(`[Search-a-licious] Received ${searchALData.hits.length} raw hits`);
+
+                    searchALFoods = searchALData.hits.map(p => {
+                        const nut = p.nutriments || {};
+                        const getNut = (keys) => {
+                            for (let k of keys) {
+                                if (nut[k] !== undefined && nut[k] !== null) {
+                                    const val = parseFloat(nut[k]);
+                                    if (!isNaN(val)) return val;
+                                }
+                            }
+                            return 0;
+                        };
+
+                        return {
+                            description: p.product_name || p.name || p.generic_name || 'Unknown Item',
+                            brandOwner: p.brands || p.brand || '',
+                            foodCategory: p.categories || p.category || 'Other',
+                            servingSize: parseFloat(p.serving_quantity || p.serving_size || 100),
+                            householdServingFullText: p.serving_size || p.serving || '100g',
+                            upc: p.code || p.barcode || '',
+                            source: 'Search-a-licious',
+                            foodNutrients: [
+                                { nutrientId: 1008, value: getNut(['energy-kcal', 'energy_kcal', 'energy-kcal_100g']) },
+                                { nutrientId: 1003, value: getNut(['proteins', 'proteins_100g']) },
+                                { nutrientId: 1004, value: getNut(['fat', 'fat_100g']) },
+                                { nutrientId: 1005, value: getNut(['carbohydrates', 'carbohydrates_100g']) },
+                                { nutrientId: 1079, value: getNut(['fiber', 'fiber_100g']) }
+                            ]
+                        };
+                    });
+                } else {
+                    console.warn(`[Search-a-licious] No hits or empty response for this query`);
+                }
+
+                // Process legacy OFF results as fallback (helps when Search-a-licious is blocked by CORS)
+                let legacyOffFoods = [];
+                if (legacyOffData && legacyOffData.products) {
+                    legacyOffFoods = legacyOffData.products.map(p => ({
+                        description: p.product_name || 'Unknown Item',
+                        brandOwner: p.brands || '',
+                        foodCategory: p.categories || 'Other',
+                        servingSize: parseFloat(p.serving_quantity) || 100,
+                        householdServingFullText: p.serving_size || '100g',
+                        upc: p.code,
+                        source: 'Open Food Facts (legacy)',
                         foodNutrients: [
-                            { nutrientId: 1008, value: parseFloat(p.nutriments?.energy_kcal || p.energy_kcal || 0) },
-                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins || p.proteins_100g || 0) },
-                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat || p.fat_100g || 0) },
-                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates || p.carbohydrates_100g || 0) },
-                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber || p.fiber_100g || 0) }
+                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
+                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
+                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
+                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
+                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
                         ]
                     }));
                 }
 
-                const rawApiResults = [...usdaFoods, ...searchALFoods];
+                const rawApiResults = [...usdaFoods, ...searchALFoods, ...legacyOffFoods];
 
                 // Sort API results by closeness of match
                 rawApiResults.sort((a, b) => {
@@ -2627,77 +2669,12 @@
                 const data = await res.json();
 
                 if (data.status === 0 || !data.product) {
-                    // Open Food Facts didn't have it — try USDA FoodData Central as fallback
-                    console.log(`Barcode ${barcode} not found in Open Food Facts. Trying USDA...`);
-                    try {
-                        const usdaRes = await fetch(
-                            `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=gtinUpc:${barcode}&pageSize=1`
-                        );
-                        const usdaData = await usdaRes.json();
-
-                        if (usdaData && usdaData.foods && usdaData.foods.length > 0) {
-                            const u = usdaData.foods[0];
-                            const nut = { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 };
-
-                            if (u.foodNutrients) {
-                                u.foodNutrients.forEach(n => {
-                                    const id = n.nutrientId || (n.nutrient && n.nutrient.id);
-                                    if (id === 1008) nut.calories = n.value || 0;
-                                    if (id === 1003) nut.protein = n.value || 0;
-                                    if (id === 1004) nut.fat = n.value || 0;
-                                    if (id === 1005) nut.carbs = n.value || 0;
-                                    if (id === 1079) nut.fiber = n.value || 0;
-                                });
-                            }
-
-                            const name = u.description || `Scanned Item (${barcode})`;
-                            const brandText = u.brandOwner || u.brand || "USDA";
-                            const catText = u.foodCategory || "Other";
-
-                            const fakeFood = {
-                                description: name,
-                                brandOwner: brandText,
-                                foodCategory: catText,
-                                servingSize: 100,
-                                householdServingFullText: "100g",
-                                upc: barcode,
-                                source: 'USDA FoodData Central',
-                                foodNutrients: [
-                                    { nutrientId: 1008, value: nut.calories },
-                                    { nutrientId: 1003, value: nut.protein },
-                                    { nutrientId: 1004, value: nut.fat },
-                                    { nutrientId: 1005, value: nut.carbs },
-                                    { nutrientId: 1079, value: nut.fiber }
-                                ]
-                            };
-
-                            if (recipeBarcodeMode) {
-                                currentRecipeSearchResults = [fakeFood];
-                                const sel = document.getElementById('recipeFoodSelect');
-                                sel.innerHTML = `<option value="0" selected>[USDA] ${name} (${brandText})</option>`;
-                                document.getElementById('recipeAmountInput').value = '';
-                                recipeBarcodeMode = false;
-                            } else {
-                                currentSearchResults = [fakeFood];
-                                const sel = document.getElementById('foodSelect');
-                                sel.innerHTML = `<option value="0" selected>[USDA] ${name} (${brandText})</option>`;
-                                document.getElementById('servingInput').value = 1;
-                                document.getElementById('amountInput').value = '';
-                                updatePreview();
-                            }
-                            return;
-                        }
-                    } catch (usdaErr) {
-                        console.warn("USDA barcode fallback failed:", usdaErr);
-                    }
-
-                    // If we get here, neither OFF nor USDA had it
                     if (recipeBarcodeMode) {
                         const sel = document.getElementById('recipeFoodSelect');
-                        sel.innerHTML = `<option value="" disabled selected>Product not found in Open Food Facts or USDA.</option>`;
+                        sel.innerHTML = `<option value="" disabled selected>Product not found in Open Food Facts.</option>`;
                         recipeBarcodeMode = false;
                     } else {
-                        preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found.</strong></span><br>Barcode ${barcode} was not found in Open Food Facts or USDA FoodData Central.`;
+                        preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
                     }
                     return;
                 }
