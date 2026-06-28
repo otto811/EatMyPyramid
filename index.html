@@ -355,6 +355,57 @@
         .fg-info-btn:hover {
             background: #bae6fd;
         }
+
+        /* Calendar modal styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .calendar-day:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(90deg,#8b5cf6,#a855f7);
+            color: white;
+            font-weight: 700;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .profile-date-display {
+            background: rgba(255,255,255,0.9);
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            font-weight: 600;
+            color: #0f172a;
+        }
     </style>
 </head>
 
@@ -379,24 +430,25 @@
                             style="font-weight:bold; padding: 8px; height: 38px;"></select>
                     </div>
 
-                    <!-- New Year/Month/Day calendar selectors for historical multi-week tracking (in addition to Day of Week) -->
-                    <div style="display:flex; gap:8px; align-items:flex-end; background:rgba(255,255,255,0.5); padding:6px 10px; border-radius:6px; flex-shrink:0;">
-                        <div>
-                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Year</label>
-                            <select id="yearSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; width:74px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
+                    <!-- New Month & Year controls for calendar -->
+                    <div>
+                        <label style="font-size: 0.8em; margin-bottom: 2px;">Month</label>
+                        <select id="monthSelect" onchange="onMonthYearChange()" style="padding:8px; height:38px;"></select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8em; margin-bottom: 2px;">Year</label>
+                        <select id="yearSelect" onchange="onMonthYearChange()" style="padding:8px; height:38px;"></select>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                        <label style="font-size: 0.8em; margin-bottom: 2px;">Calendar</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <div id="currentDateDisplay" class="profile-date-display" title="Currently selected date">
+                                <!-- Filled in by JS -->
+                            </div>
+                            <button onclick="openCalendarModal()" style="background:#8b5cf6; padding:8px 12px; height:38px;">Pick
+                                Date</button>
                         </div>
-                        <div>
-                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Month</label>
-                            <select id="monthSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
-                        </div>
-                        <div>
-                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Day</label>
-                            <select id="dayOfMonthSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; width:52px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
-                        </div>
-                        <div style="padding-bottom:3px; font-size:0.75em; color:#4338ca; min-width:64px; line-height:1.05;">
-                            <span id="computedDayOfWeek" style="font-weight:700; display:block;"></span>
-                            <span style="font-size:0.62em; color:#64748b;">(auto)</span>
-                        </div>
+                        <small style="color:#6b7280;">Select any month/year and pick a date to recall or create daily logs.</small>
                     </div>
 
                     <div
@@ -659,6 +711,44 @@
                     </div>
                 </div>
             </div> <!-- end log-content (collapsible) -->
+        </div>
+    </div>
+
+    <div id="calendarModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:22px; border-radius:12px; width:90%; max-width:560px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0;">Select a Date</h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="prevMonth()" style="background:#3b82f6; padding:8px 10px; color:white;border:none;border-radius:6px;">◀</button>
+                    <button onclick="nextMonth()" style="background:#3b82f6; padding:8px 10px; color:white;border:none;border-radius:6px;">▶</button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                <select id="calendarMonthSelect" onchange="onCalendarMonthYearChange()" style="flex:1; padding:8px;"></select>
+                <select id="calendarYearSelect" onchange="onCalendarMonthYearChange()" style="flex:1; padding:8px;"></select>
+            </div>
+
+            <div class="calendar-weekdays">
+                <div class="calendar-weekday">Sun</div>
+                <div class="calendar-weekday">Mon</div>
+                <div class="calendar-weekday">Tue</div>
+                <div class="calendar-weekday">Wed</div>
+                <div class="calendar-weekday">Thu</div>
+                <div class="calendar-weekday">Fri</div>
+                <div class="calendar-weekday">Sat</div>
+            </div>
+
+            <div id="calendarGrid" class="calendar-grid" style="margin-bottom:12px;">
+                <!-- Days injected here -->
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:space-between;">
+                <button onclick="closeCalendarModal()" style="background:var(--text-muted); padding:10px; color:white;">Cancel</button>
+                <button onclick="selectToday()" style="background:#10b981; padding:10px; color:white;">Today</button>
+            </div>
         </div>
     </div>
 
@@ -1196,9 +1286,10 @@
             usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
             // Macro targets represent percentages (30%, 30%, 40%)
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
-            history: {},
+            history: {},   // now supports arbitrary date keys (YYYY-MM-DD) and legacy day-of-week keys
             myFoods: [],
-            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true }
+            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true },
+            currentDate: '' // YYYY-MM-DD (set at init)
         };
 
         let state = {
@@ -1312,24 +1403,9 @@
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
 
-            // MIGRATION: Preserve old single-week (day-name keyed) data by mapping it to concrete dates for the current week.
-            // This allows historical recall while new data uses precise YYYY-MM-DD keys.
-            const oldDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const hasOld = oldDayNames.some(n => appData.history && appData.history[n]);
-            if (hasOld && appData.history) {
-                const today = new Date();
-                const dayIdx = today.getDay();
-                const weekSunday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dayIdx);
-                oldDayNames.forEach((dayName, idx) => {
-                    if (appData.history[dayName]) {
-                        const target = new Date(weekSunday);
-                        target.setDate(weekSunday.getDate() + idx);
-                        const key = target.toISOString().split('T')[0];
-                        if (!appData.history[key]) {
-                            appData.history[key] = appData.history[dayName];
-                        }
-                    }
-                });
+            // Ensure currentDate exists (migration)
+            if (!appData.currentDate) {
+                appData.currentDate = '';
             }
 
             document.getElementById('weightInput').value = appData.weight;
@@ -1347,20 +1423,18 @@
             daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
             daySelect.value = days[new Date().getDay()];
 
-            changeDay();
+            // Initialize month/year controls and calendar
+            initMonthYearControls();
 
-            // ==================== NEW: Initialize Year/Month/Day calendar controls and load today's date-keyed data ====================
-            populateDateSelectors();
+            // Initialize currentDate (prefer saved currentDate, else today)
             const today = new Date();
-            const ySel = document.getElementById('yearSelect');
-            const mSel = document.getElementById('monthSelect');
-            const dSel = document.getElementById('dayOfMonthSelect');
-            if (ySel && mSel && dSel) {
-                ySel.value = today.getFullYear();
-                mSel.value = today.getMonth() + 1;
-                dSel.value = today.getDate();
-                updateDateFromYMD();   // loads data for today using the new date-keyed system
+            if (!appData.currentDate || appData.currentDate.trim() === '') {
+                appData.currentDate = formatDateISO(today);
             }
+            updateCurrentDateDisplay();
+
+            // Load the initial date-based day (if user later wants weekly daySelect, they can still use it)
+            loadDate(appData.currentDate);
 
             // Listen for Enter key presses on search inputs
             document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
@@ -1373,125 +1447,175 @@
             applyVisibility();
         }
 
-        function changeDay() {
-            const day = document.getElementById('daySelect').value;
+        function initMonthYearControls() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearSelect = document.getElementById('yearSelect');
 
-            // Create an empty state for the day if it doesn't exist
-            if (!appData.history[day]) {
-                appData.history[day] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
+            const months = [
+                'January','February','March','April','May','June','July','August','September','October','November','December'
+            ];
+
+            monthSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+
+            const thisYear = new Date().getFullYear();
+            let yearsHtml = '';
+            // show +/- 8 years from current year for selection
+            for (let y = thisYear - 8; y <= thisYear + 8; y++) {
+                yearsHtml += `<option value="${y}">${y}</option>`;
             }
+            yearSelect.innerHTML = yearsHtml;
 
-            state.current = appData.history[day].current;
-            state.log = appData.history[day].log;
+            // Calendar modal month/year selects also
+            const calMonth = document.getElementById('calendarMonthSelect');
+            const calYear = document.getElementById('calendarYearSelect');
+            calMonth.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+            calYear.innerHTML = yearsHtml;
 
-            // Always sync Calories target to Daily Calorie Goal — fixes stale values at start of each day
-            if (appData.calorieGoal > 0 && state.targets.Calories !== appData.calorieGoal) {
-                state.targets.Calories = appData.calorieGoal;
-                saveData();
-            }
+            // Set selects to appData.currentDate
+            const d = appData.currentDate ? new Date(appData.currentDate) : new Date();
+            monthSelect.value = d.getMonth();
+            yearSelect.value = d.getFullYear();
+            calMonth.value = d.getMonth();
+            calYear.value = d.getFullYear();
 
-            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
-
-            renderLog();
-            renderBarometers();
+            // Prebuild calendar
+            buildCalendarGrid(parseInt(calMonth.value, 10), parseInt(calYear.value, 10));
         }
 
-        // ==================== NEW DATE/YEAR/MONTH CALENDAR FUNCTIONS (for historical tracking) ====================
-        function populateDateSelectors() {
-            const yearSel = document.getElementById('yearSelect');
-            const monthSel = document.getElementById('monthSelect');
-            const daySel = document.getElementById('dayOfMonthSelect');
-            if (!yearSel || !monthSel || !daySel) return;
-
-            const currentYear = new Date().getFullYear();
-            yearSel.innerHTML = '';
-            for (let y = currentYear - 3; y <= currentYear + 2; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                yearSel.appendChild(opt);
-            }
-
-            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            monthSel.innerHTML = '';
-            monthNames.forEach((name, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx + 1;
-                opt.textContent = name;
-                monthSel.appendChild(opt);
-            });
-
-            daySel.innerHTML = '';
-            for (let d = 1; d <= 31; d++) {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                daySel.appendChild(opt);
-            }
+        function onMonthYearChange() {
+            const m = parseInt(document.getElementById('monthSelect').value, 10);
+            const y = parseInt(document.getElementById('yearSelect').value, 10);
+            // update the calendar modal's selects to match when user changes month/year in profile
+            document.getElementById('calendarMonthSelect').value = m;
+            document.getElementById('calendarYearSelect').value = y;
+            buildCalendarGrid(m, y);
         }
 
-        function updateDayOptions() {
-            const yearSel = document.getElementById('yearSelect');
-            const monthSel = document.getElementById('monthSelect');
-            const daySel = document.getElementById('dayOfMonthSelect');
-            if (!yearSel || !monthSel || !daySel) return;
+        function onCalendarMonthYearChange() {
+            const m = parseInt(document.getElementById('calendarMonthSelect').value, 10);
+            const y = parseInt(document.getElementById('calendarYearSelect').value, 10);
+            // sync profile selects too
+            document.getElementById('monthSelect').value = m;
+            document.getElementById('yearSelect').value = y;
+            buildCalendarGrid(m, y);
+        }
 
-            const year = parseInt(yearSel.value);
-            const month = parseInt(monthSel.value);
-            if (!year || !month) return;
+        function openCalendarModal() {
+            document.getElementById('calendarModal').style.display = 'flex';
+            // ensure calendar shows the currently selected month/year
+            const d = appData.currentDate ? new Date(appData.currentDate) : new Date();
+            document.getElementById('calendarMonthSelect').value = d.getMonth();
+            document.getElementById('calendarYearSelect').value = d.getFullYear();
+            document.getElementById('monthSelect').value = d.getMonth();
+            document.getElementById('yearSelect').value = d.getFullYear();
+            buildCalendarGrid(d.getMonth(), d.getFullYear());
+        }
 
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const prevDay = parseInt(daySel.value) || 1;
+        function closeCalendarModal() {
+            document.getElementById('calendarModal').style.display = 'none';
+        }
 
-            daySel.innerHTML = '';
+        function prevMonth() {
+            const calMonth = document.getElementById('calendarMonthSelect');
+            const calYear = document.getElementById('calendarYearSelect');
+            let m = parseInt(calMonth.value, 10);
+            let y = parseInt(calYear.value, 10);
+            m--;
+            if (m < 0) { m = 11; y--; }
+            calMonth.value = m;
+            calYear.value = y;
+            document.getElementById('monthSelect').value = m;
+            document.getElementById('yearSelect').value = y;
+            buildCalendarGrid(m, y);
+        }
+
+        function nextMonth() {
+            const calMonth = document.getElementById('calendarMonthSelect');
+            const calYear = document.getElementById('calendarYearSelect');
+            let m = parseInt(calMonth.value, 10);
+            let y = parseInt(calYear.value, 10);
+            m++;
+            if (m > 11) { m = 0; y++; }
+            calMonth.value = m;
+            calYear.value = y;
+            document.getElementById('monthSelect').value = m;
+            document.getElementById('yearSelect').value = y;
+            buildCalendarGrid(m, y);
+        }
+
+        function buildCalendarGrid(month, year) {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const firstDay = new Date(year, month, 1);
+            const startDay = firstDay.getDay(); // 0..6
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // add placeholders for days before startDay
+            for (let i = 0; i < startDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day';
+                empty.style.visibility = 'hidden';
+                grid.appendChild(empty);
+            }
+
+            // create day cells
             for (let d = 1; d <= daysInMonth; d++) {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                daySel.appendChild(opt);
-            }
-            daySel.value = Math.min(prevDay, daysInMonth);
-        }
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                cell.textContent = d;
 
-        function updateDateFromYMD() {
-            updateDayOptions();
-            const year = document.getElementById('yearSelect').value;
-            const month = String(document.getElementById('monthSelect').value).padStart(2, '0');
-            const day = String(document.getElementById('dayOfMonthSelect').value).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
+                const dateStr = formatDateISO(new Date(year, month, d));
+                if (dateStr === appData.currentDate) {
+                    cell.classList.add('selected');
+                }
 
-            const dateObj = new Date(dateStr + 'T00:00:00');
-            const dowName = dateObj.toLocaleString('en-US', { weekday: 'long' });
-            const dowEl = document.getElementById('computedDayOfWeek');
-            if (dowEl) dowEl.textContent = dowName;
-
-            loadOrCreateDateData(dateStr);
-        }
-
-        function loadOrCreateDateData(dateStr) {
-            if (!appData.history[dateStr]) {
-                appData.history[dateStr] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
+                cell.onclick = () => {
+                    selectDate(dateStr);
                 };
+
+                grid.appendChild(cell);
             }
-            state.current = appData.history[dateStr].current;
-            state.log = appData.history[dateStr].log;
+        }
 
-            const exInput = document.getElementById('exerciseInput');
-            if (exInput) exInput.value = state.current.exercisePoints || 0;
-
-            const d = new Date(dateStr + 'T00:00:00');
-            const dayName = d.toLocaleString('en-us', { weekday: 'long' });
-            const oldDaySel = document.getElementById('daySelect');
-            if (oldDaySel) oldDaySel.value = dayName;
-
-            renderLog();
-            renderBarometers();
+        function selectDate(isoDate) {
+            // set current date and load that day's history
+            appData.currentDate = isoDate;
+            updateCurrentDateDisplay();
+            loadDate(isoDate);
             saveData();
+            closeCalendarModal();
+        }
+
+        function selectToday() {
+            const t = new Date();
+            const iso = formatDateISO(t);
+            appData.currentDate = iso;
+            updateCurrentDateDisplay();
+            loadDate(iso);
+            saveData();
+            closeCalendarModal();
+        }
+
+        function updateCurrentDateDisplay() {
+            const el = document.getElementById('currentDateDisplay');
+            if (!el) return;
+            if (!appData.currentDate) {
+                el.textContent = 'No date';
+                return;
+            }
+            const d = new Date(appData.currentDate);
+            const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+            el.textContent = d.toLocaleDateString(undefined, opts);
+            // sync profile selects
+            document.getElementById('monthSelect').value = d.getMonth();
+            document.getElementById('yearSelect').value = d.getFullYear();
+        }
+
+        function formatDateISO(d) {
+            const y = d.getFullYear();
+            const m = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${y}-${m}-${day}`;
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
@@ -1940,6 +2064,55 @@
             return (servingSizeGrams / 100) * servings;
         }
 
+        // ==================== DATE-BASED HISTORY LOADING ====================
+        function loadDate(isoDate) {
+            // isoDate is "YYYY-MM-DD"
+            if (!isoDate) return;
+            // Ensure an entry exists
+            if (!appData.history[isoDate]) {
+                appData.history[isoDate] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                };
+            }
+
+            state.current = appData.history[isoDate].current;
+            state.log = appData.history[isoDate].log;
+
+            // Sync exercise input UI
+            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+
+            // Update the Day of Week selector to match the selected date's weekday
+            const dt = new Date(isoDate);
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            document.getElementById('daySelect').value = days[dt.getDay()];
+
+            renderLog();
+            renderBarometers();
+        }
+
+        // Existing changeDay still works for weekly quick switch (keeps backward compatibility)
+        function changeDay() {
+            const day = document.getElementById('daySelect').value;
+
+            // If user is using the weekly mode, keep old behavior: create day-of-week key if not found
+            if (!appData.history[day]) {
+                appData.history[day] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                };
+            }
+
+            state.current = appData.history[day].current;
+            state.log = appData.history[day].log;
+
+            // Keep date selection in sync (if currentDate maps to a day with same weekday, we won't alter it)
+            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+
+            renderLog();
+            renderBarometers();
+        }
+
         // ==================== LOGGING & EDITING FUNCTIONS ====================
         //============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
         function updatePreview() {
@@ -2245,14 +2418,15 @@
 
         function resetDay() {
             if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
-                const day = document.getElementById('daySelect').value;
-                appData.history[day] = {
+                // If currentDate is set, reset that date; else fallback to daySelect
+                const dateKey = appData.currentDate && appData.currentDate.trim() !== '' ? appData.currentDate : document.getElementById('daySelect').value;
+                appData.history[dateKey] = {
                     current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
                     log: []
                 };
 
-                state.current = appData.history[day].current;
-                state.log = appData.history[day].log;
+                state.current = appData.history[dateKey].current;
+                state.log = appData.history[dateKey].log;
                 document.getElementById('exerciseInput').value = 0;
 
                 saveData();
