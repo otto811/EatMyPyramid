@@ -355,57 +355,6 @@
         .fg-info-btn:hover {
             background: #bae6fd;
         }
-
-        /* Calendar modal styles */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
-
-        .calendar-day {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .calendar-day:hover {
-            background: #f3f4f6;
-        }
-
-        .calendar-day.selected {
-            background: linear-gradient(90deg,#8b5cf6,#a855f7);
-            color: white;
-            font-weight: 700;
-        }
-
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-bottom: 6px;
-        }
-
-        .calendar-weekday {
-            text-align: center;
-            font-size: 0.85em;
-            color: var(--text-muted);
-        }
-
-        .profile-date-display {
-            background: rgba(255,255,255,0.9);
-            border-radius: 6px;
-            padding: 6px 10px;
-            display: inline-flex;
-            gap: 8px;
-            align-items: center;
-            font-weight: 600;
-            color: #0f172a;
-        }
     </style>
 </head>
 
@@ -430,25 +379,12 @@
                             style="font-weight:bold; padding: 8px; height: 38px;"></select>
                     </div>
 
-                    <!-- New Month & Year controls for calendar -->
-                    <div>
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Month</label>
-                        <select id="monthSelect" onchange="onMonthYearChange()" style="padding:8px; height:38px;"></select>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Year</label>
-                        <select id="yearSelect" onchange="onMonthYearChange()" style="padding:8px; height:38px;"></select>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
-                        <label style="font-size: 0.8em; margin-bottom: 2px;">Calendar</label>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <div id="currentDateDisplay" class="profile-date-display" title="Currently selected date">
-                                <!-- Filled in by JS -->
-                            </div>
-                            <button onclick="openCalendarModal()" style="background:#8b5cf6; padding:8px 12px; height:38px;">Pick
-                                Date</button>
-                        </div>
-                        <small style="color:#6b7280;">Select any month/year and pick a date to recall or create daily logs.</small>
+                    <!-- Recall a Week button - clean addition for loading historical tracking data -->
+                    <div style="align-self: flex-end;">
+                        <button onclick="showRecallWeekModal()"
+                            style="background:#8b5cf6; color:white; border:none; padding:8px 14px; border-radius:6px; font-size:0.9em; font-weight:600; height:38px; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            📅 Recall a Week
+                        </button>
                     </div>
 
                     <div
@@ -711,44 +647,6 @@
                     </div>
                 </div>
             </div> <!-- end log-content (collapsible) -->
-        </div>
-    </div>
-
-    <div id="calendarModal"
-        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
-        <div
-            style="background:white; padding:22px; border-radius:12px; width:90%; max-width:560px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="margin:0;">Select a Date</h3>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="prevMonth()" style="background:#3b82f6; padding:8px 10px; color:white;border:none;border-radius:6px;">◀</button>
-                    <button onclick="nextMonth()" style="background:#3b82f6; padding:8px 10px; color:white;border:none;border-radius:6px;">▶</button>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-                <select id="calendarMonthSelect" onchange="onCalendarMonthYearChange()" style="flex:1; padding:8px;"></select>
-                <select id="calendarYearSelect" onchange="onCalendarMonthYearChange()" style="flex:1; padding:8px;"></select>
-            </div>
-
-            <div class="calendar-weekdays">
-                <div class="calendar-weekday">Sun</div>
-                <div class="calendar-weekday">Mon</div>
-                <div class="calendar-weekday">Tue</div>
-                <div class="calendar-weekday">Wed</div>
-                <div class="calendar-weekday">Thu</div>
-                <div class="calendar-weekday">Fri</div>
-                <div class="calendar-weekday">Sat</div>
-            </div>
-
-            <div id="calendarGrid" class="calendar-grid" style="margin-bottom:12px;">
-                <!-- Days injected here -->
-            </div>
-
-            <div style="display:flex; gap:8px; justify-content:space-between;">
-                <button onclick="closeCalendarModal()" style="background:var(--text-muted); padding:10px; color:white;">Cancel</button>
-                <button onclick="selectToday()" style="background:#10b981; padding:10px; color:white;">Today</button>
-            </div>
         </div>
     </div>
 
@@ -1286,10 +1184,9 @@
             usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
             // Macro targets represent percentages (30%, 30%, 40%)
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
-            history: {},   // now supports arbitrary date keys (YYYY-MM-DD) and legacy day-of-week keys
+            history: {},
             myFoods: [],
-            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true },
-            currentDate: '' // YYYY-MM-DD (set at init)
+            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true }
         };
 
         let state = {
@@ -1403,9 +1300,19 @@
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
 
-            // Ensure currentDate exists (migration)
-            if (!appData.currentDate) {
-                appData.currentDate = '';
+            // One-time migration: map old day-name history to real dates so "Recall a Week" can access prior data
+            const oldDayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            if (appData.history && oldDayNames.some(n => appData.history[n])) {
+                const today = new Date();
+                const weekSunday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+                oldDayNames.forEach((name, idx) => {
+                    if (appData.history[name]) {
+                        const d = new Date(weekSunday);
+                        d.setDate(weekSunday.getDate() + idx);
+                        const key = d.toISOString().split('T')[0];
+                        if (!appData.history[key]) appData.history[key] = appData.history[name];
+                    }
+                });
             }
 
             document.getElementById('weightInput').value = appData.weight;
@@ -1423,18 +1330,7 @@
             daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
             daySelect.value = days[new Date().getDay()];
 
-            // Initialize month/year controls and calendar
-            initMonthYearControls();
-
-            // Initialize currentDate (prefer saved currentDate, else today)
-            const today = new Date();
-            if (!appData.currentDate || appData.currentDate.trim() === '') {
-                appData.currentDate = formatDateISO(today);
-            }
-            updateCurrentDateDisplay();
-
-            // Load the initial date-based day (if user later wants weekly daySelect, they can still use it)
-            loadDate(appData.currentDate);
+            changeDay();
 
             // Listen for Enter key presses on search inputs
             document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
@@ -1447,175 +1343,30 @@
             applyVisibility();
         }
 
-        function initMonthYearControls() {
-            const monthSelect = document.getElementById('monthSelect');
-            const yearSelect = document.getElementById('yearSelect');
+        function changeDay() {
+            const day = document.getElementById('daySelect').value;
 
-            const months = [
-                'January','February','March','April','May','June','July','August','September','October','November','December'
-            ];
-
-            monthSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-
-            const thisYear = new Date().getFullYear();
-            let yearsHtml = '';
-            // show +/- 8 years from current year for selection
-            for (let y = thisYear - 8; y <= thisYear + 8; y++) {
-                yearsHtml += `<option value="${y}">${y}</option>`;
-            }
-            yearSelect.innerHTML = yearsHtml;
-
-            // Calendar modal month/year selects also
-            const calMonth = document.getElementById('calendarMonthSelect');
-            const calYear = document.getElementById('calendarYearSelect');
-            calMonth.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-            calYear.innerHTML = yearsHtml;
-
-            // Set selects to appData.currentDate
-            const d = appData.currentDate ? new Date(appData.currentDate) : new Date();
-            monthSelect.value = d.getMonth();
-            yearSelect.value = d.getFullYear();
-            calMonth.value = d.getMonth();
-            calYear.value = d.getFullYear();
-
-            // Prebuild calendar
-            buildCalendarGrid(parseInt(calMonth.value, 10), parseInt(calYear.value, 10));
-        }
-
-        function onMonthYearChange() {
-            const m = parseInt(document.getElementById('monthSelect').value, 10);
-            const y = parseInt(document.getElementById('yearSelect').value, 10);
-            // update the calendar modal's selects to match when user changes month/year in profile
-            document.getElementById('calendarMonthSelect').value = m;
-            document.getElementById('calendarYearSelect').value = y;
-            buildCalendarGrid(m, y);
-        }
-
-        function onCalendarMonthYearChange() {
-            const m = parseInt(document.getElementById('calendarMonthSelect').value, 10);
-            const y = parseInt(document.getElementById('calendarYearSelect').value, 10);
-            // sync profile selects too
-            document.getElementById('monthSelect').value = m;
-            document.getElementById('yearSelect').value = y;
-            buildCalendarGrid(m, y);
-        }
-
-        function openCalendarModal() {
-            document.getElementById('calendarModal').style.display = 'flex';
-            // ensure calendar shows the currently selected month/year
-            const d = appData.currentDate ? new Date(appData.currentDate) : new Date();
-            document.getElementById('calendarMonthSelect').value = d.getMonth();
-            document.getElementById('calendarYearSelect').value = d.getFullYear();
-            document.getElementById('monthSelect').value = d.getMonth();
-            document.getElementById('yearSelect').value = d.getFullYear();
-            buildCalendarGrid(d.getMonth(), d.getFullYear());
-        }
-
-        function closeCalendarModal() {
-            document.getElementById('calendarModal').style.display = 'none';
-        }
-
-        function prevMonth() {
-            const calMonth = document.getElementById('calendarMonthSelect');
-            const calYear = document.getElementById('calendarYearSelect');
-            let m = parseInt(calMonth.value, 10);
-            let y = parseInt(calYear.value, 10);
-            m--;
-            if (m < 0) { m = 11; y--; }
-            calMonth.value = m;
-            calYear.value = y;
-            document.getElementById('monthSelect').value = m;
-            document.getElementById('yearSelect').value = y;
-            buildCalendarGrid(m, y);
-        }
-
-        function nextMonth() {
-            const calMonth = document.getElementById('calendarMonthSelect');
-            const calYear = document.getElementById('calendarYearSelect');
-            let m = parseInt(calMonth.value, 10);
-            let y = parseInt(calYear.value, 10);
-            m++;
-            if (m > 11) { m = 0; y++; }
-            calMonth.value = m;
-            calYear.value = y;
-            document.getElementById('monthSelect').value = m;
-            document.getElementById('yearSelect').value = y;
-            buildCalendarGrid(m, y);
-        }
-
-        function buildCalendarGrid(month, year) {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-            const firstDay = new Date(year, month, 1);
-            const startDay = firstDay.getDay(); // 0..6
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            // add placeholders for days before startDay
-            for (let i = 0; i < startDay; i++) {
-                const empty = document.createElement('div');
-                empty.className = 'calendar-day';
-                empty.style.visibility = 'hidden';
-                grid.appendChild(empty);
-            }
-
-            // create day cells
-            for (let d = 1; d <= daysInMonth; d++) {
-                const cell = document.createElement('div');
-                cell.className = 'calendar-day';
-                cell.textContent = d;
-
-                const dateStr = formatDateISO(new Date(year, month, d));
-                if (dateStr === appData.currentDate) {
-                    cell.classList.add('selected');
-                }
-
-                cell.onclick = () => {
-                    selectDate(dateStr);
+            // Create an empty state for the day if it doesn't exist
+            if (!appData.history[day]) {
+                appData.history[day] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
                 };
-
-                grid.appendChild(cell);
             }
-        }
 
-        function selectDate(isoDate) {
-            // set current date and load that day's history
-            appData.currentDate = isoDate;
-            updateCurrentDateDisplay();
-            loadDate(isoDate);
-            saveData();
-            closeCalendarModal();
-        }
+            state.current = appData.history[day].current;
+            state.log = appData.history[day].log;
 
-        function selectToday() {
-            const t = new Date();
-            const iso = formatDateISO(t);
-            appData.currentDate = iso;
-            updateCurrentDateDisplay();
-            loadDate(iso);
-            saveData();
-            closeCalendarModal();
-        }
-
-        function updateCurrentDateDisplay() {
-            const el = document.getElementById('currentDateDisplay');
-            if (!el) return;
-            if (!appData.currentDate) {
-                el.textContent = 'No date';
-                return;
+            // Always sync Calories target to Daily Calorie Goal — fixes stale values at start of each day
+            if (appData.calorieGoal > 0 && state.targets.Calories !== appData.calorieGoal) {
+                state.targets.Calories = appData.calorieGoal;
+                saveData();
             }
-            const d = new Date(appData.currentDate);
-            const opts = { year: 'numeric', month: 'short', day: 'numeric' };
-            el.textContent = d.toLocaleDateString(undefined, opts);
-            // sync profile selects
-            document.getElementById('monthSelect').value = d.getMonth();
-            document.getElementById('yearSelect').value = d.getFullYear();
-        }
 
-        function formatDateISO(d) {
-            const y = d.getFullYear();
-            const m = (d.getMonth() + 1).toString().padStart(2, '0');
-            const day = d.getDate().toString().padStart(2, '0');
-            return `${y}-${m}-${day}`;
+            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+
+            renderLog();
+            renderBarometers();
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
@@ -2064,55 +1815,6 @@
             return (servingSizeGrams / 100) * servings;
         }
 
-        // ==================== DATE-BASED HISTORY LOADING ====================
-        function loadDate(isoDate) {
-            // isoDate is "YYYY-MM-DD"
-            if (!isoDate) return;
-            // Ensure an entry exists
-            if (!appData.history[isoDate]) {
-                appData.history[isoDate] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
-            }
-
-            state.current = appData.history[isoDate].current;
-            state.log = appData.history[isoDate].log;
-
-            // Sync exercise input UI
-            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
-
-            // Update the Day of Week selector to match the selected date's weekday
-            const dt = new Date(isoDate);
-            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-            document.getElementById('daySelect').value = days[dt.getDay()];
-
-            renderLog();
-            renderBarometers();
-        }
-
-        // Existing changeDay still works for weekly quick switch (keeps backward compatibility)
-        function changeDay() {
-            const day = document.getElementById('daySelect').value;
-
-            // If user is using the weekly mode, keep old behavior: create day-of-week key if not found
-            if (!appData.history[day]) {
-                appData.history[day] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
-            }
-
-            state.current = appData.history[day].current;
-            state.log = appData.history[day].log;
-
-            // Keep date selection in sync (if currentDate maps to a day with same weekday, we won't alter it)
-            document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
-
-            renderLog();
-            renderBarometers();
-        }
-
         // ==================== LOGGING & EDITING FUNCTIONS ====================
         //============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
         function updatePreview() {
@@ -2418,15 +2120,14 @@
 
         function resetDay() {
             if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
-                // If currentDate is set, reset that date; else fallback to daySelect
-                const dateKey = appData.currentDate && appData.currentDate.trim() !== '' ? appData.currentDate : document.getElementById('daySelect').value;
-                appData.history[dateKey] = {
+                const day = document.getElementById('daySelect').value;
+                appData.history[day] = {
                     current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
                     log: []
                 };
 
-                state.current = appData.history[dateKey].current;
-                state.log = appData.history[dateKey].log;
+                state.current = appData.history[day].current;
+                state.log = appData.history[day].log;
                 document.getElementById('exerciseInput').value = 0;
 
                 saveData();
@@ -3755,6 +3456,158 @@
         // ==================== END RECIPE BUILDER ====================
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
+
+        // Core function to load or create tracking data for any specific date (YYYY-MM-DD)
+        function loadOrCreateDateData(dateStr) {
+            if (!appData.history[dateStr]) {
+                appData.history[dateStr] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                };
+            }
+            state.current = appData.history[dateStr].current;
+            state.log = appData.history[dateStr].log;
+
+            const exInput = document.getElementById('exerciseInput');
+            if (exInput) exInput.value = state.current.exercisePoints || 0;
+
+            // Sync the visible Day of Week selector
+            const d = new Date(dateStr + 'T00:00:00');
+            const dayName = d.toLocaleString('en-us', { weekday: 'long' });
+            const oldDaySel = document.getElementById('daySelect');
+            if (oldDaySel) oldDaySel.value = dayName;
+
+            renderLog();
+            renderBarometers();
+            saveData();
+
+            // Optional toast notification
+            const toast = document.createElement('div');
+            toast.textContent = "Loaded data for " + dateStr;
+            toast.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:10px 20px;border-radius:8px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:99999;";
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.transition = "opacity 0.4s"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 400); }, 2200);
+        }
+
+        // ==================== RECALL A WEEK / HISTORICAL DATA FUNCTIONS ====================
+        function showRecallWeekModal() {
+            const modal = document.getElementById('recallWeekModal');
+            if (!modal) return;
+
+            modal.style.display = 'flex';
+
+            // Populate Year (last 5 years + next year for flexibility)
+            const yearSel = document.getElementById('recallYear');
+            const currentYear = new Date().getFullYear();
+            yearSel.innerHTML = '';
+            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearSel.appendChild(opt);
+            }
+            yearSel.value = currentYear;
+
+            // Populate Month
+            const monthSel = document.getElementById('recallMonth');
+            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            monthSel.innerHTML = '';
+            monthNames.forEach((name, i) => {
+                const opt = document.createElement('option');
+                opt.value = i + 1;
+                opt.textContent = name;
+                monthSel.appendChild(opt);
+            });
+            monthSel.value = new Date().getMonth() + 1;
+
+            // Initial Day options (will be corrected)
+            const daySel = document.getElementById('recallDay');
+            daySel.innerHTML = '';
+            for (let d = 1; d <= 31; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                daySel.appendChild(opt);
+            }
+            daySel.value = new Date().getDate();
+
+            // Set correct days for current month/year
+            updateRecallDayOptions();
+        }
+
+        function updateRecallDayOptions() {
+            const year = parseInt(document.getElementById('recallYear').value);
+            const month = parseInt(document.getElementById('recallMonth').value);
+            const daySel = document.getElementById('recallDay');
+            if (!year || !month || !daySel) return;
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const currentVal = parseInt(daySel.value) || 1;
+
+            daySel.innerHTML = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                daySel.appendChild(opt);
+            }
+            daySel.value = Math.min(currentVal, daysInMonth);
+        }
+
+        function loadRecalledDate() {
+            const year = document.getElementById('recallYear').value;
+            const month = String(document.getElementById('recallMonth').value).padStart(2, '0');
+            const day = String(document.getElementById('recallDay').value).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            closeRecallWeekModal();
+
+            // Use the date-keyed loader (creates the entry if it doesn't exist yet)
+            if (typeof loadOrCreateDateData === 'function') {
+                loadOrCreateDateData(dateStr);
+            } else {
+                // Fallback if function not yet defined (shouldn't happen)
+                alert("Loading historical data for " + dateStr);
+            }
+        }
+
+        function closeRecallWeekModal() {
+            const modal = document.getElementById('recallWeekModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // ==================== RECALL A WEEK MODAL ====================
+        <div id="recallWeekModal"
+            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92); z-index:10000; align-items:center; justify-content:center;">
+            <div style="background:white; padding:28px 30px; border-radius:14px; width:92%; max-width:420px; box-shadow:0 15px 35px rgba(0,0,0,0.4);">
+                <h3 style="margin-top:0; color:#6b7280; border-bottom:2px solid #eee; padding-bottom:10px;">📅 Recall Tracking from a Previous Date</h3>
+                <p style="color:#4b5563; font-size:0.92em; margin-bottom:18px;">Select any date to load its saved food log, macros, food groups, and exercise points.</p>
+
+                <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:110px;">
+                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Year</label>
+                        <select id="recallYear" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
+                    </div>
+                    <div style="flex:1.4; min-width:130px;">
+                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Month</label>
+                        <select id="recallMonth" onchange="updateRecallDayOptions()" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
+                    </div>
+                    <div style="flex:0.9; min-width:80px;">
+                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Day</label>
+                        <select id="recallDay" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:10px;">
+                    <button onclick="closeRecallWeekModal()" style="flex:1; background:#6b7280; color:white; padding:12px; border:none; border-radius:8px; font-size:1em; font-weight:600;">Cancel</button>
+                    <button onclick="loadRecalledDate()" style="flex:1.6; background:#10b981; color:white; padding:12px; border:none; border-radius:8px; font-size:1em; font-weight:700;">Load Selected Date's Tracking</button>
+                </div>
+                <div style="margin-top:14px; font-size:0.78em; color:#64748b; text-align:center;">
+                    Data is saved automatically when you log food on any day.
+                </div>
+            </div>
+        </div>
+
         init();
     </script>
 </body>
