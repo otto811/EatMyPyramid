@@ -378,6 +378,27 @@
                         <select id="daySelect" onchange="changeDay()"
                             style="font-weight:bold; padding: 8px; height: 38px;"></select>
                     </div>
+
+                    <!-- New Year/Month/Day calendar selectors for historical multi-week tracking (in addition to Day of Week) -->
+                    <div style="display:flex; gap:8px; align-items:flex-end; background:rgba(255,255,255,0.5); padding:6px 10px; border-radius:6px; flex-shrink:0;">
+                        <div>
+                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Year</label>
+                            <select id="yearSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; width:74px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Month</label>
+                            <select id="monthSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.72em; margin-bottom:1px; color:#374151;">Day</label>
+                            <select id="dayOfMonthSelect" onchange="updateDateFromYMD()" style="padding:4px 6px; height:30px; width:52px; font-size:0.88em; border:1px solid #cbd5e1;"></select>
+                        </div>
+                        <div style="padding-bottom:3px; font-size:0.75em; color:#4338ca; min-width:64px; line-height:1.05;">
+                            <span id="computedDayOfWeek" style="font-weight:700; display:block;"></span>
+                            <span style="font-size:0.62em; color:#64748b;">(auto)</span>
+                        </div>
+                    </div>
+
                     <div
                         style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
                         <div>
@@ -1291,6 +1312,26 @@
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
 
+            // MIGRATION: Preserve old single-week (day-name keyed) data by mapping it to concrete dates for the current week.
+            // This allows historical recall while new data uses precise YYYY-MM-DD keys.
+            const oldDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const hasOld = oldDayNames.some(n => appData.history && appData.history[n]);
+            if (hasOld && appData.history) {
+                const today = new Date();
+                const dayIdx = today.getDay();
+                const weekSunday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dayIdx);
+                oldDayNames.forEach((dayName, idx) => {
+                    if (appData.history[dayName]) {
+                        const target = new Date(weekSunday);
+                        target.setDate(weekSunday.getDate() + idx);
+                        const key = target.toISOString().split('T')[0];
+                        if (!appData.history[key]) {
+                            appData.history[key] = appData.history[dayName];
+                        }
+                    }
+                });
+            }
+
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
             document.getElementById('goalDateInput').value = appData.goalDate || '';
@@ -1307,6 +1348,19 @@
             daySelect.value = days[new Date().getDay()];
 
             changeDay();
+
+            // ==================== NEW: Initialize Year/Month/Day calendar controls and load today's date-keyed data ====================
+            populateDateSelectors();
+            const today = new Date();
+            const ySel = document.getElementById('yearSelect');
+            const mSel = document.getElementById('monthSelect');
+            const dSel = document.getElementById('dayOfMonthSelect');
+            if (ySel && mSel && dSel) {
+                ySel.value = today.getFullYear();
+                mSel.value = today.getMonth() + 1;
+                dSel.value = today.getDate();
+                updateDateFromYMD();   // loads data for today using the new date-keyed system
+            }
 
             // Listen for Enter key presses on search inputs
             document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
@@ -1343,6 +1397,101 @@
 
             renderLog();
             renderBarometers();
+        }
+
+        // ==================== NEW DATE/YEAR/MONTH CALENDAR FUNCTIONS (for historical tracking) ====================
+        function populateDateSelectors() {
+            const yearSel = document.getElementById('yearSelect');
+            const monthSel = document.getElementById('monthSelect');
+            const daySel = document.getElementById('dayOfMonthSelect');
+            if (!yearSel || !monthSel || !daySel) return;
+
+            const currentYear = new Date().getFullYear();
+            yearSel.innerHTML = '';
+            for (let y = currentYear - 3; y <= currentYear + 2; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearSel.appendChild(opt);
+            }
+
+            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            monthSel.innerHTML = '';
+            monthNames.forEach((name, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx + 1;
+                opt.textContent = name;
+                monthSel.appendChild(opt);
+            });
+
+            daySel.innerHTML = '';
+            for (let d = 1; d <= 31; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                daySel.appendChild(opt);
+            }
+        }
+
+        function updateDayOptions() {
+            const yearSel = document.getElementById('yearSelect');
+            const monthSel = document.getElementById('monthSelect');
+            const daySel = document.getElementById('dayOfMonthSelect');
+            if (!yearSel || !monthSel || !daySel) return;
+
+            const year = parseInt(yearSel.value);
+            const month = parseInt(monthSel.value);
+            if (!year || !month) return;
+
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const prevDay = parseInt(daySel.value) || 1;
+
+            daySel.innerHTML = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                daySel.appendChild(opt);
+            }
+            daySel.value = Math.min(prevDay, daysInMonth);
+        }
+
+        function updateDateFromYMD() {
+            updateDayOptions();
+            const year = document.getElementById('yearSelect').value;
+            const month = String(document.getElementById('monthSelect').value).padStart(2, '0');
+            const day = String(document.getElementById('dayOfMonthSelect').value).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const dowName = dateObj.toLocaleString('en-US', { weekday: 'long' });
+            const dowEl = document.getElementById('computedDayOfWeek');
+            if (dowEl) dowEl.textContent = dowName;
+
+            loadOrCreateDateData(dateStr);
+        }
+
+        function loadOrCreateDateData(dateStr) {
+            if (!appData.history[dateStr]) {
+                appData.history[dateStr] = {
+                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
+                    log: []
+                };
+            }
+            state.current = appData.history[dateStr].current;
+            state.log = appData.history[dateStr].log;
+
+            const exInput = document.getElementById('exerciseInput');
+            if (exInput) exInput.value = state.current.exercisePoints || 0;
+
+            const d = new Date(dateStr + 'T00:00:00');
+            const dayName = d.toLocaleString('en-us', { weekday: 'long' });
+            const oldDaySel = document.getElementById('daySelect');
+            if (oldDaySel) oldDaySel.value = dayName;
+
+            renderLog();
+            renderBarometers();
+            saveData();
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
