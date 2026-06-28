@@ -378,15 +378,6 @@
                         <select id="daySelect" onchange="changeDay()"
                             style="font-weight:bold; padding: 8px; height: 38px;"></select>
                     </div>
-
-                    <!-- Recall a Week button - clean addition for loading historical tracking data -->
-                    <div style="align-self: flex-end;">
-                        <button onclick="showRecallWeekModal()"
-                            style="background:#8b5cf6; color:white; border:none; padding:8px 14px; border-radius:6px; font-size:0.9em; font-weight:600; height:38px; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                            📅 Recall a Week
-                        </button>
-                    </div>
-
                     <div
                         style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
                         <div>
@@ -1299,21 +1290,6 @@
             // Ensure goal weight / goal date fields exist (forward migration)
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
-
-            // One-time migration: map old day-name history to real dates so "Recall a Week" can access prior data
-            const oldDayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-            if (appData.history && oldDayNames.some(n => appData.history[n])) {
-                const today = new Date();
-                const weekSunday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
-                oldDayNames.forEach((name, idx) => {
-                    if (appData.history[name]) {
-                        const d = new Date(weekSunday);
-                        d.setDate(weekSunday.getDate() + idx);
-                        const key = d.toISOString().split('T')[0];
-                        if (!appData.history[key]) appData.history[key] = appData.history[name];
-                    }
-                });
-            }
 
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
@@ -3456,158 +3432,6 @@
         // ==================== END RECIPE BUILDER ====================
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
-
-        // Core function to load or create tracking data for any specific date (YYYY-MM-DD)
-        function loadOrCreateDateData(dateStr) {
-            if (!appData.history[dateStr]) {
-                appData.history[dateStr] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
-            }
-            state.current = appData.history[dateStr].current;
-            state.log = appData.history[dateStr].log;
-
-            const exInput = document.getElementById('exerciseInput');
-            if (exInput) exInput.value = state.current.exercisePoints || 0;
-
-            // Sync the visible Day of Week selector
-            const d = new Date(dateStr + 'T00:00:00');
-            const dayName = d.toLocaleString('en-us', { weekday: 'long' });
-            const oldDaySel = document.getElementById('daySelect');
-            if (oldDaySel) oldDaySel.value = dayName;
-
-            renderLog();
-            renderBarometers();
-            saveData();
-
-            // Optional toast notification
-            const toast = document.createElement('div');
-            toast.textContent = "Loaded data for " + dateStr;
-            toast.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:10px 20px;border-radius:8px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:99999;";
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.transition = "opacity 0.4s"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 400); }, 2200);
-        }
-
-        // ==================== RECALL A WEEK / HISTORICAL DATA FUNCTIONS ====================
-        function showRecallWeekModal() {
-            const modal = document.getElementById('recallWeekModal');
-            if (!modal) return;
-
-            modal.style.display = 'flex';
-
-            // Populate Year (last 5 years + next year for flexibility)
-            const yearSel = document.getElementById('recallYear');
-            const currentYear = new Date().getFullYear();
-            yearSel.innerHTML = '';
-            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y;
-                yearSel.appendChild(opt);
-            }
-            yearSel.value = currentYear;
-
-            // Populate Month
-            const monthSel = document.getElementById('recallMonth');
-            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            monthSel.innerHTML = '';
-            monthNames.forEach((name, i) => {
-                const opt = document.createElement('option');
-                opt.value = i + 1;
-                opt.textContent = name;
-                monthSel.appendChild(opt);
-            });
-            monthSel.value = new Date().getMonth() + 1;
-
-            // Initial Day options (will be corrected)
-            const daySel = document.getElementById('recallDay');
-            daySel.innerHTML = '';
-            for (let d = 1; d <= 31; d++) {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                daySel.appendChild(opt);
-            }
-            daySel.value = new Date().getDate();
-
-            // Set correct days for current month/year
-            updateRecallDayOptions();
-        }
-
-        function updateRecallDayOptions() {
-            const year = parseInt(document.getElementById('recallYear').value);
-            const month = parseInt(document.getElementById('recallMonth').value);
-            const daySel = document.getElementById('recallDay');
-            if (!year || !month || !daySel) return;
-
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const currentVal = parseInt(daySel.value) || 1;
-
-            daySel.innerHTML = '';
-            for (let d = 1; d <= daysInMonth; d++) {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                daySel.appendChild(opt);
-            }
-            daySel.value = Math.min(currentVal, daysInMonth);
-        }
-
-        function loadRecalledDate() {
-            const year = document.getElementById('recallYear').value;
-            const month = String(document.getElementById('recallMonth').value).padStart(2, '0');
-            const day = String(document.getElementById('recallDay').value).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-
-            closeRecallWeekModal();
-
-            // Use the date-keyed loader (creates the entry if it doesn't exist yet)
-            if (typeof loadOrCreateDateData === 'function') {
-                loadOrCreateDateData(dateStr);
-            } else {
-                // Fallback if function not yet defined (shouldn't happen)
-                alert("Loading historical data for " + dateStr);
-            }
-        }
-
-        function closeRecallWeekModal() {
-            const modal = document.getElementById('recallWeekModal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        // ==================== RECALL A WEEK MODAL ====================
-        <div id="recallWeekModal"
-            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.92); z-index:10000; align-items:center; justify-content:center;">
-            <div style="background:white; padding:28px 30px; border-radius:14px; width:92%; max-width:420px; box-shadow:0 15px 35px rgba(0,0,0,0.4);">
-                <h3 style="margin-top:0; color:#6b7280; border-bottom:2px solid #eee; padding-bottom:10px;">📅 Recall Tracking from a Previous Date</h3>
-                <p style="color:#4b5563; font-size:0.92em; margin-bottom:18px;">Select any date to load its saved food log, macros, food groups, and exercise points.</p>
-
-                <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:110px;">
-                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Year</label>
-                        <select id="recallYear" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
-                    </div>
-                    <div style="flex:1.4; min-width:130px;">
-                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Month</label>
-                        <select id="recallMonth" onchange="updateRecallDayOptions()" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
-                    </div>
-                    <div style="flex:0.9; min-width:80px;">
-                        <label style="font-size:0.82em; font-weight:600; display:block; margin-bottom:4px;">Day</label>
-                        <select id="recallDay" style="width:100%; padding:10px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></select>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-top:10px;">
-                    <button onclick="closeRecallWeekModal()" style="flex:1; background:#6b7280; color:white; padding:12px; border:none; border-radius:8px; font-size:1em; font-weight:600;">Cancel</button>
-                    <button onclick="loadRecalledDate()" style="flex:1.6; background:#10b981; color:white; padding:12px; border:none; border-radius:8px; font-size:1em; font-weight:700;">Load Selected Date's Tracking</button>
-                </div>
-                <div style="margin-top:14px; font-size:0.78em; color:#64748b; text-align:center;">
-                    Data is saved automatically when you log food on any day.
-                </div>
-            </div>
-        </div>
-
         init();
     </script>
 </body>
