@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EatMyPyramid 2.3.7 - Hide &amp; Reveal Sections</title>
+    <title>EatMyPyramid 2.3.8 - Hide &amp; Reveal Sections</title>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
         :root {
@@ -365,7 +366,7 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.7)
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.8)
                     </div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
@@ -373,6 +374,8 @@
                         style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅 Recall a Week</button>
                     <button id="return-week-btn" onclick="returnToCurrentWeek()"
                         style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">← Return to Live</button>
+                    <button onclick="showWeightTrackerModal()"
+                        style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈 Weight Tracker</button>
                     <button id="profile-toggle" onclick="toggleSection('profile')"
                         style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
                 </div>
@@ -1053,8 +1056,12 @@
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
                 <h3 style="margin:0; color:#8b5cf6;">📋 Manage My Foods</h3>
-                <button onclick="closeManageMyFoodsModal()"
-                    style="background:var(--text-muted); padding:6px 12px; border-radius:4px; border:none; color:white; cursor:pointer;">Close</button>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="sortMyFoodsAlphabetically()" 
+                        style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤 Sort A-Z</button>
+                    <button onclick="closeManageMyFoodsModal()"
+                        style="background:var(--text-muted); padding:6px 12px; border-radius:4px; border:none; color:white; cursor:pointer;">Close</button>
+                </div>
             </div>
 
             <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
@@ -1092,6 +1099,59 @@
 
             <p style="font-size:0.78em; color:#6b7280; margin-top:16px; background:#f8fafc; padding:8px 10px; border-radius:6px;">
                 <strong>Tip:</strong> While viewing a past week you can browse every day but <strong>logging, editing, exercise points, and resets are disabled</strong> (to protect your history). Click the ← Return to Live button (appears when active) or re-select the current week to resume normal tracking.
+            </p>
+        </div>
+    </div>
+
+    <!-- ==================== WEIGHT TRACKER MODAL (new in v2.3.8) ==================== -->
+    <div id="weightTrackerModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:95%; max-width:720px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin:20px auto; max-height:92vh; display:flex; flex-direction:column;">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#10b981;">📈 Weight Tracker &amp; History</h3>
+
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; align-items:flex-start;">
+                <!-- Info summary -->
+                <div style="flex:1; min-width:180px; background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #10b981;">
+                    <div style="font-size:0.9em; color:#166534;"><strong>Current Profile Weight</strong></div>
+                    <div style="font-size:1.6em; font-weight:bold; color:#166534;" id="wtCurrentWeight">— lbs</div>
+                    <div style="margin-top:8px; font-size:0.9em; color:#166534;"><strong>Goal Weight</strong></div>
+                    <div style="font-size:1.4em; font-weight:bold; color:#166534;" id="wtGoalWeight">— lbs</div>
+                </div>
+
+                <!-- Log form -->
+                <div style="flex:2; min-width:300px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e5e7eb;">
+                    <strong style="display:block; margin-bottom:8px; color:#166534;">Log New Weight Entry</strong>
+                    <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:120px;">
+                            <label style="font-size:0.75em; display:block; margin-bottom:2px;">Date</label>
+                            <input type="date" id="wtDateInput" style="width:100%; padding:8px; font-size:0.95em;">
+                        </div>
+                        <div style="flex:1; min-width:100px;">
+                            <label style="font-size:0.75em; display:block; margin-bottom:2px;">Weight (lbs)</label>
+                            <input type="number" id="wtWeightInput" step="0.1" placeholder="e.g. 208.5" style="width:100%; padding:8px; font-size:0.95em;">
+                        </div>
+                        <button onclick="logWeightEntry()" 
+                            style="background:#10b981; color:white; padding:9px 18px; border:none; border-radius:6px; font-weight:600; white-space:nowrap; cursor:pointer;">+ Log Weight</button>
+                    </div>
+                    <small style="color:#64748b; display:block; margin-top:6px;">Entries are saved automatically. Chart updates live.</small>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div style="flex:1; min-height:340px; background:white; border:1px solid #e5e7eb; border-radius:8px; padding:10px; position:relative;">
+                <canvas id="weightChart" style="width:100%; height:100%; max-height:340px;"></canvas>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button onclick="closeWeightTrackerModal()"
+                    style="background:#6b7280; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer;">Close</button>
+                <button onclick="clearWeightHistory()"
+                    style="background:#ef4444; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer;">Clear History</button>
+            </div>
+
+            <p style="font-size:0.72em; color:#64748b; margin-top:10px; text-align:center;">
+                Your weight history is stored only in this browser (localStorage). The green dashed line shows your Goal Weight target.
             </p>
         </div>
     </div>
@@ -1349,6 +1409,11 @@
             if (!appData.currentWeekStart) {
                 // Will be properly set in init() based on today's date
                 appData.currentWeekStart = null;
+            }
+
+            // Migration 8: Ensure weightHistory array exists for new Weight Tracker feature (non-breaking)
+            if (!appData.weightHistory || !Array.isArray(appData.weightHistory)) {
+                appData.weightHistory = [];
             }
 
             document.getElementById('weightInput').value = appData.weight;
@@ -3162,6 +3227,28 @@
             document.getElementById('manageMyFoodsModal').style.display = 'none';
         }
 
+        function sortMyFoodsAlphabetically() {
+            if (!appData.myFoods || appData.myFoods.length === 0) {
+                return alert("No foods to sort.");
+            }
+            // Sort in place by description (case-insensitive alphabetic)
+            appData.myFoods.sort((a, b) => {
+                const descA = String(a.description || '').toLowerCase();
+                const descB = String(b.description || '').toLowerCase();
+                if (descA < descB) return -1;
+                if (descA > descB) return 1;
+                return 0;
+            });
+            saveData();
+            renderMyFoodsList();
+            // Optional visual feedback
+            const btns = document.querySelectorAll('#manageMyFoodsModal button');
+            btns.forEach(b => { if (b.textContent.includes('Sort')) b.style.background = '#10b981'; });
+            setTimeout(() => {
+                btns.forEach(b => { if (b.textContent.includes('Sort')) b.style.background = '#8b5cf6'; });
+            }, 1200);
+        }
+
         function renderMyFoodsList() {
             const container = document.getElementById('myFoodsListContainer');
             if (!appData.myFoods || appData.myFoods.length === 0) {
@@ -3710,6 +3797,250 @@
                 }, 1200);
             }
         }
+
+        // ==================== WEIGHT TRACKER FUNCTIONS (new v2.3.8) ====================
+        let weightChartInstance = null;
+
+        function showWeightTrackerModal() {
+            const modal = document.getElementById('weightTrackerModal');
+            modal.style.display = 'flex';
+
+            // Populate current values from profile
+            const curW = parseFloat(document.getElementById('weightInput').value) || appData.weight || 0;
+            const goalW = parseFloat(document.getElementById('goalWeightInput').value) || appData.goalWeight || 0;
+            document.getElementById('wtCurrentWeight').textContent = curW > 0 ? curW.toFixed(1) : '—';
+            document.getElementById('wtGoalWeight').textContent = goalW > 0 ? goalW.toFixed(1) : '—';
+
+            // Default date to today
+            const dateInput = document.getElementById('wtDateInput');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+
+            // Pre-fill weight input with current if available
+            if (curW > 0) {
+                document.getElementById('wtWeightInput').value = curW.toFixed(1);
+            }
+
+            // Render chart
+            renderWeightChart();
+        }
+
+        function closeWeightTrackerModal() {
+            const modal = document.getElementById('weightTrackerModal');
+            modal.style.display = 'none';
+            // Destroy chart to free memory and avoid conflicts on reopen
+            if (weightChartInstance) {
+                weightChartInstance.destroy();
+                weightChartInstance = null;
+            }
+        }
+
+        function logWeightEntry() {
+            const dateVal = document.getElementById('wtDateInput').value;
+            const weightVal = parseFloat(document.getElementById('wtWeightInput').value);
+
+            if (!dateVal) {
+                alert("Please select a date.");
+                return;
+            }
+            if (!weightVal || weightVal <= 0 || weightVal > 600) {
+                alert("Please enter a valid weight between 1 and 600 lbs.");
+                return;
+            }
+
+            // Check for duplicate date entry - update if exists, else add new
+            let existingIndex = appData.weightHistory.findIndex(entry => entry.date === dateVal);
+            if (existingIndex >= 0) {
+                if (!confirm(`An entry already exists for ${dateVal}. Update it to ${weightVal} lbs?`)) {
+                    return;
+                }
+                appData.weightHistory[existingIndex].weight = weightVal;
+            } else {
+                appData.weightHistory.push({ date: dateVal, weight: weightVal });
+            }
+
+            // Sort by date ascending
+            appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+
+            saveData();
+
+            // Update profile weightInput if this is today's date (seamless sync)
+            const today = new Date().toISOString().split('T')[0];
+            if (dateVal === today) {
+                document.getElementById('weightInput').value = weightVal;
+                appData.weight = weightVal;
+                // Trigger macro recalc if needed (use original to avoid recursion in wrapper)
+                if (typeof _origRecalculate === 'function') _origRecalculate();
+            }
+
+            // Refresh chart and form
+            renderWeightChart();
+
+            // Clear weight input for next entry but keep date
+            document.getElementById('wtWeightInput').value = '';
+            document.getElementById('wtWeightInput').focus();
+            // Chart auto-refreshes; no extra alert needed
+        }
+
+        function renderWeightChart() {
+            const canvas = document.getElementById('weightChart');
+            if (!canvas) return;
+
+            // Destroy previous instance if exists
+            if (weightChartInstance) {
+                weightChartInstance.destroy();
+                weightChartInstance = null;
+            }
+
+            const history = appData.weightHistory || [];
+            if (history.length === 0) {
+                // Show placeholder message on canvas area
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#64748b';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No weight entries yet. Log your first weight above to see the chart!', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // Prepare data sorted (already sorted in log)
+            const labels = history.map(e => {
+                const d = new Date(e.date + 'T00:00:00');
+                return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            });
+            const weights = history.map(e => e.weight);
+
+            const goalWeight = parseFloat(document.getElementById('goalWeightInput').value) || appData.goalWeight || 0;
+
+            const ctx = canvas.getContext('2d');
+
+            weightChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Body Weight (lbs)',
+                        data: weights,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw} lbs on ${history[ctx.dataIndex].date}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Date', font: { weight: 'bold' } },
+                            grid: { color: '#e5e7eb' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Weight (lbs)', font: { weight: 'bold' } },
+                            grid: { color: '#e5e7eb' },
+                            beginAtZero: false
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            if (confirm(`Delete entry for ${history[idx].date} (${history[idx].weight} lbs)?`)) {
+                                appData.weightHistory.splice(idx, 1);
+                                saveData();
+                                renderWeightChart();
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Draw goal weight line if set (using afterDraw plugin-like via setTimeout hack or direct canvas overlay)
+            if (goalWeight > 0) {
+                // We use a small timeout to draw on top after Chart.js renders
+                setTimeout(() => {
+                    if (!weightChartInstance || weightChartInstance.destroyed) return;
+                    const chartArea = weightChartInstance.chartArea;
+                    const yScale = weightChartInstance.scales.y;
+                    if (!yScale || !chartArea) return;
+
+                    const yPos = yScale.getPixelForValue(goalWeight);
+                    const ctx2 = weightChartInstance.ctx;
+
+                    ctx2.save();
+                    ctx2.strokeStyle = '#10b981';
+                    ctx2.lineWidth = 2;
+                    ctx2.setLineDash([6, 4]);
+                    ctx2.beginPath();
+                    ctx2.moveTo(chartArea.left, yPos);
+                    ctx2.lineTo(chartArea.right, yPos);
+                    ctx2.stroke();
+
+                    // Label for goal line
+                    ctx2.fillStyle = '#166534';
+                    ctx2.font = 'bold 11px sans-serif';
+                    ctx2.fillText(`Goal: ${goalWeight} lbs`, chartArea.right - 90, yPos - 6);
+                    ctx2.restore();
+                }, 150);
+            }
+        }
+
+        function clearWeightHistory() {
+            if (!appData.weightHistory || appData.weightHistory.length === 0) {
+                alert("Weight history is already empty.");
+                return;
+            }
+            if (confirm("⚠️ Permanently delete ALL weight history entries?\nThis cannot be undone.")) {
+                appData.weightHistory = [];
+                saveData();
+                renderWeightChart();
+            }
+        }
+
+        // Optional enhancement: When user updates weight in profile, auto-log today's entry if different from last
+        // We hook into recalculateMacroTargets which already runs on weight change
+        const _origRecalculate = window.recalculateMacroTargets || function(){};
+        window.recalculateMacroTargets = function() {
+            _origRecalculate.apply(this, arguments);
+            // Auto-log today's weight if profile weight changed and is valid (non-intrusive)
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const currentProfileWeight = parseFloat(document.getElementById('weightInput').value) || 0;
+                if (currentProfileWeight > 0 && currentProfileWeight < 600) {
+                    const lastEntry = (appData.weightHistory || []).slice(-1)[0];
+                    const lastWeight = lastEntry ? lastEntry.weight : 0;
+                    const lastDate = lastEntry ? lastEntry.date : '';
+                    // Only auto-add if no entry today OR weight differs by >0.5 lbs from last logged
+                    if (lastDate !== today || Math.abs(lastWeight - currentProfileWeight) > 0.5) {
+                        // Add or update today's entry silently
+                        let idx = appData.weightHistory.findIndex(e => e.date === today);
+                        if (idx >= 0) {
+                            appData.weightHistory[idx].weight = currentProfileWeight;
+                        } else {
+                            appData.weightHistory.push({ date: today, weight: currentProfileWeight });
+                            appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        }
+                        saveData();
+                        // If weight tracker modal is open, refresh chart
+                        const wtModal = document.getElementById('weightTrackerModal');
+                        if (wtModal && wtModal.style.display === 'flex' && weightChartInstance) {
+                            renderWeightChart();
+                        }
+                    }
+                }
+            } catch(e) { /* silent fail on auto-log */ }
+        };
 
         // ==================== GUARDS FOR VIEW-ONLY MODE (protect archived data) ====================
         // These prevent accidental modification while a past week is loaded for viewing.
