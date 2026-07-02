@@ -462,17 +462,15 @@
 
                 <div class="form-group">
                     <label>Number of Servings (optional)</label>
-                    <div style="display: flex; gap: 8px; align-items: flex-start; justify-content: flex-start;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-start;">
                         <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
                             style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
                         <button onclick="showLogFoodModal()"
-                            style="flex: none; padding: 0 12px; font-size: 0.85em; margin: 0; height: 48px;">Log
-                            Food</button>
+                            style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log Food</button>
                         <button onclick="showCustomFoodModal()"
-                            style="flex: none; background: #8b5cf6; padding: 0 12px; font-size: 0.85em; color: white; margin: 0; height: 48px;">✏️ Manual Input</button>
+                            style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️ Manual Input</button>
                         <button onclick="saveCurrentToMyFoods()"
-                            style="flex: none; background: var(--warning); padding: 0 12px; font-size: 0.8em; color: white; margin: 0; height: 48px;">⭐
-                            Save to My Foods</button>
+                            style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐ Save to My Foods</button>
                     </div>
                 </div>
 
