@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EatMyPyramid 2.3.8 - Hide &amp; Reveal Sections</title>
+    <title>EatMyPyramid 2.3.9 - Manual Input + Copy to Day</title>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -366,7 +366,7 @@
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.8)
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.9)
                     </div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
@@ -468,6 +468,8 @@
                         <button onclick="showLogFoodModal()"
                             style="flex: none; padding: 0 12px; font-size: 0.85em; margin: 0; height: 48px;">Log
                             Food</button>
+                        <button onclick="showCustomFoodModal()"
+                            style="flex: none; background: #8b5cf6; padding: 0 12px; font-size: 0.85em; color: white; margin: 0; height: 48px;">✏️ Manual Input</button>
                         <button onclick="saveCurrentToMyFoods()"
                             style="flex: none; background: var(--warning); padding: 0 12px; font-size: 0.8em; color: white; margin: 0; height: 48px;">⭐
                             Save to My Foods</button>
@@ -704,6 +706,7 @@
                 <button onclick="document.getElementById('customFoodModal').style.display='none'"
                     style="background:var(--text-muted); flex:1;">Cancel</button>
                 <button onclick="saveCustomFood()" style="background:var(--primary); flex:1;">Save to My Foods</button>
+                <button onclick="saveCustomFood(true)" style="background:#3b82f6; flex:1.3; padding:12px; color:white; font-weight:bold;">Save &amp; Copy to Day</button>
             </div>
         </div>
     </div>
@@ -3084,7 +3087,7 @@
             document.getElementById('customFoodModal').style.display = 'flex';
         }
 
-        function saveCustomFood() {
+        function saveCustomFood(copyToDayAfter = false) {
             const name = document.getElementById('cf-name').value.trim();
             if (!name) return alert("Food Name is required.");
 
@@ -3123,13 +3126,18 @@
                 ]
             };
 
+            let targetIndex = -1;
+
             if (editingMyFoodIndex >= 0) {
+                targetIndex = editingMyFoodIndex;
                 appData.myFoods[editingMyFoodIndex] = newFood;
                 editingMyFoodIndex = -1;
                 saveData();
-                alert(`${name} updated in My Foods!`);
-                if (document.getElementById('manageMyFoodsModal').style.display === 'flex') {
-                    renderMyFoodsList();
+                if (!copyToDayAfter) {
+                    alert(`${name} updated in My Foods!`);
+                    if (document.getElementById('manageMyFoodsModal').style.display === 'flex') {
+                        renderMyFoodsList();
+                    }
                 }
             } else {
                 const exists = appData.myFoods.some(f =>
@@ -3140,11 +3148,22 @@
                     if (!confirm(`An item named "${name}" is already saved in My Foods. Proceed to save another copy?`)) return;
                 }
                 appData.myFoods.push(newFood);
+                targetIndex = appData.myFoods.length - 1;
                 saveData();
-                alert(`${name} saved to My Foods!`);
+                if (!copyToDayAfter) {
+                    alert(`${name} saved to My Foods!`);
+                }
             }
 
-            document.getElementById('customFoodModal').style.display = 'none';
+            if (copyToDayAfter && targetIndex >= 0) {
+                // Close modal first, then trigger the existing Copy to Day flow (reuses copyToDayModal + copyMyFoodToDay)
+                document.getElementById('customFoodModal').style.display = 'none';
+                setTimeout(() => {
+                    copyMyFoodToDay(targetIndex);
+                }, 80);
+            } else {
+                document.getElementById('customFoodModal').style.display = 'none';
+            }
         }
         // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
