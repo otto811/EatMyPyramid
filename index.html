@@ -1288,6 +1288,19 @@
             log: null
         };
 
+        // Helper to create a fresh day object (includes bodyWeight for per-day weight tracking)
+        function createEmptyDay(defaultWeight = 0) {
+            return {
+                current: {
+                    Calories: 0, Protein: 0, Fat: 0, Carbs: 0,
+                    Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0,
+                    exercisePoints: 0,
+                    bodyWeight: defaultWeight
+                },
+                log: []
+            };
+        }
+
         function calculateWWPoints(cal, fat, fib) {
             const capped = Math.min(fib, 4);
             return Math.max(0, Math.round(((cal / 50) + (fat / 12) - (capped / 4)) * 10) / 10);
@@ -1417,6 +1430,30 @@
                 appData.weightHistory = [];
             }
 
+            // Migration 9: Add bodyWeight to every day's current data for independent daily weight tracking (non-breaking)
+            const defaultBodyWeight = appData.weight || 0;
+            if (appData.history && typeof appData.history === 'object') {
+                for (let day in appData.history) {
+                    if (appData.history[day] && appData.history[day].current) {
+                        if (appData.history[day].current.bodyWeight === undefined) {
+                            appData.history[day].current.bodyWeight = defaultBodyWeight;
+                        }
+                    }
+                }
+            }
+            if (appData.archivedWeeks && typeof appData.archivedWeeks === 'object') {
+                for (let weekKey in appData.archivedWeeks) {
+                    const weekHist = appData.archivedWeeks[weekKey] && appData.archivedWeeks[weekKey].history;
+                    if (weekHist) {
+                        for (let day in weekHist) {
+                            if (weekHist[day] && weekHist[day].current && weekHist[day].current.bodyWeight === undefined) {
+                                weekHist[day].current.bodyWeight = defaultBodyWeight;
+                            }
+                        }
+                    }
+                }
+            }
+
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
             document.getElementById('goalDateInput').value = appData.goalDate || '';
@@ -1458,13 +1495,10 @@
                     };
                 }
                 // Reset history to a clean new week (pre-create all days to avoid partial state)
-                const emptyDay = () => ({
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                });
+                const defaultW = appData.weight || 0;
                 appData.history = {
-                    'Sunday': emptyDay(), 'Monday': emptyDay(), 'Tuesday': emptyDay(),
-                    'Wednesday': emptyDay(), 'Thursday': emptyDay(), 'Friday': emptyDay(), 'Saturday': emptyDay()
+                    'Sunday': createEmptyDay(defaultW), 'Monday': createEmptyDay(defaultW), 'Tuesday': createEmptyDay(defaultW),
+                    'Wednesday': createEmptyDay(defaultW), 'Thursday': createEmptyDay(defaultW), 'Friday': createEmptyDay(defaultW), 'Saturday': createEmptyDay(defaultW)
                 };
                 appData.currentWeekStart = todayWeekStart;
                 saveData(); // persist archive + fresh history
@@ -1502,10 +1536,8 @@
 
             // Create an empty state for the day if it doesn't exist (works for both live and recalled)
             if (!histSource[day]) {
-                histSource[day] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
+                const defaultW = appData.weight || 0;
+                histSource[day] = createEmptyDay(defaultW);
             }
 
             state.current = histSource[day].current;
@@ -1516,6 +1548,10 @@
                 state.targets.Calories = appData.calorieGoal;
                 saveData();
             }
+
+            // Load this day's specific body weight into the input field (fallback to global latest weight)
+            const dailyW = (state.current.bodyWeight !== undefined) ? state.current.bodyWeight : (appData.weight || 0);
+            document.getElementById('weightInput').value = dailyW;
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
 
@@ -1569,7 +1605,7 @@
             else if (intensityText === "Moderate") intensity = 0.0003270;
             else if (intensityText === "High") intensity = 0.0008077;
 
-            const weight = parseFloat(document.getElementById('weightInput').value) || appData.weight || 0;
+            const weight = parseFloat(document.getElementById('weightInput').value) || (state.current && state.current.bodyWeight) || appData.weight || 0;
 
             // Formula: Body Weight x Duration x Intensity Level
             const earned = weight * duration * intensity;
@@ -1588,7 +1624,24 @@
         }
 
         function recalculateMacroTargets() {
-            appData.weight = parseFloat(document.getElementById('weightInput').value) || 0;
+            if (recalledWeekData) {
+                // Revert to the archived value and warn (protects view-only history)
+                const dailyW = (state.current && state.current.bodyWeight !== undefined) ? state.current.bodyWeight : (appData.weight || 0);
+                document.getElementById('weightInput').value = dailyW;
+                alert("Body weight cannot be modified while viewing an archived week.");
+                return;
+            }
+
+            const newWeight = parseFloat(document.getElementById('weightInput').value) || 0;
+
+            // Save weight to the *current day only* (allows independent daily body weight)
+            if (state.current) {
+                state.current.bodyWeight = newWeight;
+            }
+
+            // Keep global appData.weight as the "latest known weight" (used for new days, Weight Tracker summary, defaults, etc.)
+            appData.weight = newWeight;
+
             appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 0;
 
             state.targets.Calories = appData.calorieGoal;
@@ -2307,14 +2360,13 @@
             }
             if (confirm("Clear ALL today's logged foods and reset daily totals?\n\nYour profile settings will NOT be changed.")) {
                 const day = document.getElementById('daySelect').value;
-                appData.history[day] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
+                const defaultW = appData.weight || 0;
+                appData.history[day] = createEmptyDay(defaultW);
 
                 state.current = appData.history[day].current;
                 state.log = appData.history[day].log;
                 document.getElementById('exerciseInput').value = 0;
+                document.getElementById('weightInput').value = state.current.bodyWeight || defaultW;
 
                 saveData();
                 renderLog();
@@ -2329,13 +2381,10 @@
             }
             if (confirm("⚠️ This will PERMANENTLY clear ALL logged foods, exercise points, and serving totals for EVERY day of the week.\n\nYour profile settings (weight, calorie goal, WW goal, macro %, custom targets) will NOT be changed.\n\nAre you sure?")) {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const emptyCurrent = { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 };
+                const defaultW = appData.weight || 0;
 
                 days.forEach(day => {
-                    appData.history[day] = {
-                        current: { ...emptyCurrent },
-                        log: []
-                    };
+                    appData.history[day] = createEmptyDay(defaultW);
                 });
 
                 // Refresh the currently viewed day
@@ -2343,6 +2392,7 @@
                 state.current = appData.history[currentDay].current;
                 state.log = appData.history[currentDay].log;
                 document.getElementById('exerciseInput').value = 0;
+                document.getElementById('weightInput').value = state.current.bodyWeight || 0;
 
                 saveData();
                 renderLog();
@@ -2673,10 +2723,8 @@
 
             // Ensure target day exists in history
             if (!appData.history[targetDay]) {
-                appData.history[targetDay] = {
-                    current: { Calories: 0, Protein: 0, Fat: 0, Carbs: 0, Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0, exercisePoints: 0 },
-                    log: []
-                };
+                const defaultW = appData.weight || 0;
+                appData.history[targetDay] = createEmptyDay(defaultW);
             }
 
             const targetCurrent = appData.history[targetDay].current;
