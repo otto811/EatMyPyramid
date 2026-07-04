@@ -504,6 +504,8 @@
                     <div class="search-row">
                         <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
                         <button id="searchBtn" onclick="searchDatabases()">Search</button>
+                        <button onclick="showCustomFoodModal()"
+                            style="background: #8b5cf6; white-space: nowrap;">✏️ Manual Input</button>
                         <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
                             Barcode</button>
                     </div>
@@ -521,8 +523,6 @@
                             style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
                         <button onclick="showLogFoodModal()"
                             style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log Food</button>
-                        <button onclick="showCustomFoodModal()"
-                            style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️ Manual Input</button>
                         <button onclick="saveCurrentToMyFoods()"
                             style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐ Save to My Foods</button>
                     </div>
