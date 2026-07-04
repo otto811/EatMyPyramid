@@ -30,7 +30,7 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: clamp(10px, 4vw, 20px);
+            padding: 20px;
             display: flex;
             justify-content: center;
         }
@@ -120,12 +120,6 @@
 
         button:hover {
             opacity: 0.9;
-        }
-
-        button:active {
-            opacity: 0.75;
-            transform: scale(0.97);
-            transition: opacity 0.1s ease, transform 0.1s ease;
         }
 
         button:disabled {
@@ -304,27 +298,6 @@
             .container {
                 grid-template-columns: 1fr;
             }
-
-            /* Stack profile bar inputs vertically on very small screens */
-            .profile-bar {
-                gap: 10px;
-            }
-
-            /* Ensure log item buttons wrap cleanly on narrow phones */
-            .log-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            /* Ensure search row stacks if needed */
-            .search-row {
-                flex-wrap: wrap;
-            }
-
-            .search-row button {
-                flex: 1;
-            }
         }
 
         /* Food Group Info Popup */
@@ -365,9 +338,9 @@
             color: #0369a1;
             border: 1px solid #7dd3fc;
             border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            font-size: 0.82em;
+            width: 18px;
+            height: 18px;
+            font-size: 0.72em;
             font-weight: 700;
             line-height: 1;
             cursor: pointer;
@@ -378,39 +351,10 @@
             margin-left: 6px;
             flex-shrink: 0;
             transition: background 0.15s;
-            position: relative;
-        }
-
-        /* Expand tap area without changing visual size */
-        .fg-info-btn::before {
-            content: '';
-            position: absolute;
-            inset: -8px;
         }
 
         .fg-info-btn:hover {
             background: #bae6fd;
-        }
-
-        /* Shared class for all 6 section collapse/expand buttons */
-        .section-toggle-btn {
-            background: #6b7280;
-            color: white;
-            border: none;
-            min-width: 44px;
-            min-height: 44px;
-            border-radius: 5px;
-            font-size: 1.3em;
-            line-height: 1;
-            cursor: pointer;
-            padding: 0;
-            font-weight: bold;
-            flex-shrink: 0;
-            transition: background 0.15s;
-        }
-
-        .section-toggle-btn:hover {
-            background: #4b5563;
         }
     </style>
 </head>
@@ -432,7 +376,8 @@
                         style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">← Return to Live</button>
                     <button onclick="showWeightTrackerModal()"
                         style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈 Weight Tracker</button>
-                    <button id="profile-toggle" onclick="toggleSection('profile')" class="section-toggle-btn">−</button>
+                    <button id="profile-toggle" onclick="toggleSection('profile')"
+                        style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
                 </div>
             </div>
             <div id="profile-content">
@@ -447,30 +392,30 @@
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Body Weight (lbs)</label>
                             <input type="number" id="weightInput" value="0" onchange="recalculateMacroTargets()"
-                                style="min-width:75px; padding: 10px 8px; min-height: 44px;">
+                                style="width:70px; padding: 6px 8px; height: 34px;">
                         </div>
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Goal Weight (lbs)</label>
                             <input type="number" id="goalWeightInput" value="0" onchange="saveGoalWeight()"
-                                style="min-width:75px; padding: 6px 8px; min-height: 44px;">
+                                style="width:70px; padding: 6px 8px; height: 34px;">
                         </div>
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">By Date</label>
                             <input type="date" id="goalDateInput" onchange="saveGoalDate()"
-                                style="padding: 8px; min-height: 44px; font-size: 0.85em;">
+                                style="padding: 6px 8px; height: 34px; font-size: 0.85em;">
                         </div>
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Calorie Goal</label>
                             <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()"
-                                style="min-width:85px; padding: 8px; min-height: 44px;">
+                                style="width:80px; padding: 6px 8px; height: 34px;">
                         </div>
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"
-                                    style="min-width:65px; padding: 8px; min-height: 44px;">
+                                    style="width:60px; padding: 6px 8px; height: 34px;">
                                 <button onclick="showCalculatorModal()"
-                                    style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; min-height: 44px; line-height: 1;">Calculate</button>
+                                    style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
                             </div>
                         </div>
                     </div>
@@ -495,7 +440,8 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Search & Log Food</h2>
-                <button id="search-toggle" onclick="toggleSection('search')" class="section-toggle-btn">−</button>
+                <button id="search-toggle" onclick="toggleSection('search')"
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="search-content">
 
@@ -596,7 +542,8 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Macros &amp; Energy</h2>
-                <button id="macros-toggle" onclick="toggleSection('macros')" class="section-toggle-btn">−</button>
+                <button id="macros-toggle" onclick="toggleSection('macros')"
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="macros-content">
                 <div id="macroBarometersContainer"></div>
@@ -607,7 +554,8 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Food Groups (Servings)</h2>
-                <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')" class="section-toggle-btn">−</button>
+                <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="foodgroups-content">
                 <div id="groupBarometersContainer"></div>
@@ -618,7 +566,8 @@
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">WW Daily Points Tracker</h2>
-                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')" class="section-toggle-btn">−</button>
+                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="wwTracker-content">
                 <div
@@ -676,7 +625,8 @@
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Daily Log</h2>
-                <button id="log-toggle" onclick="toggleSection('log')" class="section-toggle-btn">−</button>
+                <button id="log-toggle" onclick="toggleSection('log')"
+                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="log-content">
                 <div id="logContainer">
@@ -762,7 +712,7 @@
     <div id="scannerModal"
         style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
         <div
-            style="background:white;padding:25px;border-radius:12px;width:90%;max-width:500px;max-height:calc(100dvh - 40px);overflow-y:auto;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            style="background:white;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
 
             <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Scan or Enter Barcode</h3>
 
@@ -788,7 +738,7 @@
     <div id="calculatorModal"
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
         <div
-            style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; max-height:calc(100dvh - 40px); overflow-y:auto; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
             <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Points Calculator</h3>
 
             <div class="form-group" style="margin-top: 15px;">
@@ -1208,66 +1158,6 @@
     </div>
 
     <script>
-        // ==================== MODULE-LEVEL HELPERS ====================
-
-        // Modal helpers — replaces ~25 repeated style.display='flex'/'none' pairs
-        function openModal(id)  { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
-        function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
-
-        // Shared fetch with timeout — replaces identical local copies in searchDatabases & searchRecipeIngredients
-        async function fetchJSON(url) {
-            try {
-                const controller = new AbortController();
-                const timerId = setTimeout(() => controller.abort(), 6000);
-                const res = await fetch(url, { signal: controller.signal });
-                clearTimeout(timerId);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return await res.json();
-            } catch (e) {
-                console.warn(`fetchJSON failed for ${url}:`, e.message);
-                return null;
-            }
-        }
-
-        // Open Food Facts nutrient mapper — replaces 4 duplicated inline arrays
-        function parseOFFNutriments(nut = {}) {
-            const get = (keys) => {
-                for (const k of keys) {
-                    const v = parseFloat(nut[k]);
-                    if (!isNaN(v) && v >= 0) return v;
-                }
-                return 0;
-            };
-            return [
-                { nutrientId: 1008, value: get(['energy-kcal_100g', 'energy-kcal', 'energy_kcal']) },
-                { nutrientId: 1003, value: get(['proteins_100g', 'proteins']) },
-                { nutrientId: 1004, value: get(['fat_100g', 'fat']) },
-                { nutrientId: 1005, value: get(['carbohydrates_100g', 'carbohydrates']) },
-                { nutrientId: 1079, value: get(['fiber_100g', 'fiber']) }
-            ];
-        }
-
-        // Recipe totals accumulator — replaces duplicate forEach in updateRecipeSummary & saveRecipeToMyFoods
-        function calcRecipeTotals() {
-            return currentRecipeIngredients.reduce((acc, ing) => {
-                acc.cal  += ing.nutrients.calories || 0;
-                acc.pro  += ing.nutrients.protein  || 0;
-                acc.fat  += ing.nutrients.fat      || 0;
-                acc.carb += ing.nutrients.carbs    || 0;
-                acc.fib  += ing.nutrients.fiber    || 0;
-                acc.g    += ing.grams              || 0;
-                return acc;
-            }, { cal: 0, pro: 0, fat: 0, carb: 0, fib: 0, g: 0 });
-        }
-
-        // My Foods duplicate check — replaces 3 repeated .some() patterns
-        function myFoodExists(description, upc = '') {
-            return appData.myFoods.some(f =>
-                (f.description || '').toLowerCase() === (description || '').toLowerCase() &&
-                (f.upc || '') === (upc || '')
-            );
-        }
-
         // ==================== DROPDOWN MENU HELPERS ====================
         function toggleDropdown(id, toggleBtn) {
             const menu = document.getElementById(id);
@@ -1416,28 +1306,18 @@
             return Math.max(0, Math.round(((cal / 50) + (fat / 12) - (capped / 4)) * 10) / 10);
         }
 
-        // Dirty flag: set to true whenever log/history data changes; profile-only saves skip the deep clone.
-        let _historyDirty = false;
-        let _saveDebounceTimer = null;
-
         function saveData() {
-            // Only re-snapshot the current week's archive when the log/history actually changed.
-            // Skips the expensive JSON deep-clone for profile-setting-only saves (weight, calorie goal, etc.)
-            if (_historyDirty && appData.currentWeekStart && appData.history) {
+            // Always keep a fresh snapshot of the *live current week* in archivedWeeks.
+            // This ensures "Recall a Week" can retrieve the latest data for the ongoing week too,
+            // and past weeks remain untouched until a new week rollover occurs.
+            if (appData.currentWeekStart && appData.history) {
                 if (!appData.archivedWeeks) appData.archivedWeeks = {};
                 appData.archivedWeeks[appData.currentWeekStart] = {
                     history: JSON.parse(JSON.stringify(appData.history)),
                     savedAt: new Date().toISOString()
                 };
-                _historyDirty = false;
             }
             localStorage.setItem('foodTrackerData', JSON.stringify(appData));
-        }
-
-        // Debounced save for rapid-fire onchange handlers (profile inputs)
-        function saveDataDebounced() {
-            clearTimeout(_saveDebounceTimer);
-            _saveDebounceTimer = setTimeout(saveData, 350);
         }
 
         function loadData() {
@@ -1913,6 +1793,27 @@
             if (existingLoad) existingLoad.remove();
             parentWrap.appendChild(loadingDiv);
 
+            // 2. Then fetch from USDA + Search-a-licious in background and append results live
+            try {
+                // Helper function to fetch data and silently return null if an API fails/rate-limits
+                const fetchJSON = async (url) => {
+                    try {
+                        const controller = new AbortController();
+                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) {
+                            clearTimeout(id);
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        const data = await res.json();
+                        clearTimeout(id);
+                        return data;
+                    } catch (e) {
+                        console.warn(`Fetch failed for ${url}:`, e);
+                        return null;
+                    }
+                };
+
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
 
                 // Primary: Search-a-licious (modern full-text search)
@@ -1938,6 +1839,15 @@
 
                     searchALFoods = searchALData.hits.map(p => {
                         const nut = p.nutriments || {};
+                        const getNut = (keys) => {
+                            for (let k of keys) {
+                                if (nut[k] !== undefined && nut[k] !== null) {
+                                    const val = parseFloat(nut[k]);
+                                    if (!isNaN(val)) return val;
+                                }
+                            }
+                            return 0;
+                        };
 
                         return {
                             description: p.product_name || p.name || p.generic_name || 'Unknown Item',
@@ -1947,7 +1857,13 @@
                             householdServingFullText: p.serving_size || p.serving || '100g',
                             upc: p.code || p.barcode || '',
                             source: 'Search-a-licious',
-                            foodNutrients: parseOFFNutriments(nut)
+                            foodNutrients: [
+                                { nutrientId: 1008, value: getNut(['energy-kcal', 'energy_kcal', 'energy-kcal_100g']) },
+                                { nutrientId: 1003, value: getNut(['proteins', 'proteins_100g']) },
+                                { nutrientId: 1004, value: getNut(['fat', 'fat_100g']) },
+                                { nutrientId: 1005, value: getNut(['carbohydrates', 'carbohydrates_100g']) },
+                                { nutrientId: 1079, value: getNut(['fiber', 'fiber_100g']) }
+                            ]
                         };
                     });
                 } else {
@@ -1965,7 +1881,13 @@
                         householdServingFullText: p.serving_size || '100g',
                         upc: p.code,
                         source: 'Open Food Facts (legacy)',
-                        foodNutrients: parseOFFNutriments(p.nutriments || {})
+                        foodNutrients: [
+                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
+                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
+                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
+                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
+                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
+                        ]
                     }));
                 }
 
@@ -1996,7 +1918,13 @@
                     sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                 } else {
                     renderSearchDropdown();
-                    sel.focus(); // native picker opens automatically on touch
+                    sel.focus();
+                    try {
+                        sel.showPicker();
+                    } catch (e) {
+                        sel.size = Math.min(8, Math.min(searchVisibleCount, currentSearchResults.length) + 1);
+                        sel.onblur = function () { this.size = 1; };
+                    }
                 }
             } catch (e) {
                 console.error("API search error:", e);
@@ -2215,7 +2143,7 @@
             }
             // If cat === 'Other' (from "Do not count" or unknown), we intentionally do NOT increment any group serving total
 
-            _historyDirty = true;`r`n            saveData();
+            saveData();
             renderLog();
             renderBarometers();
 
@@ -2400,7 +2328,7 @@
 
             state.log.splice(index, 1);
 
-            _historyDirty = true;`r`n            saveData();
+            saveData();
             renderLog();
             renderBarometers();
         }
@@ -2440,7 +2368,7 @@
                 document.getElementById('exerciseInput').value = 0;
                 document.getElementById('weightInput').value = state.current.bodyWeight || defaultW;
 
-                _historyDirty = true;`r`n                saveData();
+                saveData();
                 renderLog();
                 renderBarometers();
             }
@@ -2640,7 +2568,7 @@
             if (!state.current) return;
             if (state.current.Water === undefined) state.current.Water = 0;
             state.current.Water = Math.max(0, state.current.Water + delta);
-            _historyDirty = true;`r`n            saveData();
+            saveData();
             renderBarometers();
         }
 
@@ -2682,8 +2610,8 @@
 
                     div.className = 'barometer-container';
                     const waterBtns = cat === 'Water' ? `
-                        <button onclick="adjustWaterServings(-1)" title="Remove 1 cup" style="background:#64748b; color:white; border:none; min-width:44px; min-height:44px; border-radius:4px; font-size:1.2em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
-                        <button onclick="adjustWaterServings(1)" title="Add 1 cup" style="background:#0ea5e9; color:white; border:none; min-width:44px; min-height:44px; border-radius:4px; font-size:1.2em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
+                        <button onclick="adjustWaterServings(-1)" title="Remove 1 cup" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
+                        <button onclick="adjustWaterServings(1)" title="Add 1 cup" style="background:#0ea5e9; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
                     ` : '';
                     const infoBtn = !isMacroPercentage ? `
                         <span class="fg-info-wrap">
@@ -2697,7 +2625,7 @@
                             ${waterBtns}<strong>${cat}</strong>${infoBtn}
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <input type="number" value="${target}" style="min-width:75px; padding:8px 4px; min-height:44px; font-size:0.9em; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
+                            <input type="number" value="${target}" style="width:60px; padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
                             <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
                         </div>
                     </div>
@@ -2749,10 +2677,10 @@
                                 <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                             </div>
                             <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
-                                <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 10px; min-height:44px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; font-size:0.85em;">Copy</button>
-                                <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 10px; min-height:44px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; font-size:0.85em;">⭐ Save</button>
-                                <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 10px; min-height:44px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; font-size:0.85em;">Edit</button>
-                                <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 10px; min-height:44px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; font-size:0.85em;">✕</button>
+                                <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
+                                <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
+                                <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                                <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
                             </div>
                         `;
                         cont.appendChild(div);
@@ -3015,6 +2943,13 @@
 
                 const p = data.product;
 
+                const nut = {
+                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
+                    protein: parseFloat(p.nutriments?.proteins_100g || 0),
+                    fat: parseFloat(p.nutriments?.fat_100g || 0),
+                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
+                    fiber: parseFloat(p.nutriments?.fiber_100g || 0)
+                };
 
                 const name = p.product_name || `Scanned Item (${barcode})`;
                 const brandText = String(p.brands || "Open Food Facts");
@@ -3031,7 +2966,13 @@
                     householdServingFullText: sSizeText,
                     upc: barcode,
                     source: 'Open Food Facts',
-                    foodNutrients: parseOFFNutriments(p.nutriments || {})
+                    foodNutrients: [
+                        { nutrientId: 1008, value: nut.calories },
+                        { nutrientId: 1003, value: nut.protein },
+                        { nutrientId: 1004, value: nut.fat },
+                        { nutrientId: 1005, value: nut.carbs },
+                        { nutrientId: 1079, value: nut.fiber }
+                    ]
                 };
 
                 if (recipeBarcodeMode) {
@@ -3078,7 +3019,10 @@
                 foodNutrients: food.foodNutrients || []
             };
 
-            const exists = myFoodExists(customFood.description, customFood.upc);
+            const exists = appData.myFoods.some(f =>
+                (f.description || '').toLowerCase() === customFood.description.toLowerCase() &&
+                (f.upc || '') === (customFood.upc || '')
+            );
 
             if (exists) {
                 if (!confirm(`An item named "${customFood.description}" is already saved in My Foods. Proceed to save another copy?`)) return;
@@ -3121,7 +3065,10 @@
                 ]
             };
 
-            const exists = myFoodExists(newFood.description, newFood.upc);
+            const exists = appData.myFoods.some(f =>
+                (f.description || '').toLowerCase() === newFood.description.toLowerCase() &&
+                (f.upc || '') === (newFood.upc || '')
+            );
 
             if (!exists || confirm(`An item named "${newFood.description}" is already saved in My Foods. Proceed to save another copy?`)) {
                 appData.myFoods.push(newFood);
@@ -3239,7 +3186,10 @@
                     }
                 }
             } else {
-                const exists = myFoodExists(newFood.description, newFood.upc);
+                const exists = appData.myFoods.some(f =>
+                    (f.description || '').toLowerCase() === newFood.description.toLowerCase() &&
+                    (f.upc || '') === (newFood.upc || '')
+                );
                 if (exists) {
                     if (!confirm(`An item named "${name}" is already saved in My Foods. Proceed to save another copy?`)) return;
                 }
@@ -3503,6 +3453,21 @@
 
             // Then external APIs (append)
             try {
+                const fetchJSON = async (url) => {
+                    try {
+                        const controller = new AbortController();
+                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) {
+                            clearTimeout(id);
+                            return null;
+                        }
+                        const data = await res.json();
+                        clearTimeout(id);
+                        return data;
+                    } catch { return null; }
+                };
+
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=10`;
                 const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`;
 
@@ -3518,7 +3483,13 @@
                         householdServingFullText: p.serving_size || '100g',
                         upc: p.code,
                         source: 'Open Food Facts',
-                        foodNutrients: parseOFFNutriments(p.nutriments || {})
+                        foodNutrients: [
+                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
+                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
+                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
+                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
+                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
+                        ]
                     }));
                 }
 
@@ -3548,7 +3519,13 @@
             if (currentRecipeSearchResults.length === 0) {
                 sel.innerHTML = '<option value="" disabled selected>No results found</option>';
             } else {
-                sel.focus(); // native picker opens automatically on touch
+                sel.focus();
+                try {
+                    sel.showPicker();
+                } catch (e) {
+                    sel.size = Math.min(8, currentRecipeSearchResults.length + 1);
+                    sel.onblur = function () { this.size = 1; };
+                }
             }
         }
 
@@ -3645,17 +3622,27 @@
             }
 
             const numServings = parseFloat(document.getElementById('recipeServings').value) || 1;
-            const t = calcRecipeTotals();
 
-            const perServCal  = t.cal  / numServings;
-            const perServPro  = t.pro  / numServings;
-            const perServFat  = t.fat  / numServings;
-            const perServCarb = t.carb / numServings;
-            const perServFib  = t.fib  / numServings;
-            const perServGrams = t.g   / numServings;
+            let totalCal = 0, totalPro = 0, totalFat = 0, totalCarb = 0, totalFib = 0, totalGrams = 0;
+
+            currentRecipeIngredients.forEach(ing => {
+                totalCal += ing.nutrients.calories || 0;
+                totalPro += ing.nutrients.protein || 0;
+                totalFat += ing.nutrients.fat || 0;
+                totalCarb += ing.nutrients.carbs || 0;
+                totalFib += ing.nutrients.fiber || 0;
+                totalGrams += ing.grams || 0;
+            });
+
+            const perServCal = totalCal / numServings;
+            const perServPro = totalPro / numServings;
+            const perServFat = totalFat / numServings;
+            const perServCarb = totalCarb / numServings;
+            const perServFib = totalFib / numServings;
+            const perServGrams = totalGrams / numServings;
 
             container.innerHTML = `
-            <strong>Totals for whole recipe:</strong> ${t.cal.toFixed(0)} kcal | ${t.pro.toFixed(1)}g P | ${t.fat.toFixed(1)}g F | ${t.carb.toFixed(1)}g C | ${t.fib.toFixed(1)}g fiber<br>
+            <strong>Totals for whole recipe:</strong> ${totalCal.toFixed(0)} kcal | ${totalPro.toFixed(1)}g P | ${totalFat.toFixed(1)}g F | ${totalCarb.toFixed(1)}g C | ${totalFib.toFixed(1)}g fiber<br>
             <strong>Per serving (${numServings} servings, ~${perServGrams.toFixed(0)}g):</strong> 
             <span style="color:#14b8a6; font-weight:bold;">${perServCal.toFixed(0)} kcal | ${perServPro.toFixed(1)}g protein | ${perServFat.toFixed(1)}g fat | ${perServCarb.toFixed(1)}g carbs | ${perServFib.toFixed(1)}g fiber</span>
         `;
@@ -3672,15 +3659,23 @@
             if (!numServings || numServings <= 0) return alert("Please enter a valid number of servings (> 0).");
             if (currentRecipeIngredients.length === 0) return alert("Please add at least one ingredient.");
 
-            // Compute totals using shared helper (same logic as updateRecipeSummary)
-            const t = calcRecipeTotals();
+            // Compute totals
+            let totalCal = 0, totalPro = 0, totalFat = 0, totalCarb = 0, totalFib = 0, totalGrams = 0;
+            currentRecipeIngredients.forEach(ing => {
+                totalCal += ing.nutrients.calories || 0;
+                totalPro += ing.nutrients.protein || 0;
+                totalFat += ing.nutrients.fat || 0;
+                totalCarb += ing.nutrients.carbs || 0;
+                totalFib += ing.nutrients.fiber || 0;
+                totalGrams += ing.grams || 0;
+            });
 
-            const perServGrams = t.g    / numServings;
-            const perServCal   = t.cal  / numServings;
-            const perServPro   = t.pro  / numServings;
-            const perServFat   = t.fat  / numServings;
-            const perServCarb  = t.carb / numServings;
-            const perServFib   = t.fib  / numServings;
+            const perServGrams = totalGrams / numServings;
+            const perServCal = totalCal / numServings;
+            const perServPro = totalPro / numServings;
+            const perServFat = totalFat / numServings;
+            const perServCarb = totalCarb / numServings;
+            const perServFib = totalFib / numServings;
 
             // Convert per-serving to per-100g density for storage
             const density = perServGrams > 0 ? (100 / perServGrams) : 1;
@@ -3985,35 +3980,8 @@
 
             const ctx = canvas.getContext('2d');
 
-            // Chart.js afterDraw plugin — replaces the old setTimeout hack.
-            // Fires synchronously after each render, so the goal line is always in sync
-            // and correctly repositions on resize without any flickering.
-            const goalLinePlugin = {
-                id: 'goalLine',
-                afterDraw(chart) {
-                    if (!goalWeight || goalWeight <= 0) return;
-                    const { ctx, chartArea, scales: { y } } = chart;
-                    if (!chartArea || !y) return;
-                    const yPos = y.getPixelForValue(goalWeight);
-                    ctx.save();
-                    ctx.strokeStyle = '#10b981';
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([6, 4]);
-                    ctx.beginPath();
-                    ctx.moveTo(chartArea.left, yPos);
-                    ctx.lineTo(chartArea.right, yPos);
-                    ctx.stroke();
-                    ctx.fillStyle = '#166534';
-                    ctx.font = 'bold 11px sans-serif';
-                    ctx.textAlign = 'right';
-                    ctx.fillText(`Goal: ${goalWeight} lbs`, chartArea.right, yPos - 6);
-                    ctx.restore();
-                }
-            };
-
             weightChartInstance = new Chart(ctx, {
                 type: 'line',
-                plugins: [goalLinePlugin],
                 data: {
                     labels: labels,
                     datasets: [{
@@ -4062,6 +4030,35 @@
                     }
                 }
             });
+
+            // Draw goal weight line if set (using afterDraw plugin-like via setTimeout hack or direct canvas overlay)
+            if (goalWeight > 0) {
+                // We use a small timeout to draw on top after Chart.js renders
+                setTimeout(() => {
+                    if (!weightChartInstance || weightChartInstance.destroyed) return;
+                    const chartArea = weightChartInstance.chartArea;
+                    const yScale = weightChartInstance.scales.y;
+                    if (!yScale || !chartArea) return;
+
+                    const yPos = yScale.getPixelForValue(goalWeight);
+                    const ctx2 = weightChartInstance.ctx;
+
+                    ctx2.save();
+                    ctx2.strokeStyle = '#10b981';
+                    ctx2.lineWidth = 2;
+                    ctx2.setLineDash([6, 4]);
+                    ctx2.beginPath();
+                    ctx2.moveTo(chartArea.left, yPos);
+                    ctx2.lineTo(chartArea.right, yPos);
+                    ctx2.stroke();
+
+                    // Label for goal line
+                    ctx2.fillStyle = '#166534';
+                    ctx2.font = 'bold 11px sans-serif';
+                    ctx2.fillText(`Goal: ${goalWeight} lbs`, chartArea.right - 90, yPos - 6);
+                    ctx2.restore();
+                }, 150);
+            }
         }
 
         function clearWeightHistory() {
