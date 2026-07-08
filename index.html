@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EatMyPyramid 2.3.9 - Manual Input + Copy to Day</title>
+    <title>EatMyPyramid v3.0 - Manual Input + Copy to Day</title>
 
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -363,19 +363,23 @@
 
     <div class="container">
         <div class="card full-width">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
                 <div>
                     <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v2.3.9)
+                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v3.0)
                     </div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                     <button id="recall-week-btn" onclick="showRecallWeekModal()"
-                        style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅 Recall a Week</button>
+                        style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅
+                        Recall a Week</button>
                     <button id="return-week-btn" onclick="returnToCurrentWeek()"
-                        style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">← Return to Live</button>
+                        style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">←
+                        Return to Live</button>
                     <button onclick="showWeightTrackerModal()"
-                        style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈 Weight Tracker</button>
+                        style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈
+                        Weight Tracker</button>
                     <button id="profile-toggle" onclick="toggleSection('profile')"
                         style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
                 </div>
@@ -386,6 +390,12 @@
                         <label>Day of Week</label>
                         <select id="daySelect" onchange="changeDay()"
                             style="font-weight:bold; padding: 8px; height: 38px;"></select>
+                    </div>
+                    <div>
+                        <label>Date</label>
+                        <input type="text" id="dayDateDisplay" readonly
+                            style="font-weight:bold; padding: 8px; height: 38px; width: 90px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; color:#334155; text-align:center; cursor:default; font-size:0.95em;"
+                            value="--/--/--">
                     </div>
                     <div
                         style="display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255,255,255,0.6); padding: 8px 15px; border-radius: 6px; flex-grow: 1;">
@@ -462,15 +472,19 @@
 
                 <div class="form-group">
                     <label>Number of Servings (optional)</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-start;">
+                    <div
+                        style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-start;">
                         <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
                             style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
                         <button onclick="showLogFoodModal()"
-                            style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log Food</button>
+                            style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log
+                            Food</button>
                         <button onclick="saveCurrentToMyFoods()"
-                            style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐ Save to My Foods</button>
+                            style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐
+                            Save to My Foods</button>
                         <button onclick="showCustomFoodModal()"
-                            style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️ Manual Food Entry</button>
+                            style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️
+                            Manual Food Entry</button>
                     </div>
                 </div>
 
@@ -704,7 +718,9 @@
                 <button onclick="document.getElementById('customFoodModal').style.display='none'"
                     style="background:var(--text-muted); flex:1;">Cancel</button>
                 <button onclick="saveCustomFood()" style="background:var(--primary); flex:1;">Save to My Foods</button>
-                <button onclick="saveCustomFood(true)" style="background:#3b82f6; flex:1.3; padding:12px; color:white; font-weight:bold;">Save &amp; Copy to Day</button>
+                <button onclick="saveCustomFood(true)"
+                    style="background:#3b82f6; flex:1.3; padding:12px; color:white; font-weight:bold;">Save &amp; Copy
+                    to Day</button>
             </div>
         </div>
     </div>
@@ -1058,8 +1074,9 @@
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
                 <h3 style="margin:0; color:#8b5cf6;">📋 Manage My Foods</h3>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="sortMyFoodsAlphabetically()" 
-                        style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤 Sort A-Z</button>
+                    <button onclick="sortMyFoodsAlphabetically()"
+                        style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤
+                        Sort A-Z</button>
                     <button onclick="closeManageMyFoodsModal()"
                         style="background:var(--text-muted); padding:6px 12px; border-radius:4px; border:none; color:white; cursor:pointer;">Close</button>
                 </div>
@@ -1076,15 +1093,23 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:95%; max-width:480px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin:20px auto; max-height:92vh;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#8b5cf6;">📅 Recall a Week's Tracking History</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#8b5cf6;">📅 Recall a
+                Week's Tracking History</h3>
+
+            <div id="recallWeekDateRange"
+                style="display:none; margin-bottom:10px; padding:8px 12px; background:#f3e8ff; border-radius:6px; font-size:0.9em; color:#6d28d9; font-weight:600; text-align:center;">
+            </div>
 
             <p style="font-size:0.9em; color:#374151; line-height:1.45; margin-bottom:12px;">
-                Pick a date (or use the dropdown) from any past week. The Day selector, Daily Log, Macros, Food Groups, and WW Points will switch to show that week's saved data for browsing.
+                Pick a date (or use the dropdown) from any past week. The Day selector, Daily Log, Macros, Food Groups,
+                and WW Points will switch to show that week's saved data for browsing.
             </p>
 
             <div class="form-group">
-                <label style="font-weight:600; display:block; margin-bottom:4px;">Pick a date inside the desired week:</label>
-                <input type="date" id="recallDateInput" style="width:100%; padding:12px; font-size:1.05em; border:1px solid #d1d5db; border-radius:6px;">
+                <label style="font-weight:600; display:block; margin-bottom:4px;">Pick a date inside the desired
+                    week:</label>
+                <input type="date" id="recallDateInput"
+                    style="width:100%; padding:12px; font-size:1.05em; border:1px solid #d1d5db; border-radius:6px;">
             </div>
 
             <div id="availableWeeksList" style="margin:12px 0 8px 0; font-size:0.9em; color:#374151;">
@@ -1095,11 +1120,15 @@
                 <button onclick="closeRecallWeekModal()"
                     style="background:var(--text-muted); flex:1; padding:12px; font-size:1em;">Cancel</button>
                 <button onclick="loadSelectedWeek()"
-                    style="background:#8b5cf6; flex:1.1; padding:12px; color:white; font-weight:bold; font-size:1em;">Load Week for Viewing</button>
+                    style="background:#8b5cf6; flex:1.1; padding:12px; color:white; font-weight:bold; font-size:1em;">Load
+                    Week for Viewing</button>
             </div>
 
-            <p style="font-size:0.78em; color:#6b7280; margin-top:16px; background:#f8fafc; padding:8px 10px; border-radius:6px;">
-                <strong>Tip:</strong> While viewing a past week you can browse every day but <strong>logging, editing, exercise points, and resets are disabled</strong> (to protect your history). Click the ← Return to Live button (appears when active) or re-select the current week to resume normal tracking.
+            <p
+                style="font-size:0.78em; color:#6b7280; margin-top:16px; background:#f8fafc; padding:8px 10px; border-radius:6px;">
+                <strong>Tip:</strong> While viewing a past week you can browse every day but <strong>logging, editing,
+                    exercise points, and resets are disabled</strong> (to protect your history). Click the ← Return to
+                Live button (appears when active) or re-select the current week to resume normal tracking.
             </p>
         </div>
     </div>
@@ -1109,11 +1138,13 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:95%; max-width:720px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin:20px auto; max-height:92vh; display:flex; flex-direction:column;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#10b981;">📈 Weight Tracker &amp; History</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#10b981;">📈 Weight
+                Tracker &amp; History</h3>
 
             <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; align-items:flex-start;">
                 <!-- Info summary -->
-                <div style="flex:1; min-width:180px; background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #10b981;">
+                <div
+                    style="flex:1; min-width:180px; background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #10b981;">
                     <div style="font-size:0.9em; color:#166534;"><strong>Current Profile Weight</strong></div>
                     <div style="font-size:1.6em; font-weight:bold; color:#166534;" id="wtCurrentWeight">— lbs</div>
                     <div style="margin-top:8px; font-size:0.9em; color:#166534;"><strong>Goal Weight</strong></div>
@@ -1121,7 +1152,8 @@
                 </div>
 
                 <!-- Log form -->
-                <div style="flex:2; min-width:300px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e5e7eb;">
+                <div
+                    style="flex:2; min-width:300px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e5e7eb;">
                     <strong style="display:block; margin-bottom:8px; color:#166534;">Log New Weight Entry</strong>
                     <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                         <div style="flex:1; min-width:120px;">
@@ -1130,17 +1162,21 @@
                         </div>
                         <div style="flex:1; min-width:100px;">
                             <label style="font-size:0.75em; display:block; margin-bottom:2px;">Weight (lbs)</label>
-                            <input type="number" id="wtWeightInput" step="0.1" placeholder="e.g. 208.5" style="width:100%; padding:8px; font-size:0.95em;">
+                            <input type="number" id="wtWeightInput" step="0.1" placeholder="e.g. 208.5"
+                                style="width:100%; padding:8px; font-size:0.95em;">
                         </div>
-                        <button onclick="logWeightEntry()" 
-                            style="background:#10b981; color:white; padding:9px 18px; border:none; border-radius:6px; font-weight:600; white-space:nowrap; cursor:pointer;">+ Log Weight</button>
+                        <button onclick="logWeightEntry()"
+                            style="background:#10b981; color:white; padding:9px 18px; border:none; border-radius:6px; font-weight:600; white-space:nowrap; cursor:pointer;">+
+                            Log Weight</button>
                     </div>
-                    <small style="color:#64748b; display:block; margin-top:6px;">Entries are saved automatically. Chart updates live.</small>
+                    <small style="color:#64748b; display:block; margin-top:6px;">Entries are saved automatically. Chart
+                        updates live.</small>
                 </div>
             </div>
 
             <!-- Chart -->
-            <div style="flex:1; min-height:340px; background:white; border:1px solid #e5e7eb; border-radius:8px; padding:10px; position:relative;">
+            <div
+                style="flex:1; min-height:340px; background:white; border:1px solid #e5e7eb; border-radius:8px; padding:10px; position:relative;">
                 <canvas id="weightChart" style="width:100%; height:100%; max-height:340px;"></canvas>
             </div>
 
@@ -1148,11 +1184,13 @@
                 <button onclick="closeWeightTrackerModal()"
                     style="background:#6b7280; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer;">Close</button>
                 <button onclick="clearWeightHistory()"
-                    style="background:#ef4444; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer;">Clear History</button>
+                    style="background:#ef4444; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer;">Clear
+                    History</button>
             </div>
 
             <p style="font-size:0.72em; color:#64748b; margin-top:10px; text-align:center;">
-                Your weight history is stored only in this browser (localStorage). The green dashed line shows your Goal Weight target.
+                Your weight history is stored only in this browser (localStorage). The green dashed line shows your Goal
+                Weight target.
             </p>
         </div>
     </div>
@@ -1555,9 +1593,44 @@
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
 
+            // --- Compute and display the date for the selected day ---
+            updateDayDateDisplay(day);
+
             renderLog();
             renderBarometers();
             updateWeekViewUI();  // show/hide the "Return to Live" button when in recalled mode
+        }
+
+        /**
+         * Compute the calendar date for the selected day-of-week within
+         * the active week (current or recalled) and display it as mm/dd/yy.
+         */
+        function updateDayDateDisplay(dayName) {
+            const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName);
+            if (dayIndex === -1) return;
+
+            // Determine the week-start (Sunday) date string — recalled or live
+            let weekStartStr = appData.currentWeekStart;
+            if (recalledWeekData && recalledWeekData.weekStart) {
+                weekStartStr = recalledWeekData.weekStart;
+            }
+
+            const dateEl = document.getElementById('dayDateDisplay');
+            if (!dateEl) return;
+
+            if (!weekStartStr) {
+                dateEl.value = '--/--/--';
+                return;
+            }
+
+            // Build the date for this day of the week
+            const weekStart = new Date(weekStartStr + 'T00:00:00');
+            weekStart.setDate(weekStart.getDate() + dayIndex);
+
+            const mm = String(weekStart.getMonth() + 1).padStart(2, '0');
+            const dd = String(weekStart.getDate()).padStart(2, '0');
+            const yy = String(weekStart.getFullYear()).slice(-2);
+            dateEl.value = `${mm}/${dd}/${yy}`;
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
@@ -3742,6 +3815,19 @@
             const modal = document.getElementById('recallWeekModal');
             const dateInput = document.getElementById('recallDateInput');
             const listContainer = document.getElementById('availableWeeksList');
+            const dateRangeEl = document.getElementById('recallWeekDateRange');
+
+            // Show the current live week's date range at the top of the modal
+            if (dateRangeEl && appData.currentWeekStart) {
+                const curStart = new Date(appData.currentWeekStart + 'T00:00:00');
+                const curEnd = new Date(curStart);
+                curEnd.setDate(curEnd.getDate() + 6);
+                const fmtShort = (d) => `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
+                dateRangeEl.textContent = `Current live week: ${fmtShort(curStart)} – ${fmtShort(curEnd)}`;
+                dateRangeEl.style.display = 'block';
+            } else if (dateRangeEl) {
+                dateRangeEl.style.display = 'none';
+            }
 
             // Set max date to today so users pick past/present weeks only
             const todayStr = new Date().toISOString().split('T')[0];
@@ -3763,18 +3849,19 @@
                 sel.style.cssText = 'width:100%; padding:10px; font-size:0.95em; border:1px solid #d1d5db; border-radius:6px;';
                 sel.innerHTML = '<option value="">-- Choose a saved week --</option>';
 
+                const fmtShort = (d) => `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
                 archivedKeys.forEach(weekStart => {
                     const startDate = new Date(weekStart + 'T00:00:00');
                     const endDate = new Date(startDate);
                     endDate.setDate(endDate.getDate() + 6);
-                    const label = `Week of ${startDate.toLocaleDateString(undefined, {month:'short', day:'numeric'})} – ${endDate.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
+                    const label = `Week of ${fmtShort(startDate)} – ${fmtShort(endDate)}`;
                     const opt = document.createElement('option');
                     opt.value = weekStart;
                     opt.textContent = label;
                     sel.appendChild(opt);
                 });
 
-                sel.onchange = function() {
+                sel.onchange = function () {
                     if (this.value) {
                         // Pre-fill the date input with the week's start date for consistency
                         dateInput.value = this.value;
@@ -3834,7 +3921,8 @@
                 const startD = new Date(weekStart + 'T00:00:00');
                 const endD = new Date(startD);
                 endD.setDate(endD.getDate() + 6);
-                alert(`Loaded archived week of ${startD.toLocaleDateString()} – ${endD.toLocaleDateString()}.\n\nUse the Day of Week selector to browse each day. Logging & editing are blocked while in view-only mode.`);
+                const fmtShort = (d) => `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
+                alert(`Loaded archived week of ${fmtShort(startD)} – ${fmtShort(endD)}.\n\nUse the Day of Week selector to browse each day. The Date field shows the corresponding date. Logging & editing are blocked while in view-only mode.`);
             } else {
                 alert("No tracking data found for that week. It may not have been used or was before archiving began.");
                 recalledWeekData = null;
@@ -4075,8 +4163,8 @@
 
         // Optional enhancement: When user updates weight in profile, auto-log today's entry if different from last
         // We hook into recalculateMacroTargets which already runs on weight change
-        const _origRecalculate = window.recalculateMacroTargets || function(){};
-        window.recalculateMacroTargets = function() {
+        const _origRecalculate = window.recalculateMacroTargets || function () { };
+        window.recalculateMacroTargets = function () {
             _origRecalculate.apply(this, arguments);
             // Auto-log today's weight if profile weight changed and is valid (non-intrusive)
             try {
@@ -4104,7 +4192,7 @@
                         }
                     }
                 }
-            } catch(e) { /* silent fail on auto-log */ }
+            } catch (e) { /* silent fail on auto-log */ }
         };
 
         // ==================== GUARDS FOR VIEW-ONLY MODE (protect archived data) ====================
@@ -4112,7 +4200,7 @@
         // Normal functionality for the live current week is completely unchanged.
 
         // Wrap the original logFood to add guard
-        const _origLogFood = window.logFood || function(){};
+        const _origLogFood = window.logFood || function () { };
         // We will edit the function body instead of wrapping to keep line numbers and references intact.
 
         // (Guards are inserted directly into the relevant function bodies below)
