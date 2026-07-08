@@ -1497,6 +1497,54 @@
                 }
             }
 
+            // Migration 10: Sync historical body weights to weightHistory
+            const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const allWeightsMap = new Map();
+            if (appData.weightHistory) {
+                appData.weightHistory.forEach(e => {
+                    if (e.date && e.weight > 0) allWeightsMap.set(e.date, e.weight);
+                });
+            }
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            if (appData.archivedWeeks) {
+                for (let weekKey in appData.archivedWeeks) {
+                    const weekHist = appData.archivedWeeks[weekKey].history;
+                    if (weekHist) {
+                        for (let day in weekHist) {
+                            const bw = weekHist[day] && weekHist[day].current && weekHist[day].current.bodyWeight;
+                            if (bw > 0 && daysArr.includes(day)) {
+                                const d = new Date(weekKey + 'T00:00:00');
+                                d.setDate(d.getDate() + daysArr.indexOf(day));
+                                const dateStr = d.toISOString().split('T')[0];
+                                if (dateStr <= todayStr && !allWeightsMap.has(dateStr)) {
+                                    allWeightsMap.set(dateStr, bw);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (appData.history && appData.currentWeekStart) {
+                for (let day in appData.history) {
+                    const bw = appData.history[day] && appData.history[day].current && appData.history[day].current.bodyWeight;
+                    if (bw > 0 && daysArr.includes(day)) {
+                        const d = new Date(appData.currentWeekStart + 'T00:00:00');
+                        d.setDate(d.getDate() + daysArr.indexOf(day));
+                        const dateStr = d.toISOString().split('T')[0];
+                        if (dateStr <= todayStr && !allWeightsMap.has(dateStr)) {
+                            allWeightsMap.set(dateStr, bw);
+                        }
+                    }
+                }
+            }
+            const newHist = [];
+            allWeightsMap.forEach((weight, date) => {
+                newHist.push({ date: date, weight: weight });
+            });
+            newHist.sort((a, b) => a.date.localeCompare(b.date));
+            appData.weightHistory = newHist;
+
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
             document.getElementById('goalDateInput').value = appData.goalDate || '';
@@ -4204,30 +4252,32 @@
         const _origRecalculate = window.recalculateMacroTargets || function () { };
         window.recalculateMacroTargets = function () {
             _origRecalculate.apply(this, arguments);
-            // Auto-log today's weight if profile weight changed and is valid (non-intrusive)
+            if (recalledWeekData) return;
+            // Auto-log active day's weight if profile weight changed and is valid (non-intrusive)
             try {
-                const today = new Date().toISOString().split('T')[0];
+                let activeDateStr = new Date().toISOString().split('T')[0];
+                const dayName = document.getElementById('daySelect').value;
+                const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName);
+                if (dayIndex !== -1 && appData.currentWeekStart) {
+                    const d = new Date(appData.currentWeekStart + 'T00:00:00');
+                    d.setDate(d.getDate() + dayIndex);
+                    activeDateStr = d.toISOString().split('T')[0];
+                }
+
                 const currentProfileWeight = parseFloat(document.getElementById('weightInput').value) || 0;
                 if (currentProfileWeight > 0 && currentProfileWeight < 600) {
-                    const lastEntry = (appData.weightHistory || []).slice(-1)[0];
-                    const lastWeight = lastEntry ? lastEntry.weight : 0;
-                    const lastDate = lastEntry ? lastEntry.date : '';
-                    // Only auto-add if no entry today OR weight differs by >0.5 lbs from last logged
-                    if (lastDate !== today || Math.abs(lastWeight - currentProfileWeight) > 0.5) {
-                        // Add or update today's entry silently
-                        let idx = appData.weightHistory.findIndex(e => e.date === today);
-                        if (idx >= 0) {
-                            appData.weightHistory[idx].weight = currentProfileWeight;
-                        } else {
-                            appData.weightHistory.push({ date: today, weight: currentProfileWeight });
-                            appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        }
-                        saveData();
-                        // If weight tracker modal is open, refresh chart
-                        const wtModal = document.getElementById('weightTrackerModal');
-                        if (wtModal && wtModal.style.display === 'flex' && weightChartInstance) {
-                            renderWeightChart();
-                        }
+                    let idx = appData.weightHistory.findIndex(e => e.date === activeDateStr);
+                    if (idx >= 0) {
+                        appData.weightHistory[idx].weight = currentProfileWeight;
+                    } else {
+                        appData.weightHistory.push({ date: activeDateStr, weight: currentProfileWeight });
+                        appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+                    }
+                    saveData();
+                    // If weight tracker modal is open, refresh chart
+                    const wtModal = document.getElementById('weightTrackerModal');
+                    if (wtModal && wtModal.style.display === 'flex' && window.weightChartInstance) {
+                        renderWeightChart();
                     }
                 }
             } catch (e) { /* silent fail on auto-log */ }
