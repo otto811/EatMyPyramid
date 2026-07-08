@@ -4068,6 +4068,50 @@
 
             const ctx = canvas.getContext('2d');
 
+            // --- Ensure Y-axis scale includes the goal weight with padding ---
+            const allValues = [...weights];
+            if (goalWeight > 0) allValues.push(goalWeight);
+            const dataMin = Math.min(...allValues);
+            const dataMax = Math.max(...allValues);
+            const padding = Math.max((dataMax - dataMin) * 0.15, 3); // at least 3 lbs padding
+
+            // --- Chart.js inline plugin: draws a green dashed goal-weight line on every render ---
+            const goalLinePlugin = {
+                id: 'goalWeightLine',
+                afterDraw(chart) {
+                    if (!goalWeight || goalWeight <= 0) return;
+                    const yScale = chart.scales.y;
+                    const chartArea = chart.chartArea;
+                    if (!yScale || !chartArea) return;
+
+                    const yPos = yScale.getPixelForValue(goalWeight);
+
+                    // Don't draw if the line would be outside the visible chart area
+                    if (yPos < chartArea.top - 1 || yPos > chartArea.bottom + 1) return;
+
+                    const drawCtx = chart.ctx;
+                    drawCtx.save();
+
+                    // Green dashed line
+                    drawCtx.strokeStyle = '#10b981';
+                    drawCtx.lineWidth = 2;
+                    drawCtx.setLineDash([6, 4]);
+                    drawCtx.beginPath();
+                    drawCtx.moveTo(chartArea.left, yPos);
+                    drawCtx.lineTo(chartArea.right, yPos);
+                    drawCtx.stroke();
+
+                    // Label
+                    drawCtx.setLineDash([]);
+                    drawCtx.fillStyle = '#166534';
+                    drawCtx.font = 'bold 11px sans-serif';
+                    drawCtx.textAlign = 'right';
+                    drawCtx.fillText(`Goal: ${goalWeight} lbs`, chartArea.right - 4, yPos - 6);
+
+                    drawCtx.restore();
+                }
+            };
+
             weightChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -4103,7 +4147,9 @@
                         y: {
                             title: { display: true, text: 'Weight (lbs)', font: { weight: 'bold' } },
                             grid: { color: '#e5e7eb' },
-                            beginAtZero: false
+                            beginAtZero: false,
+                            suggestedMin: dataMin - padding,
+                            suggestedMax: dataMax + padding
                         }
                     },
                     onClick: (evt, elements) => {
@@ -4116,37 +4162,9 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [goalLinePlugin]
             });
-
-            // Draw goal weight line if set (using afterDraw plugin-like via setTimeout hack or direct canvas overlay)
-            if (goalWeight > 0) {
-                // We use a small timeout to draw on top after Chart.js renders
-                setTimeout(() => {
-                    if (!weightChartInstance || weightChartInstance.destroyed) return;
-                    const chartArea = weightChartInstance.chartArea;
-                    const yScale = weightChartInstance.scales.y;
-                    if (!yScale || !chartArea) return;
-
-                    const yPos = yScale.getPixelForValue(goalWeight);
-                    const ctx2 = weightChartInstance.ctx;
-
-                    ctx2.save();
-                    ctx2.strokeStyle = '#10b981';
-                    ctx2.lineWidth = 2;
-                    ctx2.setLineDash([6, 4]);
-                    ctx2.beginPath();
-                    ctx2.moveTo(chartArea.left, yPos);
-                    ctx2.lineTo(chartArea.right, yPos);
-                    ctx2.stroke();
-
-                    // Label for goal line
-                    ctx2.fillStyle = '#166534';
-                    ctx2.font = 'bold 11px sans-serif';
-                    ctx2.fillText(`Goal: ${goalWeight} lbs`, chartArea.right - 90, yPos - 6);
-                    ctx2.restore();
-                }, 150);
-            }
         }
 
         function clearWeightHistory() {
