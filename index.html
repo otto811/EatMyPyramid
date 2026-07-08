@@ -591,7 +591,7 @@
 
                     <div class="exercise-box">
                         <label style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                            <strong>Exercise Points Earned</strong>&nbsp;(subtracts from total daily points used)
+                            <strong>Exercise and Flex Points</strong>&nbsp;(subtracts from total daily points used)
                             <span class="fg-info-wrap">
                                 <span style="white-space:nowrap;">(Time = minutes)</span>
                                 <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
@@ -626,10 +626,14 @@
                             </select>
                             <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <span style="font-size:0.9em; font-weight:600;">Manual Edit / Total:</span>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+                            <span style="font-size:0.9em; font-weight:600;">Exercise Points:</span>
                             <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
                                 onchange="updateExercisePoints()" style="width:60px;">
+                            <span style="font-size:0.9em; font-weight:600; margin-left: 10px;">Flex Points:</span>
+                            <input type="number" id="flexPointsInput" value="0" min="0" step="0.5"
+                                onchange="updateFlexPoints()" style="width:60px;">
+                            <span style="font-size:0.85em; color:var(--text-muted);">(up to 35 total in a week)</span>
                         </div>
                     </div>
                 </div>
@@ -1333,6 +1337,7 @@
                     Calories: 0, Protein: 0, Fat: 0, Carbs: 0,
                     Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0,
                     exercisePoints: 0,
+                    flexPoints: 0,
                     bodyWeight: defaultWeight
                 },
                 log: []
@@ -1592,6 +1597,8 @@
             document.getElementById('weightInput').value = dailyW;
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
+            const flexInput = document.getElementById('flexPointsInput');
+            if (flexInput) flexInput.value = state.current.flexPoints || 0;
 
             // --- Compute and display the date for the selected day ---
             updateDayDateDisplay(day);
@@ -1658,6 +1665,18 @@
                 return;
             }
             state.current.exercisePoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
+            saveData();
+            renderBarometers();
+        }
+
+        function updateFlexPoints() {
+            if (recalledWeekData) {
+                // Revert input to the (read-only) value from the archived week
+                document.getElementById('flexPointsInput').value = state.current.flexPoints || 0;
+                alert("Flex points cannot be modified while viewing an archived week.");
+                return;
+            }
+            state.current.flexPoints = parseFloat(document.getElementById('flexPointsInput').value) || 0;
             saveData();
             renderBarometers();
         }
@@ -2649,7 +2668,8 @@
         function renderBarometers() {
             const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
             const exer = state.current.exercisePoints || 0;
-            const net = Math.max(0, foodPts - exer);
+            const flex = state.current.flexPoints || 0;
+            const net = Math.max(0, foodPts - exer - flex);
             const goal = appData.wwGoal;
 
             document.getElementById('wwBarometer').innerHTML = `
