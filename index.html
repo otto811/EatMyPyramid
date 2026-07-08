@@ -1506,7 +1506,7 @@
                 });
             }
             const todayStr = new Date().toISOString().split('T')[0];
-            
+
             if (appData.archivedWeeks) {
                 for (let weekKey in appData.archivedWeeks) {
                     const weekHist = appData.archivedWeeks[weekKey].history;
@@ -2836,10 +2836,18 @@
         function showCopyToDayModal(index) {
             currentCopyIndex = index;
             currentMyFoodCopyIndex = -1;
-            // Log items already have a meal — hide the meal selector
-            document.getElementById('copyMealGroup').style.display = 'none';
+            
+            const itemToCopy = state.log[index];
+            if (itemToCopy && itemToCopy.meal) {
+                document.getElementById('copyMealSelect').value = itemToCopy.meal;
+            } else {
+                document.getElementById('copyMealSelect').value = 'Discretionary';
+            }
+
+            // Show the meal selector for copied items
+            document.getElementById('copyMealGroup').style.display = 'block';
             document.getElementById('copyToDayTitle').textContent = 'Copy Item to Day';
-            document.getElementById('copyToDayDesc').textContent = 'Select which day to copy this item to:';
+            document.getElementById('copyToDayDesc').textContent = 'Select which day and meal to copy this item to:';
             document.getElementById('copyToDayModal').style.display = 'flex';
         }
 
@@ -2935,6 +2943,7 @@
                 if (!itemToCopy) { closeCopyToDayModal(); return; }
 
                 const clonedItem = JSON.parse(JSON.stringify(itemToCopy));
+                clonedItem.meal = document.getElementById('copyMealSelect').value;
                 targetLog.push(clonedItem);
 
                 targetCurrent.Calories += clonedItem.calories;
