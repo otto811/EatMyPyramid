@@ -1169,9 +1169,6 @@
                             <input type="number" id="wtWeightInput" step="0.1" placeholder="e.g. 208.5"
                                 onchange="logWeightEntry(true)" style="width:100%; padding:8px; font-size:0.95em;">
                         </div>
-                        <button onclick="logWeightEntry()"
-                            style="background:#10b981; color:white; padding:9px 18px; border:none; border-radius:6px; font-weight:600; white-space:nowrap; cursor:pointer;">+
-                            Log Weight</button>
                     </div>
                     <small style="color:#64748b; display:block; margin-top:6px;">Entries are saved automatically. Chart
                         updates live.</small>
@@ -1641,7 +1638,30 @@
             }
 
             // Load this day's specific body weight into the input field (fallback to global latest weight)
-            const dailyW = (state.current.bodyWeight !== undefined) ? state.current.bodyWeight : (appData.weight || 0);
+            if (state.current.bodyWeight === undefined) {
+                state.current.bodyWeight = appData.weight || 0;
+                // Auto-save this inherited weight to history for this day
+                if (state.current.bodyWeight > 0 && !recalledWeekData) {
+                    const pad = n => String(n).padStart(2, '0');
+                    const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(day);
+                    if (dayIndex !== -1 && appData.currentWeekStart) {
+                        const d = new Date(appData.currentWeekStart + 'T00:00:00');
+                        d.setDate(d.getDate() + dayIndex);
+                        const activeDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                        
+                        let idx = (appData.weightHistory || []).findIndex(e => e.date === activeDateStr);
+                        if (idx >= 0) {
+                            appData.weightHistory[idx].weight = state.current.bodyWeight;
+                        } else {
+                            if(!appData.weightHistory) appData.weightHistory = [];
+                            appData.weightHistory.push({ date: activeDateStr, weight: state.current.bodyWeight });
+                            appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+                        }
+                        saveData();
+                    }
+                }
+            }
+            const dailyW = state.current.bodyWeight;
             document.getElementById('weightInput').value = dailyW;
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
@@ -4072,8 +4092,7 @@
             if (existing) {
                 wtWeightInput.value = existing.weight;
             } else {
-                const curW = parseFloat(document.getElementById('weightInput').value) || appData.weight || 0;
-                wtWeightInput.value = curW > 0 ? curW.toFixed(1) : '';
+                wtWeightInput.value = '';
             }
         }
 
