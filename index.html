@@ -3576,7 +3576,7 @@
             let html = '';
             let matchedCount = 0;
             appData.myFoods.forEach((food, index) => {
-                const brandStr = food.brandOwner ? \` (\${food.brandOwner})\` : '';
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const searchStr = (food.description + brandStr).toLowerCase();
                 
                 if (searchTerm && !searchStr.includes(searchTerm)) {
@@ -3592,19 +3592,19 @@
                 const sSize = food.servingSize || 100;
                 const calsPerServing = (cals * (sSize / 100)).toFixed(0);
 
-                html += \`
+                html += `
                 <div style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
                     <div style="flex-grow:1; padding-right:10px;">
-                        <strong style="color:var(--text-main);">\${food.description}\${brandStr}</strong><br>
-                        <small style="color:var(--text-muted);">\${food.householdServingFullText || sSize + 'g'} • \${calsPerServing} cal • \${food.foodCategory || 'Other'}</small>
+                        <strong style="color:var(--text-main);">${food.description}${brandStr}</strong><br>
+                        <small style="color:var(--text-muted);">${food.householdServingFullText || sSize + 'g'} • ${calsPerServing} cal • ${food.foodCategory || 'Other'}</small>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button onclick="copyMyFoodToDay(\${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy to Day</button>
-                        <button onclick="showCustomFoodModal(\${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
-                        <button onclick="deleteMyFoodItem(\${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
+                        <button onclick="copyMyFoodToDay(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy to Day</button>
+                        <button onclick="showCustomFoodModal(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                        <button onclick="deleteMyFoodItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
                     </div>
                 </div>
-            \`;
+            `;
             });
             
             if (matchedCount === 0) {
