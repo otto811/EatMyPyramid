@@ -1093,12 +1093,16 @@
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
                 <h3 style="margin:0; color:#8b5cf6;">📋 Manage My Foods</h3>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="sortMyFoodsAlphabetically()"
+                    <button onclick="sortMyFoodsAlphabetically()" id="myFoodsSortBtn"
                         style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤
                         Sort A-Z</button>
                     <button onclick="closeManageMyFoodsModal()"
                         style="background:var(--text-muted); padding:6px 12px; border-radius:4px; border:none; color:white; cursor:pointer;">Close</button>
                 </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <input type="text" id="myFoodsSearchInput" placeholder="Search my foods..." onkeyup="renderMyFoodsList()" style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
             </div>
 
             <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
@@ -3517,6 +3521,8 @@
 
         function showManageMyFoodsModal() {
             document.getElementById('manageMyFoodsModal').style.display = 'flex';
+            const searchInput = document.getElementById('myFoodsSearchInput');
+            if (searchInput) searchInput.value = '';
             renderMyFoodsList();
         }
 
@@ -3524,26 +3530,37 @@
             document.getElementById('manageMyFoodsModal').style.display = 'none';
         }
 
+        let myFoodsSortAscending = true;
+
         function sortMyFoodsAlphabetically() {
             if (!appData.myFoods || appData.myFoods.length === 0) {
                 return alert("No foods to sort.");
             }
+            
+            myFoodsSortAscending = !myFoodsSortAscending;
+            const btn = document.getElementById('myFoodsSortBtn');
+            if (btn) {
+                btn.textContent = myFoodsSortAscending ? "🔤 Sort A-Z" : "🔤 Sort Z-A";
+            }
+
             // Sort in place by description (case-insensitive alphabetic)
             appData.myFoods.sort((a, b) => {
                 const descA = String(a.description || '').toLowerCase();
                 const descB = String(b.description || '').toLowerCase();
-                if (descA < descB) return -1;
-                if (descA > descB) return 1;
+                if (descA < descB) return myFoodsSortAscending ? -1 : 1;
+                if (descA > descB) return myFoodsSortAscending ? 1 : -1;
                 return 0;
             });
             saveData();
             renderMyFoodsList();
+            
             // Optional visual feedback
-            const btns = document.querySelectorAll('#manageMyFoodsModal button');
-            btns.forEach(b => { if (b.textContent.includes('Sort')) b.style.background = '#10b981'; });
-            setTimeout(() => {
-                btns.forEach(b => { if (b.textContent.includes('Sort')) b.style.background = '#8b5cf6'; });
-            }, 1200);
+            if (btn) {
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.style.background = '#8b5cf6';
+                }, 1200);
+            }
         }
 
         function renderMyFoodsList() {
@@ -3553,8 +3570,20 @@
                 return;
             }
 
+            const searchInput = document.getElementById('myFoodsSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
             let html = '';
+            let matchedCount = 0;
             appData.myFoods.forEach((food, index) => {
+                const brandStr = food.brandOwner ? \` (\${food.brandOwner})\` : '';
+                const searchStr = (food.description + brandStr).toLowerCase();
+                
+                if (searchTerm && !searchStr.includes(searchTerm)) {
+                    return; // Skip if doesn't match
+                }
+                matchedCount++;
+
                 const findNut = (id) => {
                     const n = (food.foodNutrients || []).find(x => x.nutrientId === id);
                     return n ? n.value : 0;
@@ -3562,22 +3591,26 @@
                 const cals = findNut(1008);
                 const sSize = food.servingSize || 100;
                 const calsPerServing = (cals * (sSize / 100)).toFixed(0);
-                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
 
-                html += `
+                html += \`
                 <div style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
                     <div style="flex-grow:1; padding-right:10px;">
-                        <strong style="color:var(--text-main);">${food.description}${brandStr}</strong><br>
-                        <small style="color:var(--text-muted);">${food.householdServingFullText || sSize + 'g'} • ${calsPerServing} cal • ${food.foodCategory || 'Other'}</small>
+                        <strong style="color:var(--text-main);">\${food.description}\${brandStr}</strong><br>
+                        <small style="color:var(--text-muted);">\${food.householdServingFullText || sSize + 'g'} • \${calsPerServing} cal • \${food.foodCategory || 'Other'}</small>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button onclick="copyMyFoodToDay(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy to Day</button>
-                        <button onclick="showCustomFoodModal(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
-                        <button onclick="deleteMyFoodItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
+                        <button onclick="copyMyFoodToDay(\${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy to Day</button>
+                        <button onclick="showCustomFoodModal(\${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                        <button onclick="deleteMyFoodItem(\${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
                     </div>
                 </div>
-            `;
+            \`;
             });
+            
+            if (matchedCount === 0) {
+                 html = '<p style="color:gray;text-align:center;">No matching foods found.</p>';
+            }
+            
             container.innerHTML = html;
         }
 
