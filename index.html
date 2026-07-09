@@ -2865,35 +2865,68 @@
                 const mealItems = state.log.filter(item => (item.meal || 'Other') === meal);
 
                 if (mealItems.length > 0) {
+                    const mealHeaderContainer = document.createElement('div');
+                    mealHeaderContainer.style.display = 'flex';
+                    mealHeaderContainer.style.justifyContent = 'space-between';
+                    mealHeaderContainer.style.alignItems = 'center';
+                    mealHeaderContainer.style.marginTop = '15px';
+                    mealHeaderContainer.style.marginBottom = '5px';
+                    mealHeaderContainer.style.borderBottom = '1px solid #e5e7eb';
+                    mealHeaderContainer.style.paddingBottom = '5px';
+
                     const mealHeader = document.createElement('h3');
-                    mealHeader.style.marginTop = '15px';
-                    mealHeader.style.marginBottom = '5px';
+                    mealHeader.style.margin = '0';
                     mealHeader.style.color = 'var(--text-muted)';
                     mealHeader.innerText = meal;
-                    cont.appendChild(mealHeader);
 
-                    mealItems.forEach(item => {
-                        const index = state.log.indexOf(item);
-                        const div = document.createElement('div');
-                        div.className = 'log-item';
+                    const isCollapsed = window.logMealCollapseState && window.logMealCollapseState[meal];
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.innerText = isCollapsed ? '+' : '−';
+                    toggleBtn.style.background = '#6b7280';
+                    toggleBtn.style.color = 'white';
+                    toggleBtn.style.border = 'none';
+                    toggleBtn.style.width = '24px';
+                    toggleBtn.style.height = '24px';
+                    toggleBtn.style.borderRadius = '4px';
+                    toggleBtn.style.fontSize = '1.2em';
+                    toggleBtn.style.lineHeight = '20px';
+                    toggleBtn.style.cursor = 'pointer';
+                    toggleBtn.style.padding = '0';
+                    toggleBtn.style.fontWeight = 'bold';
+                    toggleBtn.onclick = () => {
+                        window.logMealCollapseState = window.logMealCollapseState || {};
+                        window.logMealCollapseState[meal] = !isCollapsed;
+                        renderLog();
+                    };
 
-                        // Format the UPC for display if it exists in the saved item data
-                        const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
+                    mealHeaderContainer.appendChild(mealHeader);
+                    mealHeaderContainer.appendChild(toggleBtn);
+                    cont.appendChild(mealHeaderContainer);
 
-                        div.innerHTML = `
-                            <div style="flex-grow:1; padding-right:10px;">
-                                <strong>${item.name}</strong><br>
-                                <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
-                            </div>
-                            <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
-                                <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
-                                <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
-                                <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
-                                <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
-                            </div>
-                        `;
-                        cont.appendChild(div);
-                    });
+                    if (!isCollapsed) {
+                        mealItems.forEach(item => {
+                            const index = state.log.indexOf(item);
+                            const div = document.createElement('div');
+                            div.className = 'log-item';
+
+                            // Format the UPC for display if it exists in the saved item data
+                            const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
+
+                            div.innerHTML = `
+                                <div style="flex-grow:1; padding-right:10px;">
+                                    <strong>${item.name}</strong><br>
+                                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
+                                </div>
+                                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+                                    <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
+                                    <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
+                                    <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                                    <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
+                                </div>
+                            `;
+                            cont.appendChild(div);
+                        });
+                    }
                 }
             });
         }
