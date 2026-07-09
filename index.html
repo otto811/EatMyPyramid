@@ -388,26 +388,26 @@
 
     <div class="container">
         <div class="card full-width">
-            <div
-                style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
-                <div>
-                    <h2 style="margin:0;">Your Profile & Setup</h2>
-                    <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v4.0)
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; flex-wrap:wrap; gap:15px; flex-grow:1;">
+                    <div>
+                        <h2 style="margin:0;">Your Profile & Setup</h2>
+                        <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v4.0)</div>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+                        <button id="recall-week-btn" onclick="showRecallWeekModal()"
+                            style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅
+                            Recall a Week</button>
+                        <button id="return-week-btn" onclick="returnToCurrentWeek()"
+                            style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">←
+                            Return to Live</button>
+                        <button onclick="showWeightTrackerModal()"
+                            style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈
+                            Weight Tracker</button>
                     </div>
                 </div>
-                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <button id="recall-week-btn" onclick="showRecallWeekModal()"
-                        style="background:#8b5cf6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📅
-                        Recall a Week</button>
-                    <button id="return-week-btn" onclick="returnToCurrentWeek()"
-                        style="background:#64748b; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer; display:none;">←
-                        Return to Live</button>
-                    <button onclick="showWeightTrackerModal()"
-                        style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈
-                        Weight Tracker</button>
-                    <button id="profile-toggle" onclick="toggleSection('profile')"
-                        style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px;">−</button>
-                </div>
+                <button id="profile-toggle" onclick="toggleSection('profile')"
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px; flex-shrink:0; margin-left:10px;">−</button>
             </div>
             <div id="profile-content">
                 <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
@@ -488,7 +488,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Search & Log Food</h2>
                 <button id="search-toggle" onclick="toggleSection('search')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="search-content">
 
@@ -596,7 +596,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Macros &amp; Energy</h2>
                 <button id="macros-toggle" onclick="toggleSection('macros')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="macros-content">
                 <div id="macroBarometersContainer"></div>
@@ -608,7 +608,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Food Groups (Servings)</h2>
                 <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="foodgroups-content">
                 <div id="groupBarometersContainer"></div>
@@ -620,7 +620,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">WW Daily Points Tracker</h2>
                 <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="wwTracker-content">
                 <div
@@ -685,7 +685,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Daily Log</h2>
                 <button id="log-toggle" onclick="toggleSection('log')"
-                    style="background:#6b7280; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="log-content">
                 <div id="logContainer">
