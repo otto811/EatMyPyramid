@@ -3426,7 +3426,7 @@
             reader.onload = function (e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (typeof importedData !== 'object' || !importedData.hasOwnProperty('logs')) {
+                    if (typeof importedData !== 'object' || (!importedData.hasOwnProperty('history') && !importedData.hasOwnProperty('archivedWeeks'))) {
                         throw new Error("Invalid file format.");
                     }
                     appData = importedData;
