@@ -801,12 +801,14 @@
                 </div>
             </div>
 
-            <div style="display:flex; gap:10px; margin-top:20px;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;">
+                <button onclick="clearCustomFoodModalFields()"
+                    style="background:#f59e0b; flex:1; min-width:100px;">Clear Fields</button>
                 <button onclick="document.getElementById('customFoodModal').style.display='none'"
-                    style="background:var(--text-muted); flex:1;">Cancel</button>
-                <button onclick="saveCustomFood()" style="background:var(--primary); flex:1;">Save to My Foods</button>
+                    style="background:var(--text-muted); flex:1; min-width:100px;">Cancel</button>
+                <button onclick="saveCustomFood()" style="background:var(--primary); flex:1.5; min-width:140px;">Save to My Foods</button>
                 <button onclick="saveCustomFood(true)"
-                    style="background:#3b82f6; flex:1.3; padding:12px; color:white; font-weight:bold;">Save &amp; Copy
+                    style="background:#3b82f6; flex:2; padding:12px; color:white; font-weight:bold; min-width:140px;">Save &amp; Copy
                     to Day</button>
             </div>
         </div>
@@ -3551,16 +3553,21 @@
 
                     document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item / New Food Entry';
                 } else {
-                    // Clear form values
-                    ['cf-name', 'cf-brand', 'cf-upc'].forEach(id => document.getElementById(id).value = '');
-                    ['cf-cal', 'cf-pro', 'cf-fat', 'cf-carb', 'cf-fib'].forEach(id => document.getElementById(id).value = '0');
-                    document.getElementById('cf-serving').value = '100';
-                    const unitSel = document.getElementById('cf-serving-unit');
-                    if (unitSel) unitSel.value = 'g';
+                    clearCustomFoodModalFields();
                     document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item / New Food Entry';
                 }
             }
             document.getElementById('customFoodModal').style.display = 'flex';
+        }
+
+        function clearCustomFoodModalFields() {
+            ['cf-name', 'cf-brand', 'cf-upc'].forEach(id => document.getElementById(id).value = '');
+            ['cf-cal', 'cf-pro', 'cf-fat', 'cf-carb', 'cf-fib'].forEach(id => document.getElementById(id).value = '0');
+            document.getElementById('cf-serving').value = '100';
+            const unitSel = document.getElementById('cf-serving-unit');
+            if (unitSel) unitSel.value = 'g';
+            const catSel = document.getElementById('cf-category');
+            if (catSel) catSel.value = 'Other';
         }
 
         function saveCustomFood(copyToDayAfter = false) {
