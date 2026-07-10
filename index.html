@@ -2821,7 +2821,11 @@
             'Proteins': '1 ounce of lean meat, poultry, or seafood, 1 egg, 1 tbsp peanut butter, ¼ cup cooked beans or peas, or ½ ounce of nuts or seeds counts as one ounce equivalent.',
             'Dairy': '1 cup of fluid milk, yogurt, or calcium-fortified soy milk, or 1.5 ounces of natural cheese (e.g., Cheddar) counts as one cup equivalent.',
             'Grain': '½ cup of cooked rice, pasta, or cooked cereal; 1 ounce of dry pasta or rice; 1 slice of bread; or 1 cup of ready-to-eat cereal counts as one ounce equivalent.',
-            'Water': 'Equivalent to 8 oz of water, milk, juice, coffee, tea, or soda. Approximately 20% of daily water intake typically comes from food, particularly fruits and vegetables (e.g., watermelon, spinach, cucumbers) which have high water content.'
+            'Water': 'Equivalent to 8 oz of water, milk, juice, coffee, tea, or soda. Approximately 20% of daily water intake typically comes from food, particularly fruits and vegetables (e.g., watermelon, spinach, cucumbers) which have high water content.',
+            'Calories': 'Calories provide the energy your body needs to function.',
+            'Protein': '<strong>Protein Requirements by Age and Sex</strong><br>Because the guideline is based on body weight, heavier individuals (typically adult males) require more protein in pounds than lighter individuals (typically females or older adults).<br><br><strong>Adult Males:</strong> Average needs are 84–112 grams (approx. 0.19–0.25 lbs) of pure protein daily. In terms of food weight (meat, eggs, beans), this translates to roughly 9.5–13 ounces (0.6–0.8 lbs) of protein foods per day.<br><strong>Adult Females:</strong> Average needs are 69–92 grams (approx. 0.15–0.20 lbs) of pure protein daily. This equals roughly 7.5–10 ounces (0.47–0.63 lbs) of protein foods.<br><strong>Older Adults (75+):</strong> The guidelines emphasize the higher end of the range (1.6 g/kg) to prevent muscle loss, meaning an older adult may need similar protein weights to a younger, heavier male even if their total calorie needs are lower.<br><strong>Teens:</strong> Adolescent males have the highest relative needs for growth (78–104 grams), often exceeding adult female requirements.',
+            'Fat': 'Dietary fats are essential to give your body energy and to support cell function.',
+            'Carbs': 'Carbohydrates are your body\'s main source of energy.'
         };
 
         function showFoodGroupInfo(btnEl, cat) {
@@ -2904,12 +2908,13 @@
                         `;
                     }
 
-                    const infoBtn = !isMacroPercentage ? `
+                    const infoTitle = isMacroPercentage ? "Learn more" : "What counts as 1 serving?";
+                    const infoBtn = `
                         <span class="fg-info-wrap">
-                            <button class="fg-info-btn" onclick="showFoodGroupInfo(this,'${cat}')" title="What counts as 1 serving?">i</button>
+                            <button class="fg-info-btn" onclick="showFoodGroupInfo(this,'${cat}')" title="${infoTitle}">i</button>
                             <span class="fg-info-popup">${FOOD_GROUP_INFO[cat] || ''}</span>
                         </span>
-                    ` : '';
+                    `;
                     div.innerHTML = `
                     <div class="barometer-header">
                         <div style="display:flex; align-items:center; gap:4px;">
