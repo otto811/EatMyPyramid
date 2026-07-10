@@ -698,7 +698,7 @@
                                             onchange="updateFlexPoints()" style="width:60px;">
                                     </div>
                                     <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                                        <span style="font-size:0.9em; font-weight:600;">Week total up to 35:</span>
+                                        <span style="font-size:0.9em; font-weight:600;">Flex week max = 35:</span>
                                         <input type="number" id="weekFlexPointsTotal" value="0"
                                             style="width:60px; background:#f1f5f9; color:#6b7280; font-weight:bold; text-align:center;"
                                             readonly title="Total Flex Points for the week (Cannot be manually edited)">
@@ -2877,10 +2877,12 @@
                         let addTitle = (cat === 'Water') ? 'Add 1 cup' : 'Add 0.5 serving';
                         let subTitle = (cat === 'Water') ? 'Remove 1 cup' : 'Remove 0.5 serving';
                         let addColor = (cat === 'Water') ? '#0ea5e9' : '#8b5cf6';
-
+                        let addText = (cat === 'Water') ? '+1' : '+½';
+                        let subText = (cat === 'Water') ? '−1' : '−½';
+                        
                         incBtns = `
-                            <button onclick="adjustFoodGroupServings('${cat}', -${delta})" title="${subTitle}" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
-                            <button onclick="adjustFoodGroupServings('${cat}', ${delta})" title="${addTitle}" style="background:${addColor}; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
+                            <button onclick="adjustFoodGroupServings('${cat}', -${delta})" title="${subTitle}" style="background:#64748b; color:white; border:none; min-width:32px; height:24px; border-radius:4px; font-size:1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px; display:inline-flex; justify-content:center; align-items:center;">${subText}</button>
+                            <button onclick="adjustFoodGroupServings('${cat}', ${delta})" title="${addTitle}" style="background:${addColor}; color:white; border:none; min-width:32px; height:24px; border-radius:4px; font-size:1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px; display:inline-flex; justify-content:center; align-items:center;">${addText}</button>
                         `;
                     }
 
