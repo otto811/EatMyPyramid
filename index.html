@@ -309,17 +309,21 @@
                 align-items: start;
             }
         }
-        .left-column, .right-column {
+
+        .left-column,
+        .right-column {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
+
         @media (max-width: 768px) {
             .desktop-columns {
                 display: grid;
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
+
             .container {
                 grid-template-columns: 1fr;
             }
@@ -392,7 +396,8 @@
                 <div style="display:flex; align-items:center; flex-wrap:wrap; gap:15px; flex-grow:1;">
                     <div>
                         <h2 style="margin:0;">Your Profile & Setup</h2>
-                        <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v4.0)</div>
+                        <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid
+                            v4.0)</div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                         <button id="recall-week-btn" onclick="showRecallWeekModal()"
@@ -486,202 +491,225 @@
             <div class="left-column">
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">Search & Log Food</h2>
-                <button id="search-toggle" onclick="toggleSection('search')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
-            </div>
-            <div id="search-content">
-
-                <div class="form-group">
-                    <label>Search Databases (My Foods, USDA, Open Food Facts)</label>
-                    <div class="search-row">
-                        <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
-                        <button id="searchBtn" onclick="searchDatabases()">Search</button>
-                        <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
-                            Barcode</button>
+                        <h2 style="margin:0;">Search & Log Food</h2>
+                        <button id="search-toggle" onclick="toggleSection('search')"
+                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
-                </div>
+                    <div id="search-content">
 
-                <div class="form-group">
-                    <label>Search Results</label>
-                    <select id="foodSelect" onchange="updatePreview()"></select>
-                </div>
-
-                <div class="form-group">
-                    <label>Number of Servings (optional)</label>
-                    <div
-                        style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-start;">
-                        <input type="number" id="servingInput" value="1" min="0.1" step="0.1" onchange="updatePreview()"
-                            style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
-                        <button onclick="showLogFoodModal()"
-                            style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log
-                            Food</button>
-                        <button onclick="saveCurrentToMyFoods()"
-                            style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐
-                            Save to My Foods</button>
-                        <button onclick="showCustomFoodModal()"
-                            style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️
-                            Manual Food Entry</button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Consumed Amount (overrides servings)</label>
-                    <div class="amount-row">
-                        <input type="number" id="amountInput" placeholder="e.g. 250 or 8" onchange="updatePreview()">
-                        <select id="unitSelect" onchange="updatePreview()">
-                            <option value="g">grams (g)</option>
-                            <option value="oz">ounces (oz)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group preview-box" id="nutritionPreview">
-                    <em>Select a food to view nutritional information.</em>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Food Group Assignment (override for this item)</label>
-                    <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
-                        onchange="updatePreview()">
-                        <option value="">-- Auto-detect from description --</option>
-                        <option value="Fruit">Fruit</option>
-                        <option value="Vegetable">Vegetable</option>
-                        <option value="Animal Protein">Animal Protein</option>
-                        <option value="Dairy">Dairy</option>
-                        <option value="Grain">Grain</option>
-                        <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
-                        <option value="none">Do not count in any Food Group servings</option>
-                    </select>
-                    <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items like
-                        snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8 cups/day
-                        by
-                        default.</small>
-                </div>
-
-                <!-- Create & Manage My Foods dropdown -->
-                <div class="form-group" style="margin-top: 15px;">
-                    <div class="dropdown-menu-wrap" style="width:100%;">
-                        <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
-                            style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                            <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
-                        </button>
-                        <div id="myFoodsDropdown" class="dropdown-menu-list">
-                            <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View &amp;
-                                Manage My Foods</button>
-                            <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create Custom
-                                Food</button>
-                            <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create
-                                Recipe</button>
-                            <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My
-                                Foods</button>
-                            <button
-                                onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
-                                Import My Foods</button>
-                            <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')"
-                                style="color:#ef4444;">🗑️ Delete All My Foods</button>
+                        <div class="form-group">
+                            <label>Search Databases (My Foods, USDA, Open Food Facts)</label>
+                            <div class="search-row">
+                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans">
+                                <button id="searchBtn" onclick="searchDatabases()">Search</button>
+                                <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
+                                    Barcode</button>
+                            </div>
                         </div>
-                        <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
-                            onchange="importMyFoods(event)">
-                    </div>
-                </div>
 
-            </div> <!-- end search-content (collapsible) -->
-        </div>
-    </div> <!-- end left-column -->
+                        <div class="form-group">
+                            <label>Search Results</label>
+                            <select id="foodSelect" onchange="updatePreview()"></select>
+                        </div>
 
-    <div class="right-column">
-        <!-- Macros & Energy Section (split from old Daily Targets) -->
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">Macros &amp; Energy</h2>
-                <button id="macros-toggle" onclick="toggleSection('macros')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
-            </div>
-            <div id="macros-content">
-                <div id="macroBarometersContainer"></div>
-            </div>
-        </div>
+                        <div class="form-group">
+                            <label>Number of Servings (optional)</label>
+                            <div
+                                style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-start;">
+                                <input type="number" id="servingInput" value="1" min="0.1" step="0.1"
+                                    onchange="updatePreview()"
+                                    style="width: 55px; flex: none; padding: 0 4px; font-size: 0.85em; height: 48px; box-sizing: border-box;">
+                                <button onclick="showLogFoodModal()"
+                                    style="flex: none; padding: 0 8px; font-size: 0.82em; margin: 0; height: 48px; white-space: nowrap;">Log
+                                    Food</button>
+                                <button onclick="saveCurrentToMyFoods()"
+                                    style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐
+                                    Save to My Foods</button>
+                                <button onclick="showCustomFoodModal()"
+                                    style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️
+                                    Manual Food Entry</button>
+                            </div>
+                        </div>
 
-        <!-- Food Groups (Servings) Section (split from old Daily Targets) -->
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">Food Groups (Servings)</h2>
-                <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
-            </div>
-            <div id="foodgroups-content">
-                <div id="groupBarometersContainer"></div>
-            </div>
-        </div>
+                        <div class="form-group">
+                            <label>Consumed Amount (overrides servings)</label>
+                            <div class="amount-row">
+                                <input type="number" id="amountInput" placeholder="e.g. 250 or 8"
+                                    onchange="updatePreview()">
+                                <select id="unitSelect" onchange="updatePreview()">
+                                    <option value="g">grams (g)</option>
+                                    <option value="oz">ounces (oz)</option>
+                                </select>
+                            </div>
+                        </div>
 
-        <!-- New WW Daily Points Tracker Section -->
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">WW Daily Points Tracker</h2>
-                <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
-            </div>
-            <div id="wwTracker-content">
-                <div
-                    style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
-                    <strong style="color:var(--purple);">Daily WW Points</strong>
-                    <div class="barometer-container" id="wwBarometer"></div>
+                        <div class="form-group preview-box" id="nutritionPreview">
+                            <em>Select a food to view nutritional information.</em>
+                        </div>
 
-                    <div class="exercise-box">
-                        <label style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                            <strong>Exercise and Flex Points</strong>&nbsp;(subtracts from total daily points used)
-                            <span class="fg-info-wrap">
-                                <span style="white-space:nowrap;">(Time = minutes)</span>
-                                <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
-                                    onclick="toggleExIntensityInfo(event)"
-                                    aria-label="Exercise intensity info">i</button>
-                                <div class="fg-info-popup" id="exIntensityInfoPopup"
-                                    style="min-width:280px; max-width:340px;">
-                                    <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise
-                                        Intensity Guide</strong>
-                                    <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual
-                                        walking.<br>
-                                        You can talk or sing comfortably, your breathing remains regular, and you do not
-                                        sweat.</p>
-                                    <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex. Brisk
-                                        walking.<br>
-                                        Your breathing becomes deep and frequent. You begin to sweat after about 10
-                                        minutes. You can speak in short sentences but cannot carry on a full
-                                        conversation or sing.</p>
-                                    <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex. Running,
-                                        jumping rope.<br>
-                                        You experience heavy, rapid breathing and begin sweating within 3 to 5 minutes.
-                                        You can only speak briefly and cannot sing at all.</p>
-                                </div>
-                            </span>
-                        </label>
-                        <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
-                            <input type="number" id="exDuration" placeholder="Time" style="width:72px; padding:10px;">
-                            <select id="exIntensity" style="flex:1; padding:10px;">
-                                <option value="Low">Low</option>
-                                <option value="Moderate">Moderate</option>
-                                <option value="High">High</option>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Food Group Assignment (override for this item)</label>
+                            <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
+                                onchange="updatePreview()">
+                                <option value="">-- Auto-detect from description --</option>
+                                <option value="Fruit">Fruit</option>
+                                <option value="Vegetable">Vegetable</option>
+                                <option value="Animal Protein">Animal Protein</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Grain">Grain</option>
+                                <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                                <option value="none">Do not count in any Food Group servings</option>
                             </select>
-                            <button onclick="addExercisePoints()" style="padding:10px; font-size:0.9em;">Add</button>
+                            <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items
+                                like
+                                snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8
+                                cups/day
+                                by
+                                default.</small>
                         </div>
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
-                            <span style="font-size:0.9em; font-weight:600;">Exercise Points:</span>
-                            <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
-                                onchange="updateExercisePoints()" style="width:60px;">
-                            <span style="font-size:0.9em; font-weight:600; margin-left: 10px;">Flex Points:</span>
-                            <input type="number" id="flexPointsInput" value="0" min="0" step="0.5"
-                                onchange="updateFlexPoints()" style="width:60px;">
-                            <span style="font-size:0.9em; font-weight:600; margin-left: 10px;">Week Total:</span>
-                            <input type="number" id="weekFlexPointsTotal" value="0" style="width:60px; background:#f1f5f9; color:#6b7280; font-weight:bold; text-align:center;" readonly title="Total Flex Points for the week (Cannot be manually edited)">
-                            <span style="font-size:0.85em; color:var(--text-muted);">(up to 35 total in a week)</span>
+
+                        <!-- Create & Manage My Foods dropdown -->
+                        <div class="form-group" style="margin-top: 15px;">
+                            <div class="dropdown-menu-wrap" style="width:100%;">
+                                <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
+                                    style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                                </button>
+                                <div id="myFoodsDropdown" class="dropdown-menu-list">
+                                    <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View
+                                        &amp;
+                                        Manage My Foods</button>
+                                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create
+                                        Custom
+                                        Food</button>
+                                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create
+                                        Recipe</button>
+                                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My
+                                        Foods</button>
+                                    <button
+                                        onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
+                                        Import My Foods</button>
+                                    <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')"
+                                        style="color:#ef4444;">🗑️ Delete All My Foods</button>
+                                </div>
+                                <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
+                                    onchange="importMyFoods(event)">
+                            </div>
                         </div>
+
+                    </div> <!-- end search-content (collapsible) -->
+                </div>
+            </div> <!-- end left-column -->
+
+            <div class="right-column">
+                <!-- Macros & Energy Section (split from old Daily Targets) -->
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h2 style="margin:0;">Macros &amp; Energy</h2>
+                        <button id="macros-toggle" onclick="toggleSection('macros')"
+                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    </div>
+                    <div id="macros-content">
+                        <div id="macroBarometersContainer"></div>
                     </div>
                 </div>
-            </div> <!-- end wwTracker-content (collapsible) -->
-        </div>
-    </div> <!-- end right-column -->
-</div> <!-- end desktop-columns -->
+
+                <!-- Food Groups (Servings) Section (split from old Daily Targets) -->
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h2 style="margin:0;">Food Groups (Servings)</h2>
+                        <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
+                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    </div>
+                    <div id="foodgroups-content">
+                        <div id="groupBarometersContainer"></div>
+                    </div>
+                </div>
+
+                <!-- New WW Daily Points Tracker Section -->
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h2 style="margin:0;">WW Daily Points Tracker</h2>
+                        <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
+                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    </div>
+                    <div id="wwTracker-content">
+                        <div
+                            style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
+                            <strong style="color:var(--purple);">Daily WW Points</strong>
+                            <div class="barometer-container" id="wwBarometer"></div>
+
+                            <div class="exercise-box">
+                                <label
+                                    style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                                    <strong>Exercise and Flex Points</strong>&nbsp;(subtracts from total daily points)
+                                    <span class="fg-info-wrap">
+                                        <span style="white-space:nowrap;">(Time = minutes)</span>
+                                        <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
+                                            onclick="toggleExIntensityInfo(event)"
+                                            aria-label="Exercise intensity info">i</button>
+                                        <div class="fg-info-popup" id="exIntensityInfoPopup"
+                                            style="min-width:280px; max-width:340px;">
+                                            <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise
+                                                Intensity Guide</strong>
+                                            <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual
+                                                walking.<br>
+                                                You can talk or sing comfortably, your breathing remains regular, and
+                                                you do not
+                                                sweat.</p>
+                                            <p style="margin:0 0 5px;"><strong>2. Moderate Intensity</strong> – ex.
+                                                Brisk
+                                                walking.<br>
+                                                Your breathing becomes deep and frequent. You begin to sweat after about
+                                                10
+                                                minutes. You can speak in short sentences but cannot carry on a full
+                                                conversation or sing.</p>
+                                            <p style="margin:0 0 10px;"><strong>3. High Intensity</strong> – ex.
+                                                Running,
+                                                jumping rope.<br>
+                                                You experience heavy, rapid breathing and begin sweating within 3 to 5
+                                                minutes.
+                                                You can only speak briefly and cannot sing at all.</p>
+                                        </div>
+                                    </span>
+                                </label>
+                                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
+                                    <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                                        <input type="number" id="exDuration" placeholder="Time"
+                                            style="width:72px; padding:10px;">
+                                        <select id="exIntensity" style="flex:1; padding:10px;">
+                                            <option value="Low">Low</option>
+                                            <option value="Moderate">Moderate</option>
+                                            <option value="High">High</option>
+                                        </select>
+                                        <button onclick="addExercisePoints()"
+                                            style="padding:10px; font-size:0.9em;">Add</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:15px; align-items:center; flex-wrap: wrap;">
+                                    <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                                        <span style="font-size:0.9em; font-weight:600;">Exercise Points:</span>
+                                        <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
+                                            onchange="updateExercisePoints()" style="width:60px;">
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                                        <span style="font-size:0.9em; font-weight:600;">Flex Points:</span>
+                                        <input type="number" id="flexPointsInput" value="0" min="0" step="0.5"
+                                            onchange="updateFlexPoints()" style="width:60px;">
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
+                                        <span style="font-size:0.9em; font-weight:600;">Week total up to 35:</span>
+                                        <input type="number" id="weekFlexPointsTotal" value="0"
+                                            style="width:60px; background:#f1f5f9; color:#6b7280; font-weight:bold; text-align:center;"
+                                            readonly title="Total Flex Points for the week (Cannot be manually edited)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- end wwTracker-content (collapsible) -->
+                </div>
+            </div> <!-- end right-column -->
+        </div> <!-- end desktop-columns -->
 
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1720,7 +1748,7 @@
 
             // --- Compute and display the date for the selected day ---
             updateDayDateDisplay(day);
-            
+
             updateWeekFlexPointsTotal();
 
             renderLog();
@@ -2786,7 +2814,7 @@
             const popup = btnEl.nextElementSibling;
             if (popup) popup.classList.toggle('open');
         }
-// Close info popups when clicking outside
+        // Close info popups when clicking outside
         document.addEventListener('click', function (e) {
             if (!e.target.classList.contains('fg-info-btn')) {
                 document.querySelectorAll('.fg-info-popup.open').forEach(p => p.classList.remove('open'));
@@ -2842,14 +2870,14 @@
                     const perc = target > 0 ? Math.min((displayCurr / target) * 100, 100) : 0;
                     const div = document.createElement('div');
                     div.className = 'barometer-container';
-                    
+
                     let incBtns = '';
                     if (!isMacroPercentage) {
                         let delta = (cat === 'Water') ? 1 : 0.5;
                         let addTitle = (cat === 'Water') ? 'Add 1 cup' : 'Add 0.5 serving';
                         let subTitle = (cat === 'Water') ? 'Remove 1 cup' : 'Remove 0.5 serving';
                         let addColor = (cat === 'Water') ? '#0ea5e9' : '#8b5cf6';
-                        
+
                         incBtns = `
                             <button onclick="adjustFoodGroupServings('${cat}', -${delta})" title="${subTitle}" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
                             <button onclick="adjustFoodGroupServings('${cat}', ${delta})" title="${addTitle}" style="background:${addColor}; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
