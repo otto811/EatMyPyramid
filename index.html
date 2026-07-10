@@ -525,9 +525,20 @@
                                 <button onclick="saveCurrentToMyFoods()"
                                     style="flex: none; background: var(--warning); padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">⭐
                                     Save to My Foods</button>
-                                <button onclick="showCustomFoodModal()"
-                                    style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️
-                                    Manual Food Entry</button>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <button onclick="showCustomFoodModal()"
+                                        style="flex: none; background: #8b5cf6; padding: 0 8px; font-size: 0.82em; color: white; margin: 0; height: 48px; white-space: nowrap;">✏️
+                                        Modify Search Item / New Food Entry</button>
+                                    <span class="fg-info-wrap" style="align-self: center;">
+                                        <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
+                                            onclick="toggleModifySearchInfo(event)"
+                                            aria-label="Modify Search Info">i</button>
+                                        <div class="fg-info-popup" id="modifySearchInfoPopup"
+                                            style="min-width:280px; max-width:340px;">
+                                            <p style="margin:0;">Food items do not always have accurate nutritional information. This button allows you to modify the portion size or enter correct nutrition information, preferred item name etc..</p>
+                                        </div>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -744,7 +755,7 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y: auto;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Create Custom Food</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Modify Search Item / New Food Entry</h3>
 
             <div class="form-group"><label>Food Name</label><input type="text" id="cf-name"
                     placeholder="e.g. Mom's Lasagna"></div>
@@ -1310,9 +1321,13 @@
                 document.querySelectorAll('.dropdown-menu-list.open').forEach(m => m.classList.remove('open'));
                 document.querySelectorAll('.dropdown-arrow-open').forEach(a => { a.textContent = '▼'; a.classList.remove('dropdown-arrow-open'); });
             }
-            // Close exercise intensity info popup when clicking outside
+            // Close info popups when clicking outside
             if (!e.target.closest('#exIntensityInfoBtn') && !e.target.closest('#exIntensityInfoPopup')) {
                 const popup = document.getElementById('exIntensityInfoPopup');
+                if (popup) popup.classList.remove('open');
+            }
+            if (!e.target.closest('#modifySearchInfoBtn') && !e.target.closest('#modifySearchInfoPopup')) {
+                const popup = document.getElementById('modifySearchInfoPopup');
                 if (popup) popup.classList.remove('open');
             }
         });
@@ -1320,6 +1335,12 @@
         function toggleExIntensityInfo(e) {
             e.stopPropagation();
             const popup = document.getElementById('exIntensityInfoPopup');
+            if (popup) popup.classList.toggle('open');
+        }
+
+        function toggleModifySearchInfo(e) {
+            e.stopPropagation();
+            const popup = document.getElementById('modifySearchInfoPopup');
             if (popup) popup.classList.toggle('open');
         }
 
@@ -1737,7 +1758,7 @@
                 const daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 let dayIdx = daysList.indexOf(day);
                 let prevW = undefined;
-                
+
                 // 1. Search backwards in the current week
                 for (let i = dayIdx - 1; i >= 0; i--) {
                     if (histSource[daysList[i]] && histSource[daysList[i]].current && histSource[daysList[i]].current.bodyWeight !== undefined && histSource[daysList[i]].current.bodyWeight !== 0) {
@@ -1745,7 +1766,7 @@
                         break;
                     }
                 }
-                
+
                 // 2. If not found in the current week, find the true 'previous weight' from the global history based on the active date
                 if (prevW === undefined) {
                     let weekStartStr = appData.currentWeekStart;
@@ -1757,7 +1778,7 @@
                         const d = new Date(weekStartStr + 'T00:00:00');
                         d.setDate(d.getDate() + dayIdx);
                         const activeDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-                        
+
                         // Find the most recent explicit weight strictly before this day
                         for (let i = appData.weightHistory.length - 1; i >= 0; i--) {
                             if (appData.weightHistory[i].date < activeDateStr) {
@@ -1765,22 +1786,22 @@
                                 break;
                             }
                         }
-                        
+
                         // If there are no past entries before this day, fallback to the earliest known weight
                         if (prevW === undefined) {
                             prevW = appData.weightHistory[0].weight;
                         }
                     }
                 }
-                
+
                 // 3. Ultimate fallback
                 if (prevW === undefined) {
                     prevW = appData.weight || 0;
                 }
-                
+
                 dailyW = prevW;
             }
-            
+
             document.getElementById('weightInput').value = dailyW;
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
@@ -1941,7 +1962,7 @@
 
             // Keep global appData.weight as the "latest known weight" (used for new days, Weight Tracker summary, defaults, etc.)
             appData.weight = newWeight;
-            
+
             // Log this new explicit weight to the weight history tracker
             if (newWeight > 0 && !recalledWeekData) {
                 const pad = n => String(n).padStart(2, '0');
@@ -3504,13 +3525,40 @@
 
                 document.querySelector('#customFoodModal h3').innerText = 'Edit Custom Food';
             } else {
-                // Clear form values
-                ['cf-name', 'cf-brand', 'cf-upc'].forEach(id => document.getElementById(id).value = '');
-                ['cf-cal', 'cf-pro', 'cf-fat', 'cf-carb', 'cf-fib'].forEach(id => document.getElementById(id).value = '0');
-                document.getElementById('cf-serving').value = '100';
-                const unitSel = document.getElementById('cf-serving-unit');
-                if (unitSel) unitSel.value = 'g';
-                document.querySelector('#customFoodModal h3').innerText = 'Create Custom Food';
+                const sel = document.getElementById('foodSelect');
+                const selectedIdx = sel ? sel.value : null;
+
+                if (selectedIdx && currentSearchResults[selectedIdx]) {
+                    const food = currentSearchResults[selectedIdx];
+                    document.getElementById('cf-name').value = food.description || '';
+                    document.getElementById('cf-brand').value = food.brandOwner || '';
+                    document.getElementById('cf-category').value = guessCategory(food);
+                    document.getElementById('cf-upc').value = food.gtinUpc || food.upc || '';
+
+                    const servingSizeVal = parseFloat(food.servingSize) || 100;
+                    document.getElementById('cf-serving').value = servingSizeVal;
+                    const unitSel = document.getElementById('cf-serving-unit');
+                    if (unitSel) unitSel.value = 'g';
+
+                    const nut = getAllNutrients(food);
+                    const multiplier = servingSizeVal / 100;
+
+                    document.getElementById('cf-cal').value = (nut.calories * multiplier).toFixed(1);
+                    document.getElementById('cf-pro').value = (nut.protein * multiplier).toFixed(1);
+                    document.getElementById('cf-fat').value = (nut.fat * multiplier).toFixed(1);
+                    document.getElementById('cf-carb').value = (nut.carbs * multiplier).toFixed(1);
+                    document.getElementById('cf-fib').value = (nut.fiber * multiplier).toFixed(1);
+
+                    document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item / New Food Entry';
+                } else {
+                    // Clear form values
+                    ['cf-name', 'cf-brand', 'cf-upc'].forEach(id => document.getElementById(id).value = '');
+                    ['cf-cal', 'cf-pro', 'cf-fat', 'cf-carb', 'cf-fib'].forEach(id => document.getElementById(id).value = '0');
+                    document.getElementById('cf-serving').value = '100';
+                    const unitSel = document.getElementById('cf-serving-unit');
+                    if (unitSel) unitSel.value = 'g';
+                    document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item / New Food Entry';
+                }
             }
             document.getElementById('customFoodModal').style.display = 'flex';
         }
@@ -4457,22 +4505,22 @@
 
             // Prepare data: build an unbroken sequence of dates from the earliest log to the latest
             let continuousHistory = [];
-            const sortedHistory = [...history].sort((a,b) => a.date.localeCompare(b.date));
+            const sortedHistory = [...history].sort((a, b) => a.date.localeCompare(b.date));
             const startD = new Date(sortedHistory[0].date + 'T00:00:00');
             const endD = new Date(sortedHistory[sortedHistory.length - 1].date + 'T00:00:00');
-            
+
             let hIdx = 0;
             let lastW = sortedHistory[0].weight;
-            
+
             for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
                 const pad = n => String(n).padStart(2, '0');
                 const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-                
+
                 while (hIdx < sortedHistory.length && sortedHistory[hIdx].date <= dateStr) {
                     lastW = sortedHistory[hIdx].weight;
                     hIdx++;
                 }
-                
+
                 continuousHistory.push({ date: dateStr, weight: lastW });
             }
 
