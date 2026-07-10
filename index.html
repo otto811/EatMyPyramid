@@ -672,6 +672,8 @@
                             <span style="font-size:0.9em; font-weight:600; margin-left: 10px;">Flex Points:</span>
                             <input type="number" id="flexPointsInput" value="0" min="0" step="0.5"
                                 onchange="updateFlexPoints()" style="width:60px;">
+                            <span style="font-size:0.9em; font-weight:600; margin-left: 10px;">Week Total:</span>
+                            <input type="number" id="weekFlexPointsTotal" value="0" style="width:60px; background:#f1f5f9; color:#6b7280; font-weight:bold; text-align:center;" readonly title="Total Flex Points for the week (Cannot be manually edited)">
                             <span style="font-size:0.85em; color:var(--text-muted);">(up to 35 total in a week)</span>
                         </div>
                     </div>
@@ -1718,6 +1720,8 @@
 
             // --- Compute and display the date for the selected day ---
             updateDayDateDisplay(day);
+            
+            updateWeekFlexPointsTotal();
 
             renderLog();
             renderBarometers();
@@ -1794,7 +1798,26 @@
             }
             state.current.flexPoints = parseFloat(document.getElementById('flexPointsInput').value) || 0;
             saveData();
+            updateWeekFlexPointsTotal();
             renderBarometers();
+        }
+
+        function updateWeekFlexPointsTotal() {
+            let histSource = appData.history;
+            if (recalledWeekData && recalledWeekData.history) {
+                histSource = recalledWeekData.history;
+            }
+            let total = 0;
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            for (let day of days) {
+                if (histSource[day] && histSource[day].current && histSource[day].current.flexPoints) {
+                    total += parseFloat(histSource[day].current.flexPoints) || 0;
+                }
+            }
+            const weekTotalEl = document.getElementById('weekFlexPointsTotal');
+            if (weekTotalEl) {
+                weekTotalEl.value = total;
+            }
         }
 
         function addExercisePoints() {
@@ -2763,19 +2786,21 @@
             const popup = btnEl.nextElementSibling;
             if (popup) popup.classList.toggle('open');
         }
-
-        // Close info popups when clicking outside
+// Close info popups when clicking outside
         document.addEventListener('click', function (e) {
             if (!e.target.classList.contains('fg-info-btn')) {
                 document.querySelectorAll('.fg-info-popup.open').forEach(p => p.classList.remove('open'));
             }
         });
 
-        // ==================== WATER QUICK-ADJUST ====================
-        function adjustWaterServings(delta) {
-            if (!state.current) return;
-            if (state.current.Water === undefined) state.current.Water = 0;
-            state.current.Water = Math.max(0, state.current.Water + delta);
+        // ==================== FOOD GROUP QUICK-ADJUST ====================
+        function adjustFoodGroupServings(cat, delta) {
+            if (recalledWeekData) {
+                alert("Cannot modify data while viewing an archived week.");
+                return;
+            }
+            if (state.current[cat] === undefined) state.current[cat] = 0;
+            state.current[cat] = Math.max(0, Math.round((state.current[cat] + delta) * 10) / 10);
             saveData();
             renderBarometers();
         }
@@ -2816,12 +2841,21 @@
 
                     const perc = target > 0 ? Math.min((displayCurr / target) * 100, 100) : 0;
                     const div = document.createElement('div');
-
                     div.className = 'barometer-container';
-                    const waterBtns = cat === 'Water' ? `
-                        <button onclick="adjustWaterServings(-1)" title="Remove 1 cup" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
-                        <button onclick="adjustWaterServings(1)" title="Add 1 cup" style="background:#0ea5e9; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
-                    ` : '';
+                    
+                    let incBtns = '';
+                    if (!isMacroPercentage) {
+                        let delta = (cat === 'Water') ? 1 : 0.5;
+                        let addTitle = (cat === 'Water') ? 'Add 1 cup' : 'Add 0.5 serving';
+                        let subTitle = (cat === 'Water') ? 'Remove 1 cup' : 'Remove 0.5 serving';
+                        let addColor = (cat === 'Water') ? '#0ea5e9' : '#8b5cf6';
+                        
+                        incBtns = `
+                            <button onclick="adjustFoodGroupServings('${cat}', -${delta})" title="${subTitle}" style="background:#64748b; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px;">−</button>
+                            <button onclick="adjustFoodGroupServings('${cat}', ${delta})" title="${addTitle}" style="background:${addColor}; color:white; border:none; width:24px; height:24px; border-radius:4px; font-size:1.1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px;">+</button>
+                        `;
+                    }
+
                     const infoBtn = !isMacroPercentage ? `
                         <span class="fg-info-wrap">
                             <button class="fg-info-btn" onclick="showFoodGroupInfo(this,'${cat}')" title="What counts as 1 serving?">i</button>
@@ -2831,7 +2865,7 @@
                     div.innerHTML = `
                     <div class="barometer-header">
                         <div style="display:flex; align-items:center; gap:4px;">
-                            ${waterBtns}<strong>${cat}</strong>${infoBtn}
+                            ${incBtns}<strong>${cat}</strong>${infoBtn}
                         </div>
                         <div style="display:flex; align-items:center;">
                             <input type="number" value="${target}" style="width:60px; padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
