@@ -1406,15 +1406,14 @@
             log: null
         };
 
-        // Helper to create a fresh day object (includes bodyWeight for per-day weight tracking)
-        function createEmptyDay(defaultWeight = 0) {
+        function createEmptyDay() {
             return {
                 current: {
                     Calories: 0, Protein: 0, Fat: 0, Carbs: 0,
                     Fruit: 0, Vegetable: 0, 'Proteins': 0, Dairy: 0, Grain: 0, Water: 0,
                     exercisePoints: 0,
                     flexPoints: 0,
-                    bodyWeight: defaultWeight
+                    bodyWeight: undefined
                 },
                 log: []
             };
@@ -1679,10 +1678,9 @@
                     };
                 }
                 // Reset history to a clean new week (pre-create all days to avoid partial state)
-                const defaultW = appData.weight || 0;
                 appData.history = {
-                    'Sunday': createEmptyDay(defaultW), 'Monday': createEmptyDay(defaultW), 'Tuesday': createEmptyDay(defaultW),
-                    'Wednesday': createEmptyDay(defaultW), 'Thursday': createEmptyDay(defaultW), 'Friday': createEmptyDay(defaultW), 'Saturday': createEmptyDay(defaultW)
+                    'Sunday': createEmptyDay(), 'Monday': createEmptyDay(), 'Tuesday': createEmptyDay(),
+                    'Wednesday': createEmptyDay(), 'Thursday': createEmptyDay(), 'Friday': createEmptyDay(), 'Saturday': createEmptyDay()
                 };
                 appData.currentWeekStart = todayWeekStart;
                 saveData(); // persist archive + fresh history
@@ -1720,8 +1718,7 @@
 
             // Create an empty state for the day if it doesn't exist (works for both live and recalled)
             if (!histSource[day]) {
-                const defaultW = appData.weight || 0;
-                histSource[day] = createEmptyDay(defaultW);
+                histSource[day] = createEmptyDay();
             }
 
             state.current = histSource[day].current;
@@ -1733,31 +1730,57 @@
                 saveData();
             }
 
-            // Load this day's specific body weight into the input field (fallback to global latest weight)
-            if (state.current.bodyWeight === undefined) {
-                state.current.bodyWeight = appData.weight || 0;
-                // Auto-save this inherited weight to history for this day
-                if (state.current.bodyWeight > 0 && !recalledWeekData) {
-                    const pad = n => String(n).padStart(2, '0');
-                    const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(day);
-                    if (dayIndex !== -1 && appData.currentWeekStart) {
-                        const d = new Date(appData.currentWeekStart + 'T00:00:00');
-                        d.setDate(d.getDate() + dayIndex);
-                        const activeDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-                        let idx = (appData.weightHistory || []).findIndex(e => e.date === activeDateStr);
-                        if (idx >= 0) {
-                            appData.weightHistory[idx].weight = state.current.bodyWeight;
-                        } else {
-                            if (!appData.weightHistory) appData.weightHistory = [];
-                            appData.weightHistory.push({ date: activeDateStr, weight: state.current.bodyWeight });
-                            appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
-                        }
-                        saveData();
+            // The body weight field should dynamically inherit the previous day's weight
+            // unless the user explicitly entered a new weight for this specific day.
+            let dailyW = state.current.bodyWeight;
+            if (dailyW === undefined || dailyW === 0) {
+                const daysList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                let dayIdx = daysList.indexOf(day);
+                let prevW = undefined;
+                
+                // 1. Search backwards in the current week
+                for (let i = dayIdx - 1; i >= 0; i--) {
+                    if (histSource[daysList[i]] && histSource[daysList[i]].current && histSource[daysList[i]].current.bodyWeight !== undefined && histSource[daysList[i]].current.bodyWeight !== 0) {
+                        prevW = histSource[daysList[i]].current.bodyWeight;
+                        break;
                     }
                 }
+                
+                // 2. If not found in the current week, find the true 'previous weight' from the global history based on the active date
+                if (prevW === undefined) {
+                    let weekStartStr = appData.currentWeekStart;
+                    if (recalledWeekData && recalledWeekData.weekStart) {
+                        weekStartStr = recalledWeekData.weekStart;
+                    }
+                    if (weekStartStr && appData.weightHistory && appData.weightHistory.length > 0) {
+                        const pad = n => String(n).padStart(2, '0');
+                        const d = new Date(weekStartStr + 'T00:00:00');
+                        d.setDate(d.getDate() + dayIdx);
+                        const activeDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                        
+                        // Find the most recent explicit weight strictly before this day
+                        for (let i = appData.weightHistory.length - 1; i >= 0; i--) {
+                            if (appData.weightHistory[i].date < activeDateStr) {
+                                prevW = appData.weightHistory[i].weight;
+                                break;
+                            }
+                        }
+                        
+                        // If there are no past entries before this day, fallback to the earliest known weight
+                        if (prevW === undefined) {
+                            prevW = appData.weightHistory[0].weight;
+                        }
+                    }
+                }
+                
+                // 3. Ultimate fallback
+                if (prevW === undefined) {
+                    prevW = appData.weight || 0;
+                }
+                
+                dailyW = prevW;
             }
-            const dailyW = state.current.bodyWeight;
+            
             document.getElementById('weightInput').value = dailyW;
 
             document.getElementById('exerciseInput').value = state.current.exercisePoints || 0;
@@ -1918,6 +1941,27 @@
 
             // Keep global appData.weight as the "latest known weight" (used for new days, Weight Tracker summary, defaults, etc.)
             appData.weight = newWeight;
+            
+            // Log this new explicit weight to the weight history tracker
+            if (newWeight > 0 && !recalledWeekData) {
+                const pad = n => String(n).padStart(2, '0');
+                const day = document.getElementById('daySelect').value;
+                const dayIndex = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(day);
+                if (dayIndex !== -1 && appData.currentWeekStart) {
+                    const d = new Date(appData.currentWeekStart + 'T00:00:00');
+                    d.setDate(d.getDate() + dayIndex);
+                    const activeDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+                    let idx = (appData.weightHistory || []).findIndex(e => e.date === activeDateStr);
+                    if (idx >= 0) {
+                        appData.weightHistory[idx].weight = newWeight;
+                    } else {
+                        if (!appData.weightHistory) appData.weightHistory = [];
+                        appData.weightHistory.push({ date: activeDateStr, weight: newWeight });
+                        appData.weightHistory.sort((a, b) => a.date.localeCompare(b.date));
+                    }
+                }
+            }
 
             appData.calorieGoal = parseFloat(document.getElementById('calorieGoalInput').value) || 0;
 
@@ -4411,12 +4455,32 @@
                 return;
             }
 
-            // Prepare data sorted (already sorted in log)
-            const labels = history.map(e => {
+            // Prepare data: build an unbroken sequence of dates from the earliest log to the latest
+            let continuousHistory = [];
+            const sortedHistory = [...history].sort((a,b) => a.date.localeCompare(b.date));
+            const startD = new Date(sortedHistory[0].date + 'T00:00:00');
+            const endD = new Date(sortedHistory[sortedHistory.length - 1].date + 'T00:00:00');
+            
+            let hIdx = 0;
+            let lastW = sortedHistory[0].weight;
+            
+            for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+                const pad = n => String(n).padStart(2, '0');
+                const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                
+                while (hIdx < sortedHistory.length && sortedHistory[hIdx].date <= dateStr) {
+                    lastW = sortedHistory[hIdx].weight;
+                    hIdx++;
+                }
+                
+                continuousHistory.push({ date: dateStr, weight: lastW });
+            }
+
+            const labels = continuousHistory.map(e => {
                 const d = new Date(e.date + 'T00:00:00');
                 return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             });
-            const weights = history.map(e => e.weight);
+            const weights = continuousHistory.map(e => e.weight);
 
             const goalWeight = parseFloat(document.getElementById('goalWeightInput').value) || appData.goalWeight || 0;
 
