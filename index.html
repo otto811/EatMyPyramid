@@ -554,7 +554,7 @@
                                 <option value="">-- Auto-detect from description --</option>
                                 <option value="Fruit">Fruit</option>
                                 <option value="Vegetable">Vegetable</option>
-                                <option value="Animal Protein">Animal Protein</option>
+                                <option value="Proteins">Proteins</option>
                                 <option value="Dairy">Dairy</option>
                                 <option value="Grain">Grain</option>
                                 <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
@@ -673,7 +673,8 @@
                                         </div>
                                     </span>
                                 </label>
-                                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
+                                <div
+                                    style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
                                     <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
                                         <input type="number" id="exDuration" placeholder="Time"
                                             style="width:72px; padding:10px;">
@@ -752,7 +753,7 @@
             <div class="form-group"><label>Category</label>
                 <select id="cf-category">
                     <option value="Other">Other</option>
-                    <option value="Animal Protein">Animal Protein</option>
+                    <option value="Proteins">Proteins</option>
                     <option value="Vegetable">Vegetable</option>
                     <option value="Fruit">Fruit</option>
                     <option value="Dairy">Dairy</option>
@@ -961,7 +962,7 @@
                 <select id="edit-food-group" style="width:100%; padding:10px; font-size:1em;">
                     <option value="Fruit">Fruit</option>
                     <option value="Vegetable">Vegetable</option>
-                    <option value="Animal Protein">Animal Protein</option>
+                    <option value="Proteins">Proteins</option>
                     <option value="Dairy">Dairy</option>
                     <option value="Grain">Grain</option>
                     <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
@@ -975,7 +976,7 @@
                     <option value="Breakfast">Breakfast</option>
                     <option value="Lunch">Lunch</option>
                     <option value="Dinner">Dinner</option>
-                    <option value="Discretionary">Discretionary / Snack</option>
+                    <option value="Discretionary">Snacks/Discretionary</option>
                     <option value="Other">Other / Unclassified</option>
                 </select>
             </div>
@@ -1012,7 +1013,7 @@
                 <button onclick="logFood('Dinner')"
                     style="background:#8b5cf6; padding:12px; font-size:1.05em;">Dinner</button>
                 <button onclick="logFood('Discretionary')"
-                    style="background:#14b8a6; padding:12px; font-size:1.05em;">Discretionary / Snack</button>
+                    style="background:#14b8a6; padding:12px; font-size:1.05em;">Snacks/Discretionary</button>
             </div>
             <button onclick="closeLogFoodModal()"
                 style="background:var(--text-muted); width:100%; margin-top:20px; padding:12px; font-size:1.05em; color:white; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
@@ -1048,7 +1049,7 @@
                     <option value="Breakfast">Breakfast</option>
                     <option value="Lunch">Lunch</option>
                     <option value="Dinner">Dinner</option>
-                    <option value="Discretionary">Discretionary / Snack</option>
+                    <option value="Discretionary">Snacks/Discretionary</option>
                     <option value="Other">Other / Unclassified</option>
                 </select>
             </div>
@@ -1393,7 +1394,7 @@
             wwGoal: 0,
             usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
             // Macro targets represent percentages (30%, 30%, 40%)
-            targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Animal Protein': 1, Dairy: 3, Grain: 2, Water: 8 },
+            targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
             myFoods: [],
             visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true }
@@ -1410,7 +1411,7 @@
             return {
                 current: {
                     Calories: 0, Protein: 0, Fat: 0, Carbs: 0,
-                    Fruit: 0, Vegetable: 0, 'Animal Protein': 0, Dairy: 0, Grain: 0, Water: 0,
+                    Fruit: 0, Vegetable: 0, 'Proteins': 0, Dairy: 0, Grain: 0, Water: 0,
                     exercisePoints: 0,
                     flexPoints: 0,
                     bodyWeight: defaultWeight
@@ -1457,8 +1458,10 @@
                 for (let day in appData.history) {
                     let currentDay = appData.history[day].current;
 
-                    if (currentDay.Fiber !== undefined) {
-                        delete currentDay.Fiber;
+                    // Also seamlessly migrate 'Animal Protein' to 'Proteins' across all history
+                    if (currentDay['Animal Protein'] !== undefined) {
+                        currentDay.Proteins = currentDay['Animal Protein'];
+                        delete currentDay['Animal Protein'];
                     }
 
                     if (currentDay.Carbs === undefined) {
@@ -1470,6 +1473,21 @@
                             }
                             currentDay.Carbs += item.carbs;
                         });
+                    }
+                }
+
+                // Migrate archived weeks' history for 'Animal Protein' -> 'Proteins'
+                if (appData.archivedWeeks) {
+                    for (let w in appData.archivedWeeks) {
+                        if (appData.archivedWeeks[w].history) {
+                            for (let day in appData.archivedWeeks[w].history) {
+                                let cDay = appData.archivedWeeks[w].history[day].current;
+                                if (cDay && cDay['Animal Protein'] !== undefined) {
+                                    cDay.Proteins = cDay['Animal Protein'];
+                                    delete cDay['Animal Protein'];
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -2229,14 +2247,14 @@
             let cat = String(food.foodCategory || '').toLowerCase();
 
             // If foodCategory is already a valid group name, use it (supports saved My Foods overrides)
-            const validGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (validGroups.includes(food.foodCategory)) {
                 return food.foodCategory;
             }
 
             if (cat.includes('vegetable') || desc.includes('broccoli') || desc.includes('green bean')) return 'Vegetable';
             if (cat.includes('fruit') || desc.includes('apple') || desc.includes('banana')) return 'Fruit';
-            if (cat.includes('meat') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac')) return 'Animal Protein';
+            if (cat.includes('meat') || cat.includes('protein') || desc.includes('chicken') || desc.includes('beef') || desc.includes('fish') || desc.includes('pork') || desc.includes('turkey') || desc.includes('bean') || desc.includes('big mac') || desc.includes('egg') || desc.includes('nut') || desc.includes('seed') || desc.includes('tofu') || desc.includes('lentil') || desc.includes('peanut')) return 'Proteins';
             if (cat.includes('dairy') || desc.includes('milk') || desc.includes('cheese')) return 'Dairy';
             if (cat.includes('grain') || desc.includes('bread') || desc.includes('rice')) return 'Grain';
             if (cat.includes('water') || desc.includes('water') || desc.includes('bottled water') || desc.includes('tap water') || desc.includes('drinking water')) return 'Water';
@@ -2393,7 +2411,7 @@
             state.current.Carbs += item.carbs;
 
             // Defensive: ensure group key exists (for Water and legacy data), then increment if it's a tracked group
-            const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (trackedGroups.includes(cat)) {
                 if (state.current[cat] === undefined) {
                     state.current[cat] = 0;
@@ -2455,7 +2473,7 @@
             document.getElementById('edit-unit-display').textContent = item.unit || '';
 
             let cat = item.category || 'Other';
-            const validGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (!validGroups.includes(cat)) {
                 cat = 'Other';
             }
@@ -2519,7 +2537,7 @@
             state.current.Carbs -= (item.carbs || 0);
 
             // Adjust food group count for the OLD category
-            const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (trackedGroups.includes(item.category) && state.current[item.category] !== undefined && state.current[item.category] > 0) {
                 state.current[item.category] -= oldFgAmount;
                 if (state.current[item.category] < 0) state.current[item.category] = 0;
@@ -2800,7 +2818,7 @@
         const FOOD_GROUP_INFO = {
             'Fruit': '1 cup of raw or frozen fruit, 1 cup of 100% fruit juice, or ½ cup of dried fruit counts as one cup equivalent.',
             'Vegetable': '1 cup of raw or cooked vegetables or 100% vegetable juice, 2 cups of raw leafy greens, or ½ cup of chopped raw vegetables counts as one cup equivalent.',
-            'Animal Protein': '1 ounce of lean meat, poultry, or seafood counts as one ounce equivalent.',
+            'Proteins': '1 ounce of lean meat, poultry, or seafood, 1 egg, 1 tbsp peanut butter, ¼ cup cooked beans or peas, or ½ ounce of nuts or seeds counts as one ounce equivalent.',
             'Dairy': '1 cup of fluid milk, yogurt, or calcium-fortified soy milk, or 1.5 ounces of natural cheese (e.g., Cheddar) counts as one cup equivalent.',
             'Grain': '½ cup of cooked rice, pasta, or cooked cereal; 1 ounce of dry pasta or rice; 1 slice of bread; or 1 cup of ready-to-eat cereal counts as one ounce equivalent.',
             'Water': 'Equivalent to 8 oz of water, milk, juice, coffee, tea, or soda. Approximately 20% of daily water intake typically comes from food, particularly fruits and vegetables (e.g., watermelon, spinach, cucumbers) which have high water content.'
@@ -2879,7 +2897,7 @@
                         let addColor = (cat === 'Water') ? '#0ea5e9' : '#8b5cf6';
                         let addText = (cat === 'Water') ? '+1' : '+½';
                         let subText = (cat === 'Water') ? '−1' : '−½';
-                        
+
                         incBtns = `
                             <button onclick="adjustFoodGroupServings('${cat}', -${delta})" title="${subTitle}" style="background:#64748b; color:white; border:none; min-width:32px; height:24px; border-radius:4px; font-size:1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:2px; display:inline-flex; justify-content:center; align-items:center;">${subText}</button>
                             <button onclick="adjustFoodGroupServings('${cat}', ${delta})" title="${addTitle}" style="background:${addColor}; color:white; border:none; min-width:32px; height:24px; border-radius:4px; font-size:1em; line-height:1; cursor:pointer; padding:0; font-weight:bold; margin-right:6px; display:inline-flex; justify-content:center; align-items:center;">${addText}</button>
@@ -2912,7 +2930,7 @@
             };
 
             renderGroup(['Calories', 'Protein', 'Fat', 'Carbs'], 'macroBarometersContainer', { Calories: '#3b82f6', Protein: '#ef4444', Fat: '#f59e0b', Carbs: '#14b8a6' }, true);
-            renderGroup(['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
+            renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
         }
         function renderLog() {
             const cont = document.getElementById('logContainer');
@@ -2941,7 +2959,7 @@
                     const mealHeader = document.createElement('h3');
                     mealHeader.style.margin = '0';
                     mealHeader.style.color = 'var(--text-muted)';
-                    mealHeader.innerText = meal;
+                    mealHeader.innerText = meal === 'Discretionary' ? 'Snacks/Discretionary' : meal;
 
                     const isCollapsed = window.logMealCollapseState && window.logMealCollapseState[meal];
                     const toggleBtn = document.createElement('button');
@@ -3043,7 +3061,7 @@
 
             const targetCurrent = appData.history[targetDay].current;
             const targetLog = appData.history[targetDay].log;
-            const trackedGroups = ['Fruit', 'Vegetable', 'Animal Protein', 'Dairy', 'Grain', 'Water'];
+            const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
 
             if (currentMyFoodCopyIndex >= 0) {
                 // ---- PATH A: Copy from My Foods (build a full log item) ----
