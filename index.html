@@ -2992,7 +2992,7 @@
             btn.textContent = 'Parsing...';
             
             try {
-                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
                 const prompt = `Extract the food items and their quantities from this meal description: "${text}". 
                 Respond ONLY with a JSON array of objects. Do not include markdown formatting or any other text. Each object must have: 
                 "description" (string, the name of the food), 
@@ -3009,9 +3009,9 @@
                     body: JSON.stringify(reqBody)
                 });
 
-                // Fallback to gemini-1.0-pro if 1.5-flash is not found (common for Workspace accounts)
+                // Fallback to pro-latest if flash is not found
                 if (!response.ok && response.status === 404) {
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`;
+                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent?key=${apiKey}`;
                     response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
