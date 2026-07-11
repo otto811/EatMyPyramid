@@ -409,6 +409,9 @@
                         <button onclick="showWeightTrackerModal()"
                             style="background:#10b981; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">📈
                             Weight Tracker</button>
+                        <button onclick="showAiKeySetupModal()"
+                            style="background:#3b82f6; color:white; border:none; padding:6px 14px; border-radius:5px; font-size:0.9em; font-weight:600; white-space:nowrap; cursor:pointer;">🤖
+                            AI Key Setup</button>
                     </div>
                 </div>
                 <button id="profile-toggle" onclick="toggleSection('profile')"
@@ -504,6 +507,7 @@
                                 <button id="searchBtn" onclick="searchDatabases()">Search</button>
                                 <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap;">📷
                                     Barcode</button>
+                                <button onclick="showAiMealLoggerModal()" style="background:#8b5cf6; white-space: nowrap;">✨ AI Meal</button>
                             </div>
                         </div>
 
@@ -535,7 +539,9 @@
                                             aria-label="Modify Search Info">i</button>
                                         <div class="fg-info-popup" id="modifySearchInfoPopup"
                                             style="min-width:280px; max-width:340px;">
-                                            <p style="margin:0;">Food items do not always have accurate nutritional information. This button allows you to modify the portion size or enter correct nutrition information, preferred item name etc..</p>
+                                            <p style="margin:0;">Food items do not always have accurate nutritional
+                                                information. This button allows you to modify the portion size or enter
+                                                correct nutrition information, preferred item name etc..</p>
                                         </div>
                                     </span>
                                 </div>
@@ -755,7 +761,8 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y: auto;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Modify Search Item / New Food Entry</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Modify Search Item / New Food
+                Entry</h3>
 
             <div class="form-group"><label>Food Name</label><input type="text" id="cf-name"
                     placeholder="e.g. Mom's Lasagna"></div>
@@ -806,9 +813,11 @@
                     style="background:#f59e0b; flex:1; min-width:100px;">Clear Fields</button>
                 <button onclick="document.getElementById('customFoodModal').style.display='none'"
                     style="background:var(--text-muted); flex:1; min-width:100px;">Cancel</button>
-                <button onclick="saveCustomFood()" style="background:var(--primary); flex:1.5; min-width:140px;">Save to My Foods</button>
+                <button onclick="saveCustomFood()" style="background:var(--primary); flex:1.5; min-width:140px;">Save to
+                    My Foods</button>
                 <button onclick="saveCustomFood(true)"
-                    style="background:#3b82f6; flex:2; padding:12px; color:white; font-weight:bold; min-width:140px;">Save &amp; Copy
+                    style="background:#3b82f6; flex:2; padding:12px; color:white; font-weight:bold; min-width:140px;">Save
+                    &amp; Copy
                     to Day</button>
             </div>
         </div>
@@ -944,6 +953,97 @@
                 <button onclick="saveUsdaApiKey()"
                     style="background:#10b981; flex:1.3; padding:12px; color:white; font-weight:600;">Save &amp; Use
                     Key</button>
+            </div>
+            
+            <h3 style="margin-top:25px; border-bottom:2px solid #eee; padding-bottom:10px; color:#6b7280;">✨ Gemini API Key (For AI Meal Logger)</h3>
+            <p style="font-size:0.9em; color:#4b5563; line-height:1.4;">
+                Enter a Gemini API key to enable the AI Meal Logger. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#3b82f6;">Google AI Studio</a>.
+            </p>
+            <div class="form-group" style="margin-top:15px;">
+                <input type="text" id="geminiApiKeyInput" placeholder="e.g. AIzaSy..."
+                    style="width:100%; padding:12px; font-family:monospace; font-size:0.95em;">
+            </div>
+            <div id="geminiApiKeyCurrent" style="margin:12px 0; padding:10px; background:#f3f4f6; border-radius:6px; font-size:0.85em; color:#374151;">
+                Current Gemini key: <strong id="currentGeminiApiKeyDisplay">None</strong>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="clearGeminiApiKey()" style="background:#f59e0b; flex:1; padding:12px; color:white;">Clear Key</button>
+                <button onclick="saveGeminiApiKey()" style="background:#8b5cf6; flex:1.3; padding:12px; color:white; font-weight:600;">Save Gemini Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AI KEY SETUP WIZARD ==================== -->
+    <div id="aiKeySetupModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#3b82f6;">🤖 AI Key Setup Wizard</h3>
+            
+            <p style="font-size:0.95em; color:#374151; line-height:1.5;">
+                To use the <strong>AI Meal Logger</strong>, you need a free Gemini API key from Google. Follow these steps:
+            </p>
+
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:20px;">
+                <ol style="margin:0; padding-left:20px; font-size:0.9em; color:#4b5563; line-height:1.6;">
+                    <li style="margin-bottom:8px;">Click this link to open Google AI Studio in a new tab:<br> 
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#3b82f6; font-weight:bold;">Get Gemini API Key ↗</a>
+                    </li>
+                    <li style="margin-bottom:8px;">Sign in with your Google Account if asked.</li>
+                    <li style="margin-bottom:8px;">Click the <strong>Create API Key</strong> button.</li>
+                    <li style="margin-bottom:8px;">Copy the long string of text it gives you (it usually starts with <code>AIzaSy...</code>).</li>
+                    <li>Come back to this tab and paste the key below.</li>
+                </ol>
+            </div>
+
+            <div class="form-group">
+                <label style="font-weight:600; color:#1f2937;">Paste Your Gemini API Key Here:</label>
+                <input type="text" id="wizardGeminiApiKeyInput" placeholder="e.g. AIzaSy..." style="width:100%; padding:12px; font-family:monospace; font-size:1em; border:2px solid #cbd5e1; border-radius:6px; margin-top:5px;">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeAiKeySetupModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+                <button onclick="saveWizardGeminiApiKey()" style="background:#3b82f6; flex:2; padding:12px; color:white; font-weight:bold;">Save &amp; Finish Setup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AI MEAL LOGGER MODAL ==================== -->
+    <div id="aiMealLoggerModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); max-height:90vh; overflow-y:auto;">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#8b5cf6;">✨ AI Meal Logger</h3>
+            
+            <div id="aiMealInputSection">
+                <p style="font-size:0.9em; color:#4b5563; line-height:1.4; margin-bottom:15px;">
+                    Describe what you ate. The AI will identify the items and quantities, and look them up for you.
+                </p>
+                <div class="form-group">
+                    <textarea id="aiMealDescription" rows="4" placeholder="e.g. 2 scrambled eggs, 1 slice of wheat toast, and a cup of black coffee" style="width:100%; padding:12px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Meal</label>
+                    <select id="aiMealSelect">
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Dinner">Dinner</option>
+                        <option value="Snacks">Snacks</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button onclick="closeAiMealLoggerModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+                    <button id="aiProcessBtn" onclick="processAiMeal()" style="background:#8b5cf6; flex:2; padding:12px; color:white; font-weight:bold;">Parse Meal</button>
+                </div>
+            </div>
+
+            <div id="aiMealReviewSection" style="display:none;">
+                <p style="font-size:0.9em; color:#4b5563; line-height:1.4; margin-bottom:15px;">
+                    <strong>Review matches:</strong> The AI parsed these items. Review and confirm to log them.
+                </p>
+                <div id="aiMealMatches" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:15px; margin-bottom:15px; max-height:250px; overflow-y:auto; font-size:0.9em;">
+                    <!-- Matches populated here -->
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="resetAiMealLogger()" style="background:var(--text-muted); flex:1; padding:12px;">Back</button>
+                    <button onclick="confirmAiMealLog()" style="background:#10b981; flex:2; padding:12px; color:white; font-weight:bold;">Log All Items</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2791,6 +2891,251 @@
             closeCalculatorModal();
         }
 
+        // ==================== AI MEAL LOGGER FUNCTIONS ====================
+        let pendingAiMealMatches = [];
+
+        function showAiMealLoggerModal() {
+            document.getElementById('aiMealLoggerModal').style.display = 'flex';
+            document.getElementById('aiMealInputSection').style.display = 'block';
+            document.getElementById('aiMealReviewSection').style.display = 'none';
+            document.getElementById('aiMealDescription').value = '';
+        }
+
+        function closeAiMealLoggerModal() {
+            document.getElementById('aiMealLoggerModal').style.display = 'none';
+        }
+
+        function showAiKeySetupModal() {
+            document.getElementById('aiKeySetupModal').style.display = 'flex';
+            document.getElementById('wizardGeminiApiKeyInput').value = appData.geminiApiKey || '';
+        }
+
+        function closeAiKeySetupModal() {
+            document.getElementById('aiKeySetupModal').style.display = 'none';
+        }
+
+        function saveWizardGeminiApiKey() {
+            const input = document.getElementById('wizardGeminiApiKeyInput').value.trim();
+            if (input) {
+                appData.geminiApiKey = input;
+                saveData();
+                updateApiKeyStatus();
+                alert("API Key saved successfully! You can now use the AI Meal Logger.");
+                closeAiKeySetupModal();
+            } else {
+                alert("Please paste a valid key or click Cancel.");
+            }
+        }
+
+        function resetAiMealLogger() {
+            document.getElementById('aiMealInputSection').style.display = 'block';
+            document.getElementById('aiMealReviewSection').style.display = 'none';
+        }
+
+        async function processAiMeal() {
+            const apiKey = appData.geminiApiKey;
+            if (!apiKey) {
+                alert("Please add a Gemini API Key in the Settings (API Key button) menu first.");
+                return;
+            }
+            
+            const text = document.getElementById('aiMealDescription').value.trim();
+            if (!text) return;
+            
+            const btn = document.getElementById('aiProcessBtn');
+            btn.disabled = true;
+            btn.textContent = 'Parsing...';
+            
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const prompt = `Extract the food items and their quantities from this meal description: "${text}". 
+                Respond ONLY with a JSON array of objects. Each object must have: 
+                "description" (string, the name of the food), 
+                "amount" (number, the quantity), 
+                "unit" (string, the unit like 'slice', 'cup', 'oz', 'item', 'serving').`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    })
+                });
+                
+                if (!response.ok) throw new Error("API Error");
+                
+                const data = await response.json();
+                const jsonText = data.candidates[0].content.parts[0].text;
+                const parsedItems = JSON.parse(jsonText);
+                
+                btn.textContent = 'Looking up foods...';
+                
+                pendingAiMealMatches = [];
+                const reviewContainer = document.getElementById('aiMealMatches');
+                reviewContainer.innerHTML = '';
+                
+                for (let i = 0; i < parsedItems.length; i++) {
+                    const parsed = parsedItems[i];
+                    let match = await searchBestFoodMatch(parsed.description);
+                    if (match) {
+                        pendingAiMealMatches.push({
+                            parsed: parsed,
+                            food: match
+                        });
+                        
+                        reviewContainer.innerHTML += `
+                            <div style="padding:10px; border-bottom:1px solid #e5e7eb;">
+                                <strong>Parsed:</strong> ${parsed.amount} ${parsed.unit} ${parsed.description}<br>
+                                <strong>Matched:</strong> ${match.description} <em>(${getFoodCategory(match)})</em>
+                            </div>
+                        `;
+                    } else {
+                        reviewContainer.innerHTML += `
+                            <div style="padding:10px; border-bottom:1px solid #e5e7eb; color:#ef4444;">
+                                <strong>Parsed:</strong> ${parsed.amount} ${parsed.unit} ${parsed.description}<br>
+                                <strong>Matched:</strong> No match found.
+                            </div>
+                        `;
+                    }
+                }
+                
+                document.getElementById('aiMealInputSection').style.display = 'none';
+                document.getElementById('aiMealReviewSection').style.display = 'block';
+                
+            } catch (e) {
+                console.error("AI processing error", e);
+                alert("Error processing the meal description. Check your API key or try again.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Parse Meal';
+            }
+        }
+        
+        async function searchBestFoodMatch(query) {
+            query = query.toLowerCase();
+            let bestMatch = null;
+            let highestScore = 999;
+            if (appData.myFoods) {
+                for (const f of appData.myFoods) {
+                    const desc = String(f.description || '').toLowerCase();
+                    if (desc.includes(query)) {
+                        const score = scoreMatch(f.description, query);
+                        if (score < highestScore) {
+                            highestScore = score;
+                            bestMatch = f;
+                        }
+                    }
+                }
+            }
+            if (bestMatch) return bestMatch;
+            
+            try {
+                const searchKey = appData.usdaApiKey || API_KEY;
+                const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=3&api_key=${searchKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.foods && data.foods.length > 0) {
+                        return data.foods[0];
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function confirmAiMealLog() {
+            if (recalledWeekData) {
+                alert("You are viewing an archived week. Logging new foods is disabled.");
+                closeAiMealLoggerModal();
+                return;
+            }
+            
+            const mealName = document.getElementById('aiMealSelect').value;
+            
+            for (const itemMatch of pendingAiMealMatches) {
+                const food = itemMatch.food;
+                const parsed = itemMatch.parsed;
+                
+                const nut = getAllNutrients(food);
+                const cat = getFoodCategory(food);
+                
+                let logAmount = parseFloat(parsed.amount) || 1;
+                let logUnit = parsed.unit || "serving";
+                const servingSize = parseFloat(food.servingSize) || 100;
+                let gramsPerUnit = servingSize;
+                
+                if (logUnit.toLowerCase().includes('oz')) {
+                    gramsPerUnit = 28.3495;
+                } else if (logUnit.toLowerCase().includes('cup')) {
+                    gramsPerUnit = 240;
+                } else if (logUnit.toLowerCase().includes('serving')) {
+                    gramsPerUnit = servingSize;
+                } else {
+                    gramsPerUnit = servingSize;
+                }
+                
+                const foodGroupAmount = (logAmount * gramsPerUnit) / servingSize;
+                const customMultiplier = (logAmount * gramsPerUnit) / 100;
+                const upcCode = food.gtinUpc || food.upc || null;
+
+                const item = {
+                    name: food.description,
+                    upc: upcCode,
+                    amount: logAmount,
+                    unit: logUnit,
+                    category: cat,
+                    servingSize: servingSize,
+                    gramsPerUnit: gramsPerUnit,
+                    foodGroupAmount: foodGroupAmount,
+                    calories: nut.calories * customMultiplier,
+                    protein: nut.protein * customMultiplier,
+                    fat: nut.fat * customMultiplier,
+                    carbs: nut.carbs * customMultiplier,
+                    fiber: nut.fiber * customMultiplier,
+                    wwPoints: calculateWWPoints(nut.calories * customMultiplier, nut.fat * customMultiplier, nut.fiber * customMultiplier),
+                    meal: mealName,
+                    calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
+                    protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
+                    fatPerUnit: nut.fat / (parseFloat(food.servingSize) || 100),
+                    carbsPerUnit: nut.carbs / (parseFloat(food.servingSize) || 100),
+                    fibPerUnit: nut.fiber / (parseFloat(food.servingSize) || 100)
+                };
+
+                state.log.push(item);
+                state.current.Calories += item.calories;
+                state.current.Protein += item.protein;
+                state.current.Fat += item.fat;
+                state.current.Carbs += item.carbs;
+
+                const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
+                if (trackedGroups.includes(cat)) {
+                    if (state.current[cat] === undefined) state.current[cat] = 0;
+                    state.current[cat] += foodGroupAmount;
+                }
+            }
+            
+            saveData();
+            renderLog();
+            renderBarometers();
+            closeAiMealLoggerModal();
+        }
+
+        function saveGeminiApiKey() {
+            const input = document.getElementById('geminiApiKeyInput').value.trim();
+            if (input) {
+                appData.geminiApiKey = input;
+                saveData();
+                updateApiKeyStatus();
+            }
+        }
+        
+        function clearGeminiApiKey() {
+            appData.geminiApiKey = '';
+            document.getElementById('geminiApiKeyInput').value = '';
+            saveData();
+            updateApiKeyStatus();
+        }
+
         // ==================== USDA API KEY FUNCTIONS ====================
         function updateApiKeyStatus() {
             const statusEl = document.getElementById('apiKeyStatus');
@@ -2798,13 +3143,26 @@
 
             const key = appData.usdaApiKey || API_KEY;
             if (key && key !== 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7') {
-                // Custom key is active - show masked version (last 4 chars)
                 const last4 = key.slice(-4);
-                statusEl.innerHTML = `✓ Custom key active (…${last4})`;
+                statusEl.innerHTML = `✓ Custom USDA key (…${last4})`;
                 statusEl.style.color = '#059669';
             } else {
-                statusEl.innerHTML = 'Demo key';
+                statusEl.innerHTML = 'Demo USDA key';
                 statusEl.style.color = '#6b7280';
+            }
+
+            const geminiStatusEl = document.getElementById('currentGeminiApiKeyDisplay');
+            if (geminiStatusEl) {
+                if (appData.geminiApiKey) {
+                    const gLast4 = appData.geminiApiKey.slice(-4);
+                    geminiStatusEl.innerHTML = `✓ Key active (…${gLast4})`;
+                    geminiStatusEl.style.color = '#059669';
+                    document.getElementById('geminiApiKeyInput').value = appData.geminiApiKey;
+                } else {
+                    geminiStatusEl.innerHTML = 'None';
+                    geminiStatusEl.style.color = '#6b7280';
+                    document.getElementById('geminiApiKeyInput').value = '';
+                }
             }
         }
 
