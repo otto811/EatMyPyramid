@@ -2980,10 +2980,18 @@
                     })
                 });
                 
-                if (!response.ok) throw new Error("API Error");
+                if (!response.ok) {
+                    let errMsg = "API Error " + response.status;
+                    try {
+                        const errData = await response.json();
+                        errMsg = errData.error?.message || errMsg;
+                    } catch(err) {}
+                    throw new Error(errMsg);
+                }
                 
                 const data = await response.json();
-                const jsonText = data.candidates[0].content.parts[0].text;
+                let jsonText = data.candidates[0].content.parts[0].text;
+                jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const parsedItems = JSON.parse(jsonText);
                 
                 btn.textContent = 'Looking up foods...';
@@ -3022,7 +3030,7 @@
                 
             } catch (e) {
                 console.error("AI processing error", e);
-                alert("Error processing the meal description. Check your API key or try again.");
+                alert("Error processing the meal description.\nDetails: " + e.message + "\n\nCheck your API key and try again.");
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Parse Meal';
