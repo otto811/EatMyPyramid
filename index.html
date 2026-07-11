@@ -1088,11 +1088,11 @@
                 <button onclick="builderManualNextItem()" style="flex:1; padding:10px; background:#f59e0b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Next Item</button>
             </div>
 
-            <div id="builderManualEntryList" style="border:1px solid #e5e7eb; border-radius:6px; min-height:80px; max-height:150px; overflow-y:auto; padding:10px; margin-bottom:15px; background:#fafafa; font-size:0.9em; display:flex; flex-direction:column; gap:5px;">
+            <div id="builderManualEntryList" style="border:1px solid #e5e7eb; border-radius:6px; min-height:80px; max-height:350px; overflow-y:auto; padding:10px; margin-bottom:15px; background:#fafafa; font-size:0.9em; display:flex; flex-direction:column; gap:5px;">
                 <!-- Manual items list goes here -->
             </div>
 
-            <button onclick="builderManualSearchAllItems()" style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Search All Items</button>
+            <button id="builderManualSearchBtn" onclick="builderManualSearchAllItems()" style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Search All Items</button>
         </div>
     </div>
     <!-- ==================== EDIT LOG MODAL ==================== -->
@@ -5239,13 +5239,16 @@
                 listDiv.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px 0;">No items added yet.</div>';
                 return;
             }
-            manualEntryItems.forEach((item, index) => {
+            manualEntryItems.forEach((itemObj, index) => {
                 const row = document.createElement('div');
-                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:white; padding:8px; border-radius:4px; border:1px solid #e5e7eb;';
+                row.style.cssText = 'display:flex; flex-direction:column; background:white; padding:10px; border-radius:6px; border:1px solid #e5e7eb; margin-bottom:8px;';
+                
+                const topRow = document.createElement('div');
+                topRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
                 
                 const nameSpan = document.createElement('span');
                 nameSpan.style.fontWeight = 'bold';
-                nameSpan.textContent = `${index + 1}. ${item}`;
+                nameSpan.textContent = `${index + 1}. ${itemObj.query}`;
                 
                 const delBtn = document.createElement('button');
                 delBtn.textContent = '✖';
@@ -5255,8 +5258,38 @@
                     renderManualEntryList();
                 };
                 
-                row.appendChild(nameSpan);
-                row.appendChild(delBtn);
+                topRow.appendChild(nameSpan);
+                topRow.appendChild(delBtn);
+                row.appendChild(topRow);
+
+                if (itemObj.loading) {
+                    const loadingText = document.createElement('div');
+                    loadingText.style.cssText = 'font-size:0.85em; color:#64748b; margin-top:5px; font-style:italic;';
+                    loadingText.textContent = '⏳ Searching databases...';
+                    row.appendChild(loadingText);
+                } else if (itemObj.results) {
+                    const select = document.createElement('select');
+                    select.id = `manualResultSelect_${index}`;
+                    select.style.cssText = 'margin-top:8px; padding:6px; border-radius:4px; border:1px solid #cbd5e1; font-size:0.9em; width:100%;';
+                    
+                    if (itemObj.results.length === 0) {
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = 'No matches found';
+                        select.appendChild(opt);
+                        select.disabled = true;
+                    } else {
+                        itemObj.results.forEach((match, rIdx) => {
+                            const opt = document.createElement('option');
+                            opt.value = rIdx;
+                            const brand = match.brandOwner ? ` (${match.brandOwner})` : '';
+                            opt.textContent = `${match.description}${brand} - ${getAllNutrients(match).calories} kcal`;
+                            select.appendChild(opt);
+                        });
+                    }
+                    row.appendChild(select);
+                }
+                
                 listDiv.appendChild(row);
             });
         }
@@ -5265,18 +5298,68 @@
             const input = document.getElementById('builderManualInput');
             const val = input.value.trim();
             if (val) {
-                manualEntryItems.push(val);
+                manualEntryItems.push({ query: val, results: null, loading: false });
                 input.value = '';
                 renderManualEntryList();
                 input.focus();
             }
         }
 
+        async function searchFoodMatches(query) {
+            query = String(query || '').trim().toLowerCase();
+            if (!query) return [];
+            
+            let localMatches = [];
+            try {
+                localMatches = appData.myFoods.filter(f => {
+                    const desc = String(f.description || '').toLowerCase();
+                    const brand = String(f.brandOwner || '').toLowerCase();
+                    const upcMatch = f.upc && String(f.upc) === query;
+                    return desc.includes(query) || brand.includes(query) || upcMatch;
+                }).map(f => ({ ...f, source: 'My Foods' }));
+
+                localMatches.sort((a, b) => {
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
+                });
+
+                localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
+            } catch (e) {
+                console.error("Local search error", e);
+            }
+
+            // Quick search from USDA for better matches
+            let usdaFoods = [];
+            try {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 3000); // Fast timeout for parallel
+                const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=5`, { signal: controller.signal });
+                if (res.ok) {
+                    const usdaData = await res.json();
+                    if (usdaData && usdaData.foods) {
+                        usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
+                    }
+                }
+                clearTimeout(id);
+            } catch (e) { }
+
+            // Combine and return top 15 matches max
+            let combined = [...localMatches, ...usdaFoods];
+            return combined.slice(0, 15);
+        }
+
+        async function searchBestFoodMatch(query) {
+            const matches = await searchFoodMatches(query);
+            return matches.length > 0 ? matches[0] : null;
+        }
+
         async function builderManualSearchAllItems() {
             const input = document.getElementById('builderManualInput');
             const val = input.value.trim();
             if (val) {
-                manualEntryItems.push(val);
+                manualEntryItems.push({ query: val, results: null, loading: true });
                 input.value = '';
             }
 
@@ -5285,54 +5368,67 @@
                 return;
             }
 
-            // Close the manual modal
-            document.getElementById('builderManualEntryModal').style.display = 'none';
-
-            // Push pending items with loading states
-            const startIdx = pendingMealItems.length;
-            manualEntryItems.forEach(query => {
-                pendingMealItems.push({
-                    name: query,
-                    amount: 1,
-                    unit: 'serving',
-                    calories: 0,
-                    protein: 0,
-                    fat: 0,
-                    carbs: 0,
-                    group: 'Other',
-                    food: null,
-                    loading: true
-                });
-            });
-            renderPendingMealItems();
+            // Set loading state for all items
+            manualEntryItems.forEach(item => { item.loading = true; });
+            renderManualEntryList();
 
             // Run searches in parallel
-            const promises = manualEntryItems.map(async (query, index) => {
-                const actualIndex = startIdx + index;
+            const promises = manualEntryItems.map(async (item) => {
                 try {
-                    const match = await searchBestFoodMatch(query);
-                    if (match) {
-                        pendingMealItems[actualIndex] = {
-                            ...pendingMealItems[actualIndex],
-                            name: match.name,
-                            calories: match.calories,
-                            protein: match.protein,
-                            fat: match.fat,
-                            carbs: match.carbs,
-                            group: match.group || getFoodCategory(match.name),
-                            food: match,
-                            loading: false
-                        };
-                    } else {
-                        pendingMealItems[actualIndex].loading = false;
-                    }
+                    const matches = await searchFoodMatches(item.query);
+                    item.results = matches;
                 } catch(e) {
-                    pendingMealItems[actualIndex].loading = false;
+                    item.results = [];
                 }
+                item.loading = false;
             });
 
             await Promise.all(promises);
+            renderManualEntryList();
+
+            // Transform button to "Add Selected"
+            const searchBtn = document.getElementById('builderManualSearchBtn');
+            if (searchBtn) {
+                searchBtn.textContent = 'Add Selected to Meal';
+                searchBtn.onclick = builderManualAddSelected;
+                searchBtn.style.background = '#10b981';
+            }
+        }
+
+        function builderManualAddSelected() {
+            manualEntryItems.forEach((item, index) => {
+                const select = document.getElementById(`manualResultSelect_${index}`);
+                if (select && select.value !== '') {
+                    const matchIdx = parseInt(select.value, 10);
+                    const match = item.results[matchIdx];
+                    if (match) {
+                        pendingMealItems.push({
+                            name: match.description || item.query,
+                            amount: 1,
+                            unit: 'serving',
+                            calories: match.calories || getAllNutrients(match).calories || 0,
+                            protein: match.protein || getAllNutrients(match).protein || 0,
+                            fat: match.fat || getAllNutrients(match).fat || 0,
+                            carbs: match.carbs || getAllNutrients(match).carbs || 0,
+                            group: match.group || getFoodCategory(match) || 'Other',
+                            food: match,
+                            parsed: { description: item.query, amount: 1, unit: 'serving' },
+                            loading: false
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('builderManualEntryModal').style.display = 'none';
             renderPendingMealItems();
+            
+            // Reset button for next time
+            const searchBtn = document.getElementById('builderManualSearchBtn');
+            if (searchBtn) {
+                searchBtn.textContent = 'Search All Items';
+                searchBtn.onclick = builderManualSearchAllItems;
+                searchBtn.style.background = '#3b82f6';
+            }
         }
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
