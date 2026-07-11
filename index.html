@@ -4,10 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v5.0</title>
+    <title>EatMyPyramid v5.1</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+
+    <script>
+        // Force a cache-busting reload on iOS PWAs when a new version is detected
+        const APP_VERSION = "5.1";
+        if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
+            localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
+            // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
+            window.location.replace(window.location.href.split('?')[0] + '?v=' + new Date().getTime());
+        }
+    </script>
 
     <!-- PWA / Apple Home Screen Icons -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,9 +30,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
         }
+
         :root {
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
@@ -540,7 +553,8 @@
                                     <button id="searchBtn" onclick="searchDatabases()"
                                         style="padding: 8px 12px; font-size: 0.85em; flex: 1;">Search</button>
                                     <button onclick="showDatabaseConfigModal()"
-                                        style="padding: 8px 12px; font-size: 0.85em; flex: 1; background: #64748b; color:white; white-space:nowrap;">⚙️ Databases</button>
+                                        style="padding: 8px 12px; font-size: 0.85em; flex: 1; background: #64748b; color:white; white-space:nowrap;">⚙️
+                                        Databases</button>
                                     <button onclick="startBarcodeScan()"
                                         style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">📷
                                         Barcode</button>
@@ -1070,7 +1084,8 @@
                         API Ninjas Nutrition (Natural Language Parsing)
                     </label>
                     <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API key from <a
-                            href="https://api-ninjas.com/api/nutrition" target="_blank" style="color:#3b82f6;">api-ninjas.com</a>.
+                            href="https://api-ninjas.com/api/nutrition" target="_blank"
+                            style="color:#3b82f6;">api-ninjas.com</a>.
                     </p>
                     <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
                         <input type="text" id="apiNinjasKeyInput" placeholder="API Key"
@@ -1112,7 +1127,8 @@
                     <li style="margin-bottom:8px;">Sign in with your Google Account if asked.</li>
                     <li style="margin-bottom:8px;">Click the <strong>Create API Key</strong> button.</li>
                     <li style="margin-bottom:8px;">Copy the long string of text it gives you (it usually starts with
-                        <code>AIzaSy...</code>).</li>
+                        <code>AIzaSy...</code>).
+                    </li>
                     <li>Come back to this tab and paste the key below.</li>
                 </ol>
             </div>
@@ -5378,7 +5394,7 @@
         // ==================== DATABASE CONFIG MODAL LOGIC ====================
         function showDatabaseConfigModal() {
             document.getElementById('databaseConfigModal').style.display = 'flex';
-            
+
             // Set toggles based on appData (defaults to true for USDA/OFF)
             document.getElementById('dbUsdaToggle').checked = appData.dbUsdaEnabled !== false;
             document.getElementById('dbOffToggle').checked = appData.dbOffEnabled !== false;
