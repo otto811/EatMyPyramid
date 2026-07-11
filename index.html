@@ -532,6 +532,8 @@
                                 <div style="display: flex; gap: 10px; width: 100%;">
                                     <button id="searchBtn" onclick="searchDatabases()"
                                         style="padding: 8px 12px; font-size: 0.85em; flex: 1;">Search</button>
+                                    <button onclick="showDatabaseConfigModal()"
+                                        style="padding: 8px 12px; font-size: 0.85em; flex: 1; background: #64748b; color:white; white-space:nowrap;">⚙️ Databases</button>
                                     <button onclick="startBarcodeScan()"
                                         style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">📷
                                         Barcode</button>
@@ -1023,6 +1025,75 @@
                 <button onclick="saveGeminiApiKey()"
                     style="background:#8b5cf6; flex:1.3; padding:12px; color:white; font-weight:600;">Save Gemini
                     Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DATABASE CONFIG MODAL ==================== -->
+    <div id="databaseConfigModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:25px; border-radius:12px; width:95%; max-width:600px; box-shadow:0 10px 25px rgba(0,0,0,0.5); max-height:90vh; overflow-y:auto;">
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#3b82f6;">⚙️ Select
+                Databases</h3>
+
+            <p style="font-size:0.95em; color:#374151; line-height:1.5;">
+                Choose which databases to search when finding foods. Note: My Foods is always searched first.
+            </p>
+
+            <div style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
+                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
+                    <input type="checkbox" checked disabled style="width:20px; height:20px;">
+                    My Foods (Local, Always Enabled)
+                </label>
+
+                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
+                    <input type="checkbox" id="dbUsdaToggle" style="width:20px; height:20px;">
+                    USDA FoodData Central
+                </label>
+
+                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
+                    <input type="checkbox" id="dbOffToggle" style="width:20px; height:20px;">
+                    Open Food Facts (Free)
+                </label>
+
+                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:15px; background:#f8fafc;">
+                    <label style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#10b981;">
+                        <input type="checkbox" id="dbNutritionixToggle" style="width:20px; height:20px;">
+                        Nutritionix API (Branded Foods & Restaurants)
+                    </label>
+                    <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API keys from <a
+                            href="https://developer.nutritionix.com/" target="_blank"
+                            style="color:#3b82f6;">developer.nutritionix.com</a>.</p>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="nutritionixAppIdInput" placeholder="Application ID"
+                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                        <input type="text" id="nutritionixApiKeyInput" placeholder="API Key"
+                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                    </div>
+                </div>
+
+                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:15px; background:#f8fafc;">
+                    <label style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#8b5cf6;">
+                        <input type="checkbox" id="dbApiNinjasToggle" style="width:20px; height:20px;">
+                        API Ninjas Nutrition (Natural Language Parsing)
+                    </label>
+                    <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API key from <a
+                            href="https://api-ninjas.com/api/nutrition" target="_blank" style="color:#3b82f6;">api-ninjas.com</a>.
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="apiNinjasKeyInput" placeholder="API Key"
+                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeDatabaseConfigModal()"
+                    style="background:var(--text-muted); flex:1; padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer;">Cancel</button>
+                <button onclick="saveDatabaseConfig()"
+                    style="background:#3b82f6; flex:2; padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer;">Save
+                    Preferences</button>
             </div>
         </div>
     </div>
@@ -2346,14 +2417,15 @@
             if (existingLoad) existingLoad.remove();
             parentWrap.appendChild(loadingDiv);
 
-            // 2. Then fetch from USDA + Search-a-licious in background and append results live
+            // 2. Then fetch from external databases based on config in background and append results live
             try {
                 // Helper function to fetch data and silently return null if an API fails/rate-limits
-                const fetchJSON = async (url) => {
+                const fetchJSON = async (url, options = {}) => {
                     try {
                         const controller = new AbortController();
                         const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
-                        const res = await fetch(url, { signal: controller.signal });
+                        options.signal = controller.signal;
+                        const res = await fetch(url, options);
                         if (!res.ok) {
                             clearTimeout(id);
                             throw new Error(`HTTP error! status: ${res.status}`);
@@ -2367,19 +2439,28 @@
                     }
                 };
 
+                const runUsda = appData.dbUsdaEnabled !== false;
+                const runOff = appData.dbOffEnabled !== false;
+                const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
+                const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
+
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
-
-                // Primary: Search-a-licious (modern full-text search)
                 const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=15`;
-
-                // Fallback: Legacy Open Food Facts search (more reliable when Search-a-licious is blocked by CORS)
                 const legacyOffUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
+                const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+                const nutritionixUrl = `https://trackapi.nutritionix.com/v2/search/instant?query=${encodeURIComponent(query)}&detailed=true`;
 
-                const [usdaData, searchALData, legacyOffData] = await Promise.all([
-                    fetchJSON(usdaUrl),
-                    fetchJSON(searchALUrl),
-                    fetchJSON(legacyOffUrl)
-                ]);
+                const fetchOptionsNutritionix = { headers: { 'x-app-id': appData.nutritionixAppId, 'x-app-key': appData.nutritionixApiKey } };
+                const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
+
+                const fetchPromises = [];
+                fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
+                fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
+                fetchPromises.push(runOff ? fetchJSON(legacyOffUrl) : Promise.resolve(null));
+                fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
+                fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
+
+                const [usdaData, searchALData, legacyOffData, nutritionixData, apiNinjasData] = await Promise.all(fetchPromises);
 
                 let usdaFoods = [];
                 if (usdaData && usdaData.foods) {
@@ -2388,8 +2469,6 @@
 
                 let searchALFoods = [];
                 if (searchALData && searchALData.hits && searchALData.hits.length > 0) {
-                    console.log(`[Search-a-licious] Received ${searchALData.hits.length} raw hits`);
-
                     searchALFoods = searchALData.hits.map(p => {
                         const nut = p.nutriments || {};
                         const getNut = (keys) => {
@@ -2419,8 +2498,6 @@
                             ]
                         };
                     });
-                } else {
-                    console.warn(`[Search-a-licious] No hits or empty response for this query`);
                 }
 
                 // Process legacy OFF results as fallback (helps when Search-a-licious is blocked by CORS)
@@ -2444,7 +2521,60 @@
                     }));
                 }
 
-                const rawApiResults = [...usdaFoods, ...searchALFoods, ...legacyOffFoods];
+                let apiNinjasFoods = [];
+                if (apiNinjasData && Array.isArray(apiNinjasData)) {
+                    apiNinjasFoods = apiNinjasData.map(p => ({
+                        description: p.name,
+                        brandOwner: '',
+                        foodCategory: 'Other',
+                        servingSize: parseFloat(p.serving_size_g) || 100,
+                        householdServingFullText: `${p.serving_size_g}g`,
+                        upc: '',
+                        source: 'API Ninjas',
+                        foodNutrients: [
+                            { nutrientId: 1008, value: parseFloat(p.calories) || 0 },
+                            { nutrientId: 1003, value: parseFloat(p.protein_g) || 0 },
+                            { nutrientId: 1004, value: parseFloat(p.fat_total_g) || 0 },
+                            { nutrientId: 1005, value: parseFloat(p.carbohydrates_total_g) || 0 },
+                            { nutrientId: 1079, value: parseFloat(p.fiber_g) || 0 }
+                        ]
+                    }));
+                }
+
+                let nutritionixFoods = [];
+                if (nutritionixData) {
+                    const processNxList = (list) => {
+                        if(!list) return [];
+                        return list.map(p => {
+                            let nutObj = {};
+                            if (p.full_nutrients) {
+                                p.full_nutrients.forEach(n => { nutObj[n.attr_id] = n.value; });
+                            }
+                            return {
+                                description: p.food_name || 'Unknown',
+                                brandOwner: p.brand_name || '',
+                                foodCategory: 'Other',
+                                servingSize: parseFloat(p.serving_weight_grams) || 100,
+                                householdServingFullText: `${p.serving_qty || 1} ${p.serving_unit || 'serving'}`,
+                                upc: '',
+                                source: 'Nutritionix',
+                                foodNutrients: [
+                                    { nutrientId: 208, value: nutObj[208] || 0 },
+                                    { nutrientId: 203, value: nutObj[203] || 0 },
+                                    { nutrientId: 204, value: nutObj[204] || 0 },
+                                    { nutrientId: 205, value: nutObj[205] || 0 },
+                                    { nutrientId: 291, value: nutObj[291] || 0 }
+                                ]
+                            };
+                        });
+                    };
+                    nutritionixFoods = [
+                        ...processNxList(nutritionixData.common),
+                        ...processNxList(nutritionixData.branded)
+                    ];
+                }
+
+                const rawApiResults = [...apiNinjasFoods, ...nutritionixFoods, ...usdaFoods, ...searchALFoods, ...legacyOffFoods];
 
                 // Sort API results by closeness of match
                 rawApiResults.sort((a, b) => {
@@ -3096,7 +3226,7 @@
                         const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
                         const nut = getAllNutrients(r);
                         const isSelected = (match && r.description === match.description) ? 'selected' : '';
-                        selectHtml += `<option value="${rIdx}" ${isSelected}>${r.description}${brand} - ${nut.calories}kcal</option>`;
+                        selectHtml += `<option value="${rIdx}" ${isSelected}>${r.description}${brand} - ${Number(nut.calories).toFixed(0)} kcal</option>`;
                     });
                     selectHtml += `</select>`;
                 } else {
@@ -3107,7 +3237,7 @@
                 if (match) {
                     const nut = getAllNutrients(match);
                     nutHtml = `<div style="font-size:0.85em; color:#6b7280; margin-top:4px;">
-                        🔥 ${nut.calories} kcal | 🥩 ${nut.protein}g P | 🧈 ${nut.fat}g F | 🍞 ${nut.carbs}g C
+                        🔥 ${Number(nut.calories).toFixed(0)} kcal | 🥩 ${Number(nut.protein).toFixed(1)}g P | 🧈 ${Number(nut.fat).toFixed(1)}g F | 🍞 ${Number(nut.carbs).toFixed(1)}g C
                     </div>`;
                 }
 
@@ -5290,6 +5420,41 @@
                 alert('Please enter a valid key.');
             }
         }
+
+        // ==================== DATABASE CONFIG MODAL LOGIC ====================
+        function showDatabaseConfigModal() {
+            document.getElementById('databaseConfigModal').style.display = 'flex';
+            
+            // Set toggles based on appData (defaults to true for USDA/OFF)
+            document.getElementById('dbUsdaToggle').checked = appData.dbUsdaEnabled !== false;
+            document.getElementById('dbOffToggle').checked = appData.dbOffEnabled !== false;
+            document.getElementById('dbNutritionixToggle').checked = appData.dbNutritionixEnabled || false;
+            document.getElementById('dbApiNinjasToggle').checked = appData.dbApiNinjasEnabled || false;
+
+            // Set keys
+            document.getElementById('nutritionixAppIdInput').value = appData.nutritionixAppId || '';
+            document.getElementById('nutritionixApiKeyInput').value = appData.nutritionixApiKey || '';
+            document.getElementById('apiNinjasKeyInput').value = appData.apiNinjasApiKey || '';
+        }
+
+        function closeDatabaseConfigModal() {
+            document.getElementById('databaseConfigModal').style.display = 'none';
+        }
+
+        function saveDatabaseConfig() {
+            appData.dbUsdaEnabled = document.getElementById('dbUsdaToggle').checked;
+            appData.dbOffEnabled = document.getElementById('dbOffToggle').checked;
+            appData.dbNutritionixEnabled = document.getElementById('dbNutritionixToggle').checked;
+            appData.dbApiNinjasEnabled = document.getElementById('dbApiNinjasToggle').checked;
+
+            appData.nutritionixAppId = document.getElementById('nutritionixAppIdInput').value.trim();
+            appData.nutritionixApiKey = document.getElementById('nutritionixApiKeyInput').value.trim();
+            appData.apiNinjasApiKey = document.getElementById('apiNinjasKeyInput').value.trim();
+
+            saveData();
+            closeDatabaseConfigModal();
+            alert('Database preferences saved!');
+        }
         function toggleSearchInfo(event) {
             event.preventDefault();
             const popup = document.getElementById('searchInfoPopup');
@@ -5377,7 +5542,7 @@
                             const opt = document.createElement('option');
                             opt.value = rIdx;
                             const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
-                            opt.textContent = `${r.description}${brand} - ${getAllNutrients(r).calories} kcal`;
+                            opt.textContent = `${r.description}${brand} - ${Number(getAllNutrients(r).calories).toFixed(0)} kcal`;
                             if (rIdx === currentIdx) opt.selected = true;
                             select.appendChild(opt);
                         });
@@ -5393,7 +5558,7 @@
                         const nut = getAllNutrients(match);
                         const nutDiv = document.createElement('div');
                         nutDiv.style.cssText = 'font-size:0.85em; color:#6b7280; margin-top:4px;';
-                        nutDiv.innerHTML = `🔥 ${nut.calories} kcal | 🥩 ${nut.protein}g P | 🧈 ${nut.fat}g F | 🍞 ${nut.carbs}g C`;
+                        nutDiv.innerHTML = `🔥 ${Number(nut.calories).toFixed(0)} kcal | 🥩 ${Number(nut.protein).toFixed(1)}g P | 🧈 ${Number(nut.fat).toFixed(1)}g F | 🍞 ${Number(nut.carbs).toFixed(1)}g C`;
                         row.appendChild(nutDiv);
                     }
                 }
@@ -5449,23 +5614,97 @@
                 console.error("Local search error", e);
             }
 
-            // Quick search from USDA for better matches
-            let usdaFoods = [];
-            try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 3000); // Fast timeout for parallel
-                const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=5`, { signal: controller.signal });
-                if (res.ok) {
-                    const usdaData = await res.json();
-                    if (usdaData && usdaData.foods) {
-                        usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
-                    }
-                }
-                clearTimeout(id);
-            } catch (e) { }
+            // Quick search from APIs based on config
+            const runUsda = appData.dbUsdaEnabled !== false;
+            const runOff = appData.dbOffEnabled !== false;
+            const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
+            const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
+
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=5`;
+            const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=5`;
+            const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+            const nutritionixUrl = `https://trackapi.nutritionix.com/v2/search/instant?query=${encodeURIComponent(query)}&detailed=true`;
+
+            const fetchOptionsNutritionix = { headers: { 'x-app-id': appData.nutritionixAppId, 'x-app-key': appData.nutritionixApiKey } };
+            const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
+
+            const fetchJSON = async (url, options = {}) => {
+                try {
+                    const controller = new AbortController();
+                    const id = setTimeout(() => controller.abort(), 3000); // 3-second timeout for quick search
+                    options.signal = controller.signal;
+                    const res = await fetch(url, options);
+                    if (!res.ok) { clearTimeout(id); return null; }
+                    const data = await res.json();
+                    clearTimeout(id);
+                    return data;
+                } catch (e) { return null; }
+            };
+
+            const fetchPromises = [];
+            fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
+            fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
+            fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
+            fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
+
+            const [usdaData, searchALData, nutritionixData, apiNinjasData] = await Promise.all(fetchPromises);
+
+            let apiFoods = [];
+
+            if (apiNinjasData && Array.isArray(apiNinjasData)) {
+                apiFoods.push(...apiNinjasData.map(p => ({
+                    description: p.name, brandOwner: '', foodCategory: 'Other', servingSize: parseFloat(p.serving_size_g) || 100, householdServingFullText: `${p.serving_size_g}g`, upc: '', source: 'API Ninjas',
+                    foodNutrients: [
+                        { nutrientId: 1008, value: parseFloat(p.calories) || 0 },
+                        { nutrientId: 1003, value: parseFloat(p.protein_g) || 0 },
+                        { nutrientId: 1004, value: parseFloat(p.fat_total_g) || 0 },
+                        { nutrientId: 1005, value: parseFloat(p.carbohydrates_total_g) || 0 }
+                    ]
+                })));
+            }
+
+            if (nutritionixData) {
+                const processNxList = (list) => {
+                    if(!list) return [];
+                    return list.slice(0, 3).map(p => {
+                        let nutObj = {};
+                        if (p.full_nutrients) p.full_nutrients.forEach(n => { nutObj[n.attr_id] = n.value; });
+                        return {
+                            description: p.food_name || 'Unknown', brandOwner: p.brand_name || '', foodCategory: 'Other', servingSize: parseFloat(p.serving_weight_grams) || 100, householdServingFullText: `${p.serving_qty || 1} ${p.serving_unit || 'serving'}`, upc: '', source: 'Nutritionix',
+                            foodNutrients: [
+                                { nutrientId: 208, value: nutObj[208] || 0 },
+                                { nutrientId: 203, value: nutObj[203] || 0 },
+                                { nutrientId: 204, value: nutObj[204] || 0 },
+                                { nutrientId: 205, value: nutObj[205] || 0 }
+                            ]
+                        };
+                    });
+                };
+                apiFoods.push(...processNxList(nutritionixData.common), ...processNxList(nutritionixData.branded));
+            }
+
+            if (usdaData && usdaData.foods) {
+                apiFoods.push(...usdaData.foods.map(f => ({ ...f, source: 'USDA' })));
+            }
+
+            if (searchALData && searchALData.hits) {
+                apiFoods.push(...searchALData.hits.map(p => {
+                    const nut = p.nutriments || {};
+                    const getNut = (keys) => { for (let k of keys) { if (nut[k] !== undefined && nut[k] !== null) return parseFloat(nut[k]) || 0; } return 0; };
+                    return {
+                        description: p.product_name || p.name || 'Unknown Item', brandOwner: p.brands || '', foodCategory: p.categories || 'Other', servingSize: parseFloat(p.serving_quantity || p.serving_size || 100), householdServingFullText: p.serving_size || '100g', upc: p.code || '', source: 'Search-a-licious',
+                        foodNutrients: [
+                            { nutrientId: 1008, value: getNut(['energy-kcal', 'energy_kcal', 'energy-kcal_100g']) },
+                            { nutrientId: 1003, value: getNut(['proteins', 'proteins_100g']) },
+                            { nutrientId: 1004, value: getNut(['fat', 'fat_100g']) },
+                            { nutrientId: 1005, value: getNut(['carbohydrates', 'carbohydrates_100g']) }
+                        ]
+                    };
+                }));
+            }
 
             // Combine and return top 15 matches max
-            let combined = [...localMatches, ...usdaFoods];
+            let combined = [...localMatches, ...apiFoods];
             return combined.slice(0, 15);
         }
 
