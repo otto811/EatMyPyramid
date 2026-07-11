@@ -1037,12 +1037,13 @@
                     <option value="Dinner">Dinner</option>
                     <option value="Discretionary">Snacks/Discretionary</option>
                 </select>
+                <button onclick="openBuilderManualEntryModal()" style="margin-top:10px; width:100%; padding:10px; background:#10b981; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">+ Add Items Manually</button>
             </div>
 
             <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-bottom:15px;">
                 <h4 style="margin-top:0; color:#374151;">✨ AI Parse Meal</h4>
                 <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Describe what you ate. The AI will identify items and quantities, and add them to your pending list below.</p>
-                <textarea id="builderAiDescription" rows="2" style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; resize:vertical; font-family:inherit; margin-bottom:10px;" placeholder="e.g. I had two slices of pepperoni pizza and a cup of orange juice."></textarea>
+                <textarea id="builderAiDescription" rows="2" style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; resize:vertical; font-family:inherit; margin-bottom:10px; font-size:16px;" placeholder="e.g. I had two slices of pepperoni pizza and a cup of orange juice."></textarea>
                 <button id="builderAiProcessBtn" onclick="builderProcessAiMeal()" style="width:100%; padding:10px; background:#8b5cf6; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">Parse Items</button>
             </div>
 
@@ -1053,8 +1054,6 @@
                 </div>
             </div>
             
-            <button onclick="builderAddManualItem()" style="padding:10px; background:#10b981; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer; margin-bottom:15px;">+ Add Item Manually</button>
-
             <button id="builderLogMealBtn" onclick="builderLogMeal()" style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Log Entire Meal</button>
         </div>
     </div>
@@ -1065,12 +1064,35 @@
             <h3 style="margin-top:0; color:#3b82f6;">Find Food</h3>
             <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Search the database to set this item's matched food.</p>
             <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="builderEditSearchInput" style="flex:1; padding:8px;" onkeypress="if(event.key==='Enter') builderEditSearch()">
+                <input type="text" id="builderEditSearchInput" style="flex:1; padding:8px; font-size:16px;" onkeypress="if(event.key==='Enter') builderEditSearch()">
                 <button onclick="builderEditSearch()" style="padding:8px 12px; background:#10b981; color:white; border:none; border-radius:5px;">Search</button>
             </div>
             <div id="builderEditSearchResults" style="max-height:250px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:5px; margin-bottom:15px; padding:5px;"></div>
             <input type="hidden" id="builderEditingIndex">
             <button onclick="document.getElementById('builderEditModal').style.display='none'" style="padding:10px; background:#6b7280; color:white; border:none; border-radius:6px; width:100%;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Multi-Item Manual Entry Modal -->
+    <div id="builderManualEntryModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10001; align-items:center; justify-content:center;">
+        <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column;">
+            <h3 style="margin-top:0; color:#10b981;">Add Items Manually</h3>
+            <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type the name of a food item and click 'Next Item' to rapidly build a list. Click 'Search All Items' when finished.</p>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="text" id="builderManualInput" style="flex:1; padding:10px; font-size:16px; border-radius:5px; border:1px solid #d1d5db;" placeholder="e.g. 1 apple" onkeypress="if(event.key==='Enter') builderManualNextItem()">
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button onclick="document.getElementById('builderManualEntryModal').style.display='none'" style="flex:1; padding:10px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Cancel</button>
+                <button onclick="builderManualNextItem()" style="flex:1; padding:10px; background:#f59e0b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Next Item</button>
+            </div>
+
+            <div id="builderManualEntryList" style="border:1px solid #e5e7eb; border-radius:6px; min-height:80px; max-height:150px; overflow-y:auto; padding:10px; margin-bottom:15px; background:#fafafa; font-size:0.9em; display:flex; flex-direction:column; gap:5px;">
+                <!-- Manual items list goes here -->
+            </div>
+
+            <button onclick="builderManualSearchAllItems()" style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Search All Items</button>
         </div>
     </div>
     <!-- ==================== EDIT LOG MODAL ==================== -->
@@ -5153,6 +5175,165 @@
         // We will edit the function body instead of wrapping to keep line numbers and references intact.
 
         // (Guards are inserted directly into the relevant function bodies below)
+
+        // ==================== RESTORED API FUNCTIONS ====================
+        function showAiKeySetupModal() {
+            document.getElementById('aiKeySetupModal').style.display = 'flex';
+            document.getElementById('wizardGeminiApiKeyInput').value = appData.geminiApiKey || '';
+        }
+        function closeAiKeySetupModal() {
+            document.getElementById('aiKeySetupModal').style.display = 'none';
+        }
+        function saveWizardGeminiApiKey() {
+            const key = document.getElementById('wizardGeminiApiKeyInput').value.trim();
+            if(key) {
+                appData.geminiApiKey = key;
+                saveData();
+                closeAiKeySetupModal();
+                alert('Gemini API Key saved!');
+            } else {
+                alert('Please enter a valid key.');
+            }
+        }
+        async function diagnoseApiKey() {
+            if (!appData.geminiApiKey) {
+                alert("Please set your Gemini API key first.");
+                return;
+            }
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${appData.geminiApiKey}`);
+                if (response.ok) {
+                    alert("API Key is valid and working!");
+                } else {
+                    alert("API Key failed validation. Check your key.");
+                }
+            } catch(e) {
+                alert("Network error while checking API key.");
+            }
+        }
+        function toggleSearchInfo(event) {
+            event.preventDefault();
+            const popup = document.getElementById('searchInfoPopup');
+            if (popup.style.display === 'none') {
+                popup.style.display = 'block';
+            } else {
+                popup.style.display = 'none';
+            }
+        }
+
+        // ==================== MANUAL MULTI-ITEM WORKFLOW ====================
+        let manualEntryItems = [];
+
+        function openBuilderManualEntryModal() {
+            manualEntryItems = [];
+            document.getElementById('builderManualInput').value = '';
+            document.getElementById('builderManualEntryModal').style.display = 'flex';
+            renderManualEntryList();
+            setTimeout(() => document.getElementById('builderManualInput').focus(), 100);
+        }
+
+        function renderManualEntryList() {
+            const listDiv = document.getElementById('builderManualEntryList');
+            listDiv.innerHTML = '';
+            if (manualEntryItems.length === 0) {
+                listDiv.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px 0;">No items added yet.</div>';
+                return;
+            }
+            manualEntryItems.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:white; padding:8px; border-radius:4px; border:1px solid #e5e7eb;';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.style.fontWeight = 'bold';
+                nameSpan.textContent = `${index + 1}. ${item}`;
+                
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '✖';
+                delBtn.style.cssText = 'background:none; border:none; color:#ef4444; cursor:pointer; padding:5px;';
+                delBtn.onclick = () => {
+                    manualEntryItems.splice(index, 1);
+                    renderManualEntryList();
+                };
+                
+                row.appendChild(nameSpan);
+                row.appendChild(delBtn);
+                listDiv.appendChild(row);
+            });
+        }
+
+        function builderManualNextItem() {
+            const input = document.getElementById('builderManualInput');
+            const val = input.value.trim();
+            if (val) {
+                manualEntryItems.push(val);
+                input.value = '';
+                renderManualEntryList();
+                input.focus();
+            }
+        }
+
+        async function builderManualSearchAllItems() {
+            const input = document.getElementById('builderManualInput');
+            const val = input.value.trim();
+            if (val) {
+                manualEntryItems.push(val);
+                input.value = '';
+            }
+
+            if (manualEntryItems.length === 0) {
+                alert("Please add at least one item first.");
+                return;
+            }
+
+            // Close the manual modal
+            document.getElementById('builderManualEntryModal').style.display = 'none';
+
+            // Push pending items with loading states
+            const startIdx = pendingMealItems.length;
+            manualEntryItems.forEach(query => {
+                pendingMealItems.push({
+                    name: query,
+                    amount: 1,
+                    unit: 'serving',
+                    calories: 0,
+                    protein: 0,
+                    fat: 0,
+                    carbs: 0,
+                    group: 'Other',
+                    food: null,
+                    loading: true
+                });
+            });
+            renderPendingMealItems();
+
+            // Run searches in parallel
+            const promises = manualEntryItems.map(async (query, index) => {
+                const actualIndex = startIdx + index;
+                try {
+                    const match = await searchBestFoodMatch(query);
+                    if (match) {
+                        pendingMealItems[actualIndex] = {
+                            ...pendingMealItems[actualIndex],
+                            name: match.name,
+                            calories: match.calories,
+                            protein: match.protein,
+                            fat: match.fat,
+                            carbs: match.carbs,
+                            group: match.group || getFoodCategory(match.name),
+                            food: match,
+                            loading: false
+                        };
+                    } else {
+                        pendingMealItems[actualIndex].loading = false;
+                    }
+                } catch(e) {
+                    pendingMealItems[actualIndex].loading = false;
+                }
+            });
+
+            await Promise.all(promises);
+            renderPendingMealItems();
+        }
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
         init();
