@@ -493,20 +493,28 @@
         <div class="desktop-columns full-width">
             <div class="left-column">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h2 style="margin:0;">Search & Log Food</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position: relative;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <h2 style="margin:0;">Search & Log Food</h2>
+                            <button id="searchInfoBtn" onclick="toggleSearchInfo(event)" style="background:none; border:none; color:var(--primary); font-size:1.2em; cursor:pointer; padding:0;" title="Search Database Info">ℹ️</button>
+                        </div>
                         <button id="search-toggle" onclick="toggleSection('search')"
                             style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    </div>
+                    <div id="searchInfoPopup" style="display:none; background:#e0e7ff; color:#374151; border:1px solid #c7d2fe; border-radius:6px; padding:10px; font-size:0.85em; margin-bottom:10px;">
+                        Searches are conducted using three databases. My Foods (stored locally), USDA Food Central, and Open Food Facts. Results from the local My Foods are presented first.
                     </div>
                     <div id="search-content">
 
                         <div class="form-group">
-                            <label>Search Databases (My Foods, USDA, Open Food Facts)</label>
-                            <div class="search-row">
-                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans" style="flex: 1; min-width: 0;">
-                                <button id="searchBtn" onclick="searchDatabases()" style="padding: 8px 12px; font-size: 0.85em; flex-shrink: 0;">Search</button>
-                                <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex-shrink: 0;">📷 Barcode</button>
-                                <button onclick="showAiMealLoggerModal()" style="background:#8b5cf6; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex-shrink: 0;">✨ AI Meal</button>
+                            <label>Search Databases</label>
+                            <div class="search-row" style="flex-wrap: wrap;">
+                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans" style="flex: 1 1 100%; min-width: 200px;">
+                                <div style="display: flex; gap: 10px; width: 100%;">
+                                    <button id="searchBtn" onclick="searchDatabases()" style="padding: 8px 12px; font-size: 0.85em; flex: 1;">Search</button>
+                                    <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">📷 Barcode</button>
+                                    <button onclick="showAiMealLoggerModal()" style="background:#8b5cf6; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">✨ AI Meal</button>
+                                </div>
                             </div>
                         </div>
 
@@ -2911,6 +2919,16 @@
 
         function closeAiKeySetupModal() {
             document.getElementById('aiKeySetupModal').style.display = 'none';
+        }
+
+        function toggleSearchInfo(event) {
+            event.preventDefault();
+            const popup = document.getElementById('searchInfoPopup');
+            if (popup.style.display === 'none') {
+                popup.style.display = 'block';
+            } else {
+                popup.style.display = 'none';
+            }
         }
 
         function saveWizardGeminiApiKey() {
