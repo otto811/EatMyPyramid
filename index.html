@@ -516,7 +516,7 @@
                                 <div style="display: flex; gap: 10px; width: 100%;">
                                     <button id="searchBtn" onclick="searchDatabases()" style="padding: 8px 12px; font-size: 0.85em; flex: 1;">Search</button>
                                     <button onclick="startBarcodeScan()" style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">📷 Barcode</button>
-                                    <button onclick="showAiMealLoggerModal()" style="background:#8b5cf6; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">✨ AI Meal</button>
+                                    <button onclick="openEnterMealModal()" style="background:#8b5cf6; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1;">✨ Enter Meal</button>
                                 </div>
                             </div>
                         </div>
@@ -1016,40 +1016,6 @@
         </div>
     </div>
 
-    <!-- ==================== AI MEAL LOGGER MODAL ==================== -->
-    <div id="aiMealLoggerModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
-        <div style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); max-height:90vh; overflow-y:auto;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#8b5cf6;">✨ AI Meal Logger</h3>
-            
-            <div id="aiMealInputSection">
-                <p style="font-size:0.9em; color:#4b5563; line-height:1.4; margin-bottom:15px;">
-                    Describe what you ate. The AI will identify the items and quantities, and look them up for you.
-                </p>
-                <div class="form-group">
-                    <textarea id="aiMealDescription" rows="4" placeholder="e.g. 2 scrambled eggs, 1 slice of wheat toast, and a cup of black coffee" style="width:100%; padding:12px; font-size:1em; border:1px solid #d1d5db; border-radius:6px;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Meal</label>
-                    <select id="aiMealSelect">
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Dinner">Dinner</option>
-                        <option value="Snacks">Snacks</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button onclick="closeAiMealLoggerModal()" style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
-                    <button id="aiProcessBtn" onclick="processAiMeal()" style="background:#8b5cf6; flex:2; padding:12px; color:white; font-weight:bold;">Parse Meal</button>
-                </div>
-            </div>
-
-            <div id="aiMealReviewSection" style="display:none;">
-                <p style="font-size:0.9em; color:#4b5563; line-height:1.4; margin-bottom:15px;">
-                    <strong>Review matches:</strong> The AI parsed these items. Review and confirm to log them.
-                </p>
-                <div id="aiMealMatches" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:15px; margin-bottom:15px; max-height:250px; overflow-y:auto; font-size:0.9em;">
-                    <!-- Matches populated here -->
-                </div>
                 <div style="display:flex; gap:10px;">
                     <button onclick="resetAiMealLogger()" style="background:var(--text-muted); flex:1; padding:12px;">Back</button>
                     <button onclick="confirmAiMealLog()" style="background:#10b981; flex:2; padding:12px; color:white; font-weight:bold;">Log All Items</button>
@@ -2902,92 +2868,80 @@
         }
 
         // ==================== AI MEAL LOGGER FUNCTIONS ====================
-        let pendingAiMealMatches = [];
+        let pendingMealItems = []; 
 
-        function showAiMealLoggerModal() {
-            document.getElementById('aiMealLoggerModal').style.display = 'flex';
-            document.getElementById('aiMealInputSection').style.display = 'block';
-            document.getElementById('aiMealReviewSection').style.display = 'none';
-            document.getElementById('aiMealDescription').value = '';
+        function openEnterMealModal() {
+            document.getElementById('enterMealModal').style.display = 'flex';
+            document.getElementById('builderAiDescription').value = '';
+            document.getElementById('builderMealSelect').value = 'Breakfast';
+            pendingMealItems = [];
+            renderPendingMealItems();
         }
 
-        function closeAiMealLoggerModal() {
-            document.getElementById('aiMealLoggerModal').style.display = 'none';
+        function closeEnterMealModal() {
+            document.getElementById('enterMealModal').style.display = 'none';
         }
 
-        function showAiKeySetupModal() {
-            document.getElementById('aiKeySetupModal').style.display = 'flex';
-            document.getElementById('wizardGeminiApiKeyInput').value = appData.geminiApiKey || '';
-        }
-
-        function closeAiKeySetupModal() {
-            document.getElementById('aiKeySetupModal').style.display = 'none';
-        }
-
-        function toggleSearchInfo(event) {
-            event.preventDefault();
-            const popup = document.getElementById('searchInfoPopup');
-            if (popup.style.display === 'none') {
-                popup.style.display = 'block';
-            } else {
-                popup.style.display = 'none';
-            }
-        }
-
-        function saveWizardGeminiApiKey() {
-            const input = document.getElementById('wizardGeminiApiKeyInput').value.trim();
-            if (input) {
-                appData.geminiApiKey = input;
-                saveData();
-                updateApiKeyStatus();
-                alert("API Key saved successfully! You can now use the AI Meal Logger.");
-                closeAiKeySetupModal();
-            } else {
-                alert("Please paste a valid key or click Cancel.");
-            }
-        }
-
-        async function diagnoseApiKey() {
-            const apiKey = appData.geminiApiKey;
-            if (!apiKey) {
-                alert("Please save an API key first.");
+        function renderPendingMealItems() {
+            const container = document.getElementById('builderPendingItemsList');
+            container.innerHTML = '';
+            
+            if (pendingMealItems.length === 0) {
+                container.innerHTML = '<p style="color:#9ca3af; font-size:0.9em; text-align:center;">No items added yet. Describe your meal above or add manually.</p>';
                 return;
             }
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                if (!res.ok) {
-                    const err = await res.json();
-                    alert("Error checking models: " + (err.error?.message || res.status));
-                    return;
-                }
-                const data = await res.json();
-                if (data.models && data.models.length > 0) {
-                    const names = data.models.map(m => m.name.replace('models/', '')).join(', ');
-                    alert("Success! Your key has access to these models:\n\n" + names);
-                } else {
-                    alert("Your key works, but has NO models available.");
-                }
-            } catch (e) {
-                alert("Network error: " + e.message);
-            }
+
+            pendingMealItems.forEach((item, index) => {
+                const parsed = item.parsed;
+                const match = item.food;
+                
+                let matchText = match ? `<strong>${match.description}</strong> <em>(${getFoodCategory(match)})</em>` : '<strong style="color:#ef4444;">No match found. Please edit.</strong>';
+                
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #e5e7eb; background:white; border-radius:4px; margin-bottom:5px;">
+                        <div style="flex:1;">
+                            <div style="font-size:0.95em; margin-bottom:3px;">
+                                <span style="background:#e0e7ff; color:#4f46e5; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.85em; margin-right:5px;">${parsed.amount || 1} ${parsed.unit || 'serving'}</span>
+                                <span style="color:#4b5563;">${parsed.description}</span>
+                            </div>
+                            <div style="font-size:0.85em; color:#374151;">
+                                ↳ ${matchText}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:5px; margin-left:10px;">
+                            <button onclick="openBuilderEditModal(${index})" style="background:#f59e0b; color:white; border:none; padding:6px 10px; border-radius:4px; font-size:0.85em; cursor:pointer;">Edit</button>
+                            <button onclick="builderRemoveItem(${index})" style="background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:4px; font-size:0.85em; cursor:pointer;">X</button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        function resetAiMealLogger() {
-            document.getElementById('aiMealInputSection').style.display = 'block';
-            document.getElementById('aiMealReviewSection').style.display = 'none';
+        function builderRemoveItem(index) {
+            pendingMealItems.splice(index, 1);
+            renderPendingMealItems();
         }
 
-        async function processAiMeal() {
+        function builderAddManualItem() {
+            pendingMealItems.push({
+                parsed: { amount: 1, unit: 'serving', description: 'New Item' },
+                food: null
+            });
+            renderPendingMealItems();
+            openBuilderEditModal(pendingMealItems.length - 1);
+        }
+
+        async function builderProcessAiMeal() {
             const apiKey = appData.geminiApiKey;
             if (!apiKey) {
                 alert("Please add a Gemini API Key in the Settings (API Key button) menu first.");
                 return;
             }
             
-            const text = document.getElementById('aiMealDescription').value.trim();
+            const text = document.getElementById('builderAiDescription').value.trim();
             if (!text) return;
             
-            const btn = document.getElementById('aiProcessBtn');
+            const btn = document.getElementById('builderAiProcessBtn');
             btn.disabled = true;
             btn.textContent = 'Parsing...';
             
@@ -3009,7 +2963,6 @@
                     body: JSON.stringify(reqBody)
                 });
 
-                // Fallback to pro-latest if flash is not found
                 if (!response.ok && response.status === 404) {
                     url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent?key=${apiKey}`;
                     response = await fetch(url, {
@@ -3035,95 +2988,114 @@
                 
                 btn.textContent = 'Looking up foods...';
                 
-                pendingAiMealMatches = [];
-                const reviewContainer = document.getElementById('aiMealMatches');
-                reviewContainer.innerHTML = '';
-                
                 for (let i = 0; i < parsedItems.length; i++) {
                     const parsed = parsedItems[i];
                     let match = await searchBestFoodMatch(parsed.description);
-                    if (match) {
-                        pendingAiMealMatches.push({
-                            parsed: parsed,
-                            food: match
-                        });
-                        
-                        reviewContainer.innerHTML += `
-                            <div style="padding:10px; border-bottom:1px solid #e5e7eb;">
-                                <strong>Parsed:</strong> ${parsed.amount} ${parsed.unit} ${parsed.description}<br>
-                                <strong>Matched:</strong> ${match.description} <em>(${getFoodCategory(match)})</em>
-                            </div>
-                        `;
-                    } else {
-                        reviewContainer.innerHTML += `
-                            <div style="padding:10px; border-bottom:1px solid #e5e7eb; color:#ef4444;">
-                                <strong>Parsed:</strong> ${parsed.amount} ${parsed.unit} ${parsed.description}<br>
-                                <strong>Matched:</strong> No match found.
-                            </div>
-                        `;
-                    }
+                    pendingMealItems.push({
+                        parsed: parsed,
+                        food: match
+                    });
                 }
                 
-                document.getElementById('aiMealInputSection').style.display = 'none';
-                document.getElementById('aiMealReviewSection').style.display = 'block';
+                renderPendingMealItems();
+                document.getElementById('builderAiDescription').value = '';
                 
             } catch (e) {
                 console.error("AI processing error", e);
                 alert("Error processing the meal description.\nDetails: " + e.message + "\n\nCheck your API key and try again.");
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Parse Meal';
+                btn.textContent = 'Parse Items';
             }
         }
-        
-        async function searchBestFoodMatch(query) {
-            query = query.toLowerCase();
-            let bestMatch = null;
-            let highestScore = 999;
+
+        function openBuilderEditModal(index) {
+            document.getElementById('builderEditingIndex').value = index;
+            document.getElementById('builderEditSearchInput').value = pendingMealItems[index].parsed.description || '';
+            document.getElementById('builderEditSearchResults').innerHTML = '';
+            document.getElementById('builderEditModal').style.display = 'flex';
+        }
+
+        async function builderEditSearch() {
+            const query = document.getElementById('builderEditSearchInput').value.trim().toLowerCase();
+            if (!query) return;
+            const resContainer = document.getElementById('builderEditSearchResults');
+            resContainer.innerHTML = '<div style="padding:10px; color:#6b7280;">Searching...</div>';
+            
+            let html = '';
+            
             if (appData.myFoods) {
-                for (const f of appData.myFoods) {
-                    const desc = String(f.description || '').toLowerCase();
-                    if (desc.includes(query)) {
-                        const score = scoreMatch(f.description, query);
-                        if (score < highestScore) {
-                            highestScore = score;
-                            bestMatch = f;
-                        }
-                    }
+                const localMatches = appData.myFoods.filter(f => String(f.description||'').toLowerCase().includes(query));
+                if (localMatches.length > 0) {
+                    html += `<div style="background:#e0e7ff; padding:5px 10px; font-weight:bold; font-size:0.85em; color:#3730a3;">My Foods</div>`;
+                    localMatches.slice(0, 5).forEach(f => {
+                        const nut = getAllNutrients(f);
+                        html += `
+                        <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick='builderSelectMatch(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
+                            <div style="font-weight:bold;">${f.description}</div>
+                            <div style="font-size:0.8em; color:#6b7280;">${nut.calories} kcal, ${nut.protein}g protein | Serving: ${f.servingSize}g</div>
+                        </div>`;
+                    });
                 }
             }
-            if (bestMatch) return bestMatch;
-            
+
             try {
                 const searchKey = appData.usdaApiKey || API_KEY;
-                const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=3&api_key=${searchKey}`);
+                const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=10&api_key=${searchKey}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.foods && data.foods.length > 0) {
-                        return data.foods[0];
+                        html += `<div style="background:#dcfce7; padding:5px 10px; font-weight:bold; font-size:0.85em; color:#166534;">USDA Database</div>`;
+                        data.foods.forEach(f => {
+                            const nut = getAllNutrients(f);
+                            html += `
+                            <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick='builderSelectMatch(${JSON.stringify(f).replace(/'/g, "&apos;")})'>
+                                <div style="font-weight:bold;">${f.description}</div>
+                                <div style="font-size:0.8em; color:#6b7280;">${nut.calories} kcal, ${nut.protein}g protein | Serving: ${f.servingSize || 100}g</div>
+                            </div>`;
+                        });
                     }
                 }
             } catch (e) {}
-            return null;
+
+            if (!html) html = '<div style="padding:10px; color:#ef4444;">No results found.</div>';
+            resContainer.innerHTML = html;
         }
 
-        function confirmAiMealLog() {
+        function builderSelectMatch(foodObj) {
+            const index = document.getElementById('builderEditingIndex').value;
+            pendingMealItems[index].food = foodObj;
+            // Update the parsed description to match the new food name
+            pendingMealItems[index].parsed.description = foodObj.description;
+            renderPendingMealItems();
+            document.getElementById('builderEditModal').style.display = 'none';
+        }
+
+        function builderLogMeal() {
             if (recalledWeekData) {
                 alert("You are viewing an archived week. Logging new foods is disabled.");
-                closeAiMealLoggerModal();
+                closeEnterMealModal();
                 return;
             }
             
-            const mealName = document.getElementById('aiMealSelect').value;
-            
-            for (const itemMatch of pendingAiMealMatches) {
+            const mealName = document.getElementById('builderMealSelect').value;
+            let loggedCount = 0;
+
+            for (const itemMatch of pendingMealItems) {
                 const food = itemMatch.food;
                 const parsed = itemMatch.parsed;
+                
+                if (!food) {
+                    alert(`Item "${parsed.description}" is missing a food match. Please edit it or remove it before logging.`);
+                    return;
+                }
                 
                 const nut = getAllNutrients(food);
                 const cat = getFoodCategory(food);
                 
-                let logAmount = parseFloat(parsed.amount) || 1;
+                let logAmount = parseFloat(parsed.amount);
+                if (isNaN(logAmount) || logAmount <= 0) logAmount = 1;
+                
                 let logUnit = parsed.unit || "serving";
                 const servingSize = parseFloat(food.servingSize) || 100;
                 let gramsPerUnit = servingSize;
@@ -3142,8 +3114,14 @@
                 const customMultiplier = (logAmount * gramsPerUnit) / 100;
                 const upcCode = food.gtinUpc || food.upc || null;
 
+                const safeCalories = (parseFloat(nut.calories) || 0) * customMultiplier;
+                const safeProtein = (parseFloat(nut.protein) || 0) * customMultiplier;
+                const safeFat = (parseFloat(nut.fat) || 0) * customMultiplier;
+                const safeCarbs = (parseFloat(nut.carbs) || 0) * customMultiplier;
+                const safeFiber = (parseFloat(nut.fiber) || 0) * customMultiplier;
+
                 const item = {
-                    name: food.description,
+                    name: food.description || "Unknown Food",
                     upc: upcCode,
                     amount: logAmount,
                     unit: logUnit,
@@ -3151,37 +3129,42 @@
                     servingSize: servingSize,
                     gramsPerUnit: gramsPerUnit,
                     foodGroupAmount: foodGroupAmount,
-                    calories: nut.calories * customMultiplier,
-                    protein: nut.protein * customMultiplier,
-                    fat: nut.fat * customMultiplier,
-                    carbs: nut.carbs * customMultiplier,
-                    fiber: nut.fiber * customMultiplier,
-                    wwPoints: calculateWWPoints(nut.calories * customMultiplier, nut.fat * customMultiplier, nut.fiber * customMultiplier),
+                    calories: safeCalories,
+                    protein: safeProtein,
+                    fat: safeFat,
+                    carbs: safeCarbs,
+                    fiber: safeFiber,
+                    wwPoints: calculateWWPoints(safeCalories, safeFat, safeFiber),
                     meal: mealName,
-                    calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
-                    protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
-                    fatPerUnit: nut.fat / (parseFloat(food.servingSize) || 100),
-                    carbsPerUnit: nut.carbs / (parseFloat(food.servingSize) || 100),
-                    fibPerUnit: nut.fiber / (parseFloat(food.servingSize) || 100)
+                    calsPerUnit: (parseFloat(nut.calories) || 0) / (parseFloat(food.servingSize) || 100),
+                    protPerUnit: (parseFloat(nut.protein) || 0) / (parseFloat(food.servingSize) || 100),
+                    fatPerUnit: (parseFloat(nut.fat) || 0) / (parseFloat(food.servingSize) || 100),
+                    carbsPerUnit: (parseFloat(nut.carbs) || 0) / (parseFloat(food.servingSize) || 100),
+                    fibPerUnit: (parseFloat(nut.fiber) || 0) / (parseFloat(food.servingSize) || 100)
                 };
 
                 state.log.push(item);
-                state.current.Calories += item.calories;
-                state.current.Protein += item.protein;
-                state.current.Fat += item.fat;
-                state.current.Carbs += item.carbs;
+                state.current.Calories = (state.current.Calories || 0) + item.calories;
+                state.current.Protein = (state.current.Protein || 0) + item.protein;
+                state.current.Fat = (state.current.Fat || 0) + item.fat;
+                state.current.Carbs = (state.current.Carbs || 0) + item.carbs;
 
                 const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
                 if (trackedGroups.includes(cat)) {
                     if (state.current[cat] === undefined) state.current[cat] = 0;
                     state.current[cat] += foodGroupAmount;
                 }
+                
+                loggedCount++;
             }
             
-            saveData();
-            renderLog();
-            renderBarometers();
-            closeAiMealLoggerModal();
+            if (loggedCount > 0) {
+                saveData();
+                renderLog();
+                renderBarometers();
+                closeEnterMealModal();
+                alert(`Successfully logged ${loggedCount} items to ${mealName}!`);
+            }
         }
 
         function saveGeminiApiKey() {
