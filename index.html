@@ -2964,7 +2964,7 @@
             btn.textContent = 'Parsing...';
             
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                 const prompt = `Extract the food items and their quantities from this meal description: "${text}". 
                 Respond ONLY with a JSON array of objects. Each object must have: 
                 "description" (string, the name of the food), 
