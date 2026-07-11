@@ -75,6 +75,9 @@
             .container {
                 grid-template-columns: 1fr;
             }
+            html, body {
+                padding: 0;
+            }
         }
 
         .card {
@@ -3207,8 +3210,9 @@
                 let nutHtml = '';
                 if (match) {
                     const nut = getAllNutrients(match);
+                    const amount = parsed.amount || 1;
                     nutHtml = `<div style="font-size:0.85em; color:#6b7280; margin-top:4px;">
-                        🔥 ${Number(nut.calories).toFixed(0)} kcal | 🥩 ${Number(nut.protein).toFixed(1)}g P | 🧈 ${Number(nut.fat).toFixed(1)}g F | 🍞 ${Number(nut.carbs).toFixed(1)}g C
+                        🔥 ${(nut.calories * amount).toFixed(0)} kcal | 🥩 ${(nut.protein * amount).toFixed(1)}g P | 🧈 ${(nut.fat * amount).toFixed(1)}g F | 🍞 ${(nut.carbs * amount).toFixed(1)}g C
                     </div>`;
                 }
 
@@ -5561,11 +5565,15 @@
 
             let localMatches = [];
             try {
+                // To allow '1 apple' to match 'Apple', strip out numbers/quantities
+                let cleanedQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim();
+                if (!cleanedQuery) cleanedQuery = query;
+
                 localMatches = appData.myFoods.filter(f => {
                     const desc = String(f.description || '').toLowerCase();
                     const brand = String(f.brandOwner || '').toLowerCase();
                     const upcMatch = f.upc && String(f.upc) === query;
-                    return desc.includes(query) || brand.includes(query) || upcMatch;
+                    return desc.includes(cleanedQuery) || brand.includes(cleanedQuery) || upcMatch;
                 }).map(f => ({ ...f, source: 'My Foods' }));
 
                 localMatches.sort((a, b) => {
@@ -5682,6 +5690,7 @@
                 }
             });
 
+            manualEntryItems = [];
             document.getElementById('builderManualEntryModal').style.display = 'none';
             renderPendingMealItems();
         }
