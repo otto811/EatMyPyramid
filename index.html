@@ -1239,9 +1239,8 @@
                 Selected to Meal</button>
         </div>
     </div>
-    <!-- ==================== EDIT LOG MODAL ==================== -->
     <div id="editLogModal"
-        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10005; align-items:center; justify-content:center;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
             <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px; color:#f59e0b;">Edit Logged Item
@@ -3210,9 +3209,17 @@
                 let nutHtml = '';
                 if (match) {
                     const nut = getAllNutrients(match);
-                    const amount = parsed.amount || 1;
+                    const logAmount = parseFloat(parsed.amount) || 1;
+                    const logUnit = parsed.unit || "serving";
+                    const servingSize = parseFloat(match.servingSize) || 100;
+                    let gramsPerUnit = servingSize;
+                    if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
+                    else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
+                    
+                    const customMultiplier = (logAmount * gramsPerUnit) / 100;
+                    
                     nutHtml = `<div style="font-size:0.85em; color:#6b7280; margin-top:4px;">
-                        🔥 ${(nut.calories * amount).toFixed(0)} kcal | 🥩 ${(nut.protein * amount).toFixed(1)}g P | 🧈 ${(nut.fat * amount).toFixed(1)}g F | 🍞 ${(nut.carbs * amount).toFixed(1)}g C
+                        🔥 ${(nut.calories * customMultiplier).toFixed(0)} kcal | 🥩 ${(nut.protein * customMultiplier).toFixed(1)}g P | 🧈 ${(nut.fat * customMultiplier).toFixed(1)}g F | 🍞 ${(nut.carbs * customMultiplier).toFixed(1)}g C
                     </div>`;
                 }
 
