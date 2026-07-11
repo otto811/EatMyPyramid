@@ -944,11 +944,20 @@
                 Central API Key</h3>
 
             <p style="font-size:0.9em; color:#4b5563; line-height:1.4;">
-                The app uses a shared demo key by default. For higher rate limits or personal usage, enter your own free
-                API key from
-                <a href="https://fdc.nal.usda.gov/api-key-signup.html" target="_blank" style="color:#3b82f6;">USDA
-                    FoodData Central</a>.
+                The app uses a shared demo key by default. For higher rate limits or personal usage, you can get your own free API key.
             </p>
+            <button onclick="const el = document.getElementById('usdaKeyInstructions'); el.style.display = el.style.display === 'none' ? 'block' : 'none';" style="margin-bottom:15px; background:#e0e7ff; color:#4f46e5; border:none; padding:8px 12px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">How to get a key?</button>
+            
+            <div id="usdaKeyInstructions" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:12px; margin-bottom:15px; font-size:0.85em; color:#334155;">
+                <ol style="margin-top:0; margin-bottom:10px; padding-left:20px; line-height:1.5;">
+                    <li>Click the signup link below, enter your name and email.</li>
+                    <li>Check your email.</li>
+                    <li>Copy the key.</li>
+                    <li>Paste the key in the field below.</li>
+                    <li>Press the <strong>Save &amp; Use Key</strong> button.</li>
+                </ol>
+                <a href="https://fdc.nal.usda.gov/api-key-signup" target="_blank" style="display:inline-block; background:#10b981; color:white; padding:6px 12px; text-decoration:none; border-radius:4px; font-weight:bold;">USDA API-Key Signup</a>
+            </div>
 
             <div class="form-group" style="margin-top:15px;">
                 <label style="font-weight:600;">Your USDA API Key</label>
