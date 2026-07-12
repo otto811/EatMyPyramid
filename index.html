@@ -427,7 +427,7 @@
                 width: 90vw !important;
                 max-width: 350px !important;
                 min-width: unset !important;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
                 z-index: 20000 !important;
             }
         }
@@ -527,8 +527,7 @@
                         <div>
                             <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Protein Goal (g)</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="proteinGoalInput" value="0"
-                                    onchange="updateTarget('ProteinGrams', this.value)" min="0"
+                                <input type="number" id="proteinGoalInput" value="0" onchange="updateTarget('ProteinGrams', this.value)" min="0"
                                     style="width:60px; padding: 6px 8px; height: 34px;">
                                 <button type="button" onclick="showProteinCalculatorModal(event)"
                                     style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
@@ -548,8 +547,7 @@
                             📤 Export App Data
                         </button>
                         <div>
-                            <button type="button"
-                                onclick="event.preventDefault(); document.getElementById('importAppDataInput').click()"
+                            <button type="button" onclick="event.preventDefault(); document.getElementById('importAppDataInput').click()"
                                 style="background:#10b981; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 📥 Import App Data
                             </button>
@@ -562,8 +560,7 @@
                             🧹 Manage Storage
                         </button>
                         <div>
-                            <button type="button"
-                                onclick="event.preventDefault(); document.getElementById('viewArchiveInput').click()"
+                            <button type="button" onclick="event.preventDefault(); document.getElementById('viewArchiveInput').click()"
                                 style="background:#ef4444; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 📂 View Archive
                             </button>
@@ -993,6 +990,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <div id="scannerModal"
             style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
@@ -1094,13 +1092,11 @@
             style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
             <div
                 style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: auto;">
-                <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Protein Target Calculator
-                </h3>
+                <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Protein Target Calculator</h3>
 
                 <div class="form-group" style="margin-top: 15px;">
                     <label for="prot-weight">Weight (lbs)</label>
-                    <input type="number" id="prot-weight" placeholder="Enter weight (e.g. 150)" min="0"
-                        onchange="calculateProteinTarget()">
+                    <input type="number" id="prot-weight" placeholder="Enter weight (e.g. 150)" min="0" onchange="calculateProteinTarget()">
                 </div>
 
                 <div class="form-group">
@@ -1137,8 +1133,7 @@
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button type="button"
-                        onclick="document.getElementById('proteinCalculatorModal').style.display='none'"
+                    <button type="button" onclick="document.getElementById('proteinCalculatorModal').style.display='none'"
                         style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
                     <button type="button" onclick="applyProteinTarget()"
                         style="background:var(--primary); flex:1; padding:12px;">Apply
@@ -3528,13 +3523,13 @@
                     document.getElementById('prot-output').innerText = 'Target = 0g';
                     return 0;
                 }
-
+                
                 const weightKg = weightLbs / 2.20462;
                 const goal = document.getElementById('prot-goal').value;
                 const activityMultiplier = parseFloat(document.getElementById('prot-activity').value) || 1.2;
-
+                
                 let baseMultiplier = 0.8; // default sedentary maintenance
-
+                
                 if (goal === 'fat_loss') {
                     baseMultiplier = 2.5; // High protein to preserve lean mass
                 } else if (goal === 'muscle_gain') {
@@ -3548,14 +3543,14 @@
                     else if (activityMultiplier >= 1.3) baseMultiplier = 1.0;
                     else baseMultiplier = 0.8;
                 }
-
+                
                 let targetGrams = weightKg * baseMultiplier;
-
+                
                 // Dietary Context adjustment (+10% for plant-based to offset bioavailability)
                 if (document.getElementById('prot-diet').value === 'plant_based') {
                     targetGrams *= 1.1;
                 }
-
+                
                 const finalTarget = Math.round(targetGrams);
                 document.getElementById('prot-output').innerText = `Target = ${finalTarget}g`;
                 return finalTarget;
@@ -4151,7 +4146,7 @@
                 };
 
                 renderGroup(['Calories', 'Protein', 'Fat', 'Carbs'], 'macroBarometersContainer', { Calories: '#3b82f6', Protein: '#ef4444', Fat: '#f59e0b', Carbs: '#14b8a6' }, true);
-
+                
                 const macroCont = document.getElementById('macroBarometersContainer');
                 if (macroCont) {
                     const tempDiv = document.createElement('div');
@@ -4159,7 +4154,7 @@
                     macroCont.appendChild(tempDiv);
                     renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
                     const labelStr = tempDiv.querySelector('strong');
-                    if (labelStr) labelStr.innerText = 'Protein (g/lb)';
+                    if(labelStr) labelStr.innerText = 'Protein (g/lb)';
                 }
 
                 renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
