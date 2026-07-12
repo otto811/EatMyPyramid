@@ -517,7 +517,11 @@
                                 style="background:#6b7280; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 🔑 USDA API Key
                             </button>
-                            <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280; margin-top:4px;"></span>
+                            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px;">
+                                <button onclick="showDatabaseConfigModal()"
+                                    style="padding: 2px 6px; font-size: 0.75em; background: #64748b; color:white; white-space:nowrap; border:none; border-radius:4px; cursor:pointer;">⚙️ Databases</button>
+                                <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
+                            </div>
                         </div>
 
                         <button onclick="showAiKeySetupModal()"
@@ -550,11 +554,7 @@
                     <div id="search-content">
 
                         <div class="form-group">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <label style="margin:0;">Search Databases</label>
-                                <button onclick="showDatabaseConfigModal()"
-                                    style="padding: 4px 8px; font-size: 0.85em; background: #64748b; color:white; white-space:nowrap; border:none; border-radius:4px; cursor:pointer;">⚙️ Databases</button>
-                            </div>
+
                             
                             <div style="display:flex; gap:8px; margin-bottom:8px;">
                                 <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans"
@@ -583,20 +583,20 @@
                         </div>
 
                         <div class="form-group">
-                            <div style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 200px;">
+                            <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
+                                <div style="flex: 1; min-width: 0;">
                                     <label style="margin-bottom: 4px;">Search Results</label>
-                                    <select id="foodSelect" onchange="updatePreview()" style="width: 100%; height: 42px;"></select>
+                                    <select id="foodSelect" onchange="updatePreview()" style="width: 100%; height: 38px;"></select>
                                 </div>
                                 <div style="flex: none;">
                                     <label style="margin-bottom: 4px;">Servings</label>
                                     <input type="number" id="servingInput" value="1" min="0.1" step="0.1"
                                         onchange="updatePreview()"
-                                        style="width: 60px; height: 42px; padding: 0 4px; font-size: 0.85em; box-sizing: border-box;">
+                                        style="width: 50px; height: 38px; padding: 0 4px; font-size: 0.85em; box-sizing: border-box;">
                                 </div>
-                                <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 42px;">
+                                <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 38px;">
                                     <button onclick="showCustomFoodModal()"
-                                        style="background: #8b5cf6; padding: 0 10px; font-size: 0.82em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">✏️ Modify Search Item</button>
+                                        style="background: #8b5cf6; padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">✏️ Modify Item</button>
                                     <span class="fg-info-wrap" style="align-self: center;">
                                         <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
                                             onclick="toggleModifySearchInfo(event)"
@@ -611,26 +611,26 @@
                         </div>
 
                         <div class="form-group">
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start;">
+                            <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
                                 <button onclick="showLogFoodModal()"
-                                    style="flex: none; padding: 0 16px; font-size: 0.85em; margin: 0; height: 42px; white-space: nowrap;">Log Food</button>
+                                    style="flex: 1; padding: 0; font-size: 0.85em; margin: 0; height: 38px; white-space: nowrap; border:none; border-radius:4px; cursor:pointer;">Log Food</button>
                                 
-                                <div style="display: flex; align-items: center; gap: 4px; height: 42px;">
+                                <div style="flex: 1; display: flex; align-items: center; gap: 4px; height: 38px;">
                                     <button onclick="saveCurrentToMyFoods()"
-                                        style="background: var(--warning); padding: 0 12px; font-size: 0.85em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">⭐ Save to My Foods</button>
+                                        style="flex: 1; background: var(--warning); padding: 0; font-size: 0.85em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">⭐ Save to My Foods</button>
                                     <span class="fg-info-wrap" style="align-self: center;">
                                         <button type="button" class="fg-info-btn" id="saveMyFoodsInfoBtn"
                                             onclick="toggleSaveMyFoodsInfo(event)"
                                             aria-label="Save to My Foods Info">i</button>
                                         <div class="fg-info-popup" id="saveMyFoodsInfoPopup"
-                                            style="min-width:280px; max-width:340px; right: auto; left: 0;">
+                                            style="min-width:280px; max-width:340px; right: 0; left: auto;">
                                             <p style="margin:0;">My Foods is a local database you create. It allows you to customize based on the foods you consume often. You can create an item from scratch, add a scanned or searched item, fix bad info from online items, modify nutrition info based on preferred serving sizes. All searches will place items from 'My Foods' at the top of the list.</p>
                                         </div>
                                     </span>
                                 </div>
 
                                 <button onclick="showNewFoodEntryModal()"
-                                    style="flex: none; background: #3b82f6; padding: 0 12px; font-size: 0.85em; color: white; margin: 0; height: 42px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">➕ New Food Entry</button>
+                                    style="flex: 1; background: #3b82f6; padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">➕ New Food Entry</button>
                             </div>
                         </div>
 
@@ -4279,10 +4279,10 @@
                     document.getElementById('cf-carb').value = (nut.carbs * multiplier).toFixed(1);
                     document.getElementById('cf-fib').value = (nut.fiber * multiplier).toFixed(1);
 
-                    document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item';
+                    document.querySelector('#customFoodModal h3').innerText = 'Modify Item';
                 } else {
                     clearCustomFoodModalFields();
-                    document.querySelector('#customFoodModal h3').innerText = 'Modify Search Item';
+                    document.querySelector('#customFoodModal h3').innerText = 'Modify Item';
                 }
             }
             document.getElementById('customFoodModal').style.display = 'flex';
