@@ -575,15 +575,15 @@
                             <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
                                 <div style="flex: 1; min-width: 0;">
                                     <label style="margin-bottom: 4px;">Search Results</label>
-                                    <select id="foodSelect" onchange="updatePreview()" style="width: 100%; height: 38px;"></select>
+                                    <select id="foodSelect" onchange="updatePreview()" style="width: 100%; height: 44px; padding: 0 4px; box-sizing: border-box; font-size: 0.9em;"></select>
                                 </div>
                                 <div style="flex: none;">
                                     <label style="margin-bottom: 4px;">Servings</label>
                                     <input type="number" id="servingInput" value="1" min="0.1" step="0.1"
                                         onchange="updatePreview()"
-                                        style="width: 50px; height: 38px; padding: 0 4px; font-size: 0.85em; box-sizing: border-box;">
+                                        style="width: 50px; height: 44px; padding: 0 4px; font-size: 0.85em; box-sizing: border-box;">
                                 </div>
-                                <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 38px;">
+                                <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 44px;">
                                     <button onclick="showCustomFoodModal()"
                                         style="background: #8b5cf6; padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">Modify Item</button>
                                 </div>
@@ -614,7 +614,7 @@
                         </div>
 
                         <div class="form-group preview-box" id="nutritionPreview">
-                            <em>Select a food to view nutritional information.</em>
+                            <em>Nutritional information for the selected item in Search Results field.</em>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 0;">
@@ -2841,7 +2841,7 @@
             document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
             document.getElementById('servingInput').value = 1;
             document.getElementById('amountInput').value = '';
-            document.getElementById('nutritionPreview').innerHTML = "<em>Select a food to view nutritional information.</em>";
+            document.getElementById('nutritionPreview').innerHTML = "<em>Nutritional information for the selected item in Search Results field.</em>";
 
             // Reset override select after logging
             const fgSelect = document.getElementById('foodGroupSelect');
