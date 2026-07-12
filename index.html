@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v5.1</title>
+    <title>EatMyPyramid v5.6</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -3197,8 +3197,18 @@
                     item.results.forEach((r, rIdx) => {
                         const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
                         const nut = getAllNutrients(r);
+                        
+                        const logAmount = parseFloat(parsed.amount) || 1;
+                        const logUnit = parsed.unit || "serving";
+                        const servingSize = parseFloat(r.servingSize) || 100;
+                        let gramsPerUnit = servingSize;
+                        if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
+                        else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
+                        const rMultiplier = (logAmount * gramsPerUnit) / 100;
+                        const displayCals = (nut.calories * rMultiplier).toFixed(0);
+
                         const isSelected = (match && r.description === match.description) ? 'selected' : '';
-                        selectHtml += `<option value="${rIdx}" ${isSelected}>${r.description}${brand} - ${Number(nut.calories).toFixed(0)} kcal</option>`;
+                        selectHtml += `<option value="${rIdx}" ${isSelected}>${r.description}${brand} - ${displayCals} kcal</option>`;
                     });
                     selectHtml += `</select>`;
                 } else {
@@ -5518,7 +5528,18 @@
                             const opt = document.createElement('option');
                             opt.value = rIdx;
                             const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
-                            opt.textContent = `${r.description}${brand} - ${Number(getAllNutrients(r).calories).toFixed(0)} kcal`;
+                            const nut = getAllNutrients(r);
+                            
+                            const logAmount = parseFloat(itemObj.amount) || 1;
+                            const logUnit = itemObj.unit || "serving";
+                            const servingSize = parseFloat(r.servingSize) || 100;
+                            let gramsPerUnit = servingSize;
+                            if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
+                            else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
+                            const rMultiplier = (logAmount * gramsPerUnit) / 100;
+                            const displayCals = (nut.calories * rMultiplier).toFixed(0);
+
+                            opt.textContent = `${r.description}${brand} - ${displayCals} kcal`;
                             if (rIdx === currentIdx) opt.selected = true;
                             select.appendChild(opt);
                         });
