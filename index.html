@@ -1235,8 +1235,7 @@
             </div>
 
             <button id="builderManualSearchBtn" onclick="builderManualAddSelected()"
-                style="padding:12px; background:#10b981; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Add
-                Selected to Meal</button>
+                style="padding:12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Log Meal</button>
         </div>
     </div>
     <div id="editLogModal"
@@ -5548,13 +5547,24 @@
             const input = document.getElementById('builderManualInput');
             const val = input.value.trim();
             if (val) {
-                const item = { query: val, results: null, loading: true };
+                const match = val.match(/^([\d.]+)\s*([a-zA-Z]+)?\s+(.*)$/);
+                let amount = 1;
+                let unit = 'serving';
+                let queryStr = val;
+
+                if (match) {
+                    amount = parseFloat(match[1]);
+                    unit = match[2] || 'serving';
+                    queryStr = match[3];
+                }
+
+                const item = { query: queryStr, amount: amount, unit: unit, results: null, loading: true, original: val };
                 manualEntryItems.push(item);
                 input.value = '';
                 renderManualEntryList();
                 input.focus();
 
-                searchFoodMatches(val).then(matches => {
+                searchFoodMatches(queryStr).then(matches => {
                     item.results = matches;
                     item.loading = false;
                     renderManualEntryList();
@@ -5575,12 +5585,23 @@
                 // To allow '1 apple' to match 'Apple', strip out numbers/quantities
                 let cleanedQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim();
                 if (!cleanedQuery) cleanedQuery = query;
+                
+                const queryWords = cleanedQuery.split(/\s+/).filter(w => w.length > 2);
 
                 localMatches = appData.myFoods.filter(f => {
                     const desc = String(f.description || '').toLowerCase();
                     const brand = String(f.brandOwner || '').toLowerCase();
                     const upcMatch = f.upc && String(f.upc) === query;
-                    return desc.includes(cleanedQuery) || brand.includes(cleanedQuery) || upcMatch;
+                    
+                    if (upcMatch) return true;
+                    if (desc.includes(cleanedQuery) || brand.includes(cleanedQuery)) return true;
+                    if (desc.length > 2 && cleanedQuery.includes(desc)) return true;
+                    
+                    for (const word of queryWords) {
+                        if (desc.includes(word)) return true;
+                    }
+                    
+                    return false;
                 }).map(f => ({ ...f, source: 'My Foods' }));
 
                 localMatches.sort((a, b) => {
@@ -5700,6 +5721,7 @@
             manualEntryItems = [];
             document.getElementById('builderManualEntryModal').style.display = 'none';
             renderPendingMealItems();
+            builderLogMeal();
         }
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
