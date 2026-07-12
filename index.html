@@ -545,30 +545,41 @@
                     </div>
                     <div id="searchInfoPopup"
                         style="display:none; background:#e0e7ff; color:#374151; border:1px solid #c7d2fe; border-radius:6px; padding:10px; font-size:0.85em; margin-bottom:10px;">
-                        Searches are conducted using three databases. My Foods (stored locally), USDA Food Central, and
-                        Open Food Facts. Results from the local My Foods are presented first.
+                        Searches are conducted using the databases you select from the 'Databases' button. You will need to load API keys for the USDA Foodcentral and Gemini Ai meal search function. This is a one time process. Instructions to obtain the keys are given when you press those buttons, and it is very easy to do. 
                     </div>
                     <div id="search-content">
 
                         <div class="form-group">
-                            <label>Search Databases</label>
-                            <div class="search-row" style="flex-wrap: wrap;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="margin:0;">Search Databases</label>
+                                <button onclick="showDatabaseConfigModal()"
+                                    style="padding: 4px 8px; font-size: 0.85em; background: #64748b; color:white; white-space:nowrap; border:none; border-radius:4px; cursor:pointer;">⚙️ Databases</button>
+                            </div>
+                            
+                            <div style="display:flex; gap:8px; margin-bottom:8px;">
                                 <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans"
-                                    style="flex: 1 1 100%; min-width: 200px;">
-                                <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-                                    <button id="searchBtn" onclick="searchDatabases()"
-                                        style="padding: 8px 12px; font-size: 0.85em; flex: 1; min-width: 80px;">Search</button>
-                                    <button onclick="showDatabaseConfigModal()"
-                                        style="padding: 8px 12px; font-size: 0.85em; flex: 1; min-width: 100px; background: #64748b; color:white; white-space:nowrap;">⚙️
-                                        Databases</button>
-                                    <button onclick="startBarcodeScan()"
-                                        style="background:#10b981; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; min-width: 100px;">📷
-                                        Barcode</button>
+                                    style="flex: 1;">
+                                <button id="searchBtn" onclick="searchDatabases()"
+                                    style="padding: 8px 12px; font-size: 0.85em; white-space:nowrap;">Search</button>
+                            </div>
+
+                            <div style="display: flex; gap: 8px; width: 100%; align-items: stretch;">
+                                <button onclick="startBarcodeScan()"
+                                    style="background:#10b981; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">📷 Barcode</button>
+                                
+                                <div style="display:flex; flex: 1; gap:4px;">
                                     <button onclick="openEnterMealModal()"
-                                        style="background:#8b5cf6; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; min-width: 110px;">✨
-                                        Enter Meal</button>
+                                        style="background:#8b5cf6; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">✨ Search a Meal</button>
+                                    <button id="searchMealInfoBtn" onclick="toggleSearchMealInfo(event)"
+                                        style="background:none; border:none; color:var(--primary); font-size:1.2em; cursor:pointer; padding:0 4px;"
+                                        title="Search a Meal Info">ℹ️</button>
                                 </div>
                             </div>
+                        </div>
+
+                        <div id="searchMealInfoPopup"
+                            style="display:none; background:#e0e7ff; color:#374151; border:1px solid #c7d2fe; border-radius:6px; padding:10px; font-size:0.85em; margin-bottom:10px;">
+                            Search a Meal allows two options for you to enter multiple items at a time. There is a manual meal builder or you can describe what you had to eat and let Gemini AI parse it into a list. Note: parsing and lookups may not always render accurately, but you can adjust by selecting the correct items from a dropdown search field and make edits as needed before committing the meal to the daily log.
                         </div>
 
                         <div class="form-group">
@@ -1239,7 +1250,8 @@
             </div>
 
             <div style="display:flex; gap:10px;">
-                <button onclick="document.getElementById('builderManualEntryModal').style.display='none'; closeEnterMealModal();"
+                <button
+                    onclick="document.getElementById('builderManualEntryModal').style.display='none'; closeEnterMealModal();"
                     style="flex:1; padding:12px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Cancel</button>
                 <button id="builderManualSearchBtn" onclick="builderManualAddSelected()"
                     style="flex:1; padding:12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Log
@@ -5459,6 +5471,15 @@
                 popup.style.display = 'none';
             }
         }
+        function toggleSearchMealInfo(event) {
+            event.preventDefault();
+            const popup = document.getElementById('searchMealInfoPopup');
+            if (popup.style.display === 'none') {
+                popup.style.display = 'block';
+            } else {
+                popup.style.display = 'none';
+            }
+        }
 
         // ==================== MANUAL MULTI-ITEM WORKFLOW ====================
         let manualEntryItems = [];
@@ -5755,6 +5776,17 @@
         }
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
+        // Re-check date logic when the app returns from background
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const todayWeekStart = getWeekStartDate();
+                if (appData.currentWeekStart && appData.currentWeekStart !== todayWeekStart) {
+                    // Force a reload of the page so it runs through the standard init cycle cleanly
+                    window.location.reload();
+                }
+            }
+        });
+
         init();
     </script>
 </body>
