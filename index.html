@@ -75,7 +75,9 @@
             .container {
                 grid-template-columns: 1fr;
             }
-            html, body {
+
+            html,
+            body {
                 padding: 0;
             }
         }
@@ -1198,9 +1200,13 @@
                 </div>
             </div>
 
-            <button id="builderLogMealBtn" onclick="builderLogMeal()"
-                style="padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Log
-                Entire Meal</button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeEnterMealModal()"
+                    style="flex:1; padding:12px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Cancel</button>
+                <button id="builderLogMealBtn" onclick="builderLogMeal()"
+                    style="flex:1; padding:12px; background:#3b82f6; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Log
+                    Entire Meal</button>
+            </div>
         </div>
     </div>
 
@@ -1221,11 +1227,9 @@
                     placeholder="e.g. 1 apple" onkeypress="if(event.key==='Enter') builderManualNextItem()">
             </div>
 
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button onclick="document.getElementById('builderManualEntryModal').style.display='none'"
-                    style="flex:1; padding:10px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Cancel</button>
+            <div style="margin-bottom:15px;">
                 <button onclick="builderManualNextItem()"
-                    style="flex:1; padding:10px; background:#f59e0b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Next
+                    style="width:100%; padding:10px; background:#f59e0b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Next
                     Item</button>
             </div>
 
@@ -1234,8 +1238,13 @@
                 <!-- Manual items list goes here -->
             </div>
 
-            <button id="builderManualSearchBtn" onclick="builderManualAddSelected()"
-                style="padding:12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer; width:100%;">Log Meal</button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('builderManualEntryModal').style.display='none'; closeEnterMealModal();"
+                    style="flex:1; padding:12px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Cancel</button>
+                <button id="builderManualSearchBtn" onclick="builderManualAddSelected()"
+                    style="flex:1; padding:12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Log
+                    Meal</button>
+            </div>
         </div>
     </div>
     <div id="editLogModal"
@@ -3197,7 +3206,7 @@
                     item.results.forEach((r, rIdx) => {
                         const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
                         const nut = getAllNutrients(r);
-                        
+
                         const logAmount = parseFloat(parsed.amount) || 1;
                         const logUnit = parsed.unit || "serving";
                         const servingSize = parseFloat(r.servingSize) || 100;
@@ -3224,9 +3233,9 @@
                     let gramsPerUnit = servingSize;
                     if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
                     else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
-                    
+
                     const customMultiplier = (logAmount * gramsPerUnit) / 100;
-                    
+
                     nutHtml = `<div style="font-size:0.85em; color:#6b7280; margin-top:4px;">
                         🔥 ${(nut.calories * customMultiplier).toFixed(0)} kcal | 🥩 ${(nut.protein * customMultiplier).toFixed(1)}g P | 🧈 ${(nut.fat * customMultiplier).toFixed(1)}g F | 🍞 ${(nut.carbs * customMultiplier).toFixed(1)}g C
                     </div>`;
@@ -5529,7 +5538,7 @@
                             opt.value = rIdx;
                             const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
                             const nut = getAllNutrients(r);
-                            
+
                             const logAmount = parseFloat(itemObj.amount) || 1;
                             const logUnit = itemObj.unit || "serving";
                             const servingSize = parseFloat(r.servingSize) || 100;
@@ -5606,22 +5615,22 @@
                 // To allow '1 apple' to match 'Apple', strip out numbers/quantities
                 let cleanedQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim();
                 if (!cleanedQuery) cleanedQuery = query;
-                
+
                 const queryWords = cleanedQuery.split(/\s+/).filter(w => w.length > 2);
 
                 localMatches = appData.myFoods.filter(f => {
                     const desc = String(f.description || '').toLowerCase();
                     const brand = String(f.brandOwner || '').toLowerCase();
                     const upcMatch = f.upc && String(f.upc) === query;
-                    
+
                     if (upcMatch) return true;
                     if (desc.includes(cleanedQuery) || brand.includes(cleanedQuery)) return true;
                     if (desc.length > 2 && cleanedQuery.includes(desc)) return true;
-                    
+
                     for (const word of queryWords) {
                         if (desc.includes(word)) return true;
                     }
-                    
+
                     return false;
                 }).map(f => ({ ...f, source: 'My Foods' }));
 
