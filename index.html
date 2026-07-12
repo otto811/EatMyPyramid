@@ -596,16 +596,7 @@
                                 </div>
                                 <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 38px;">
                                     <button onclick="showCustomFoodModal()"
-                                        style="background: #8b5cf6; padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">✏️ Modify Item</button>
-                                    <span class="fg-info-wrap" style="align-self: center;">
-                                        <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
-                                            onclick="toggleModifySearchInfo(event)"
-                                            aria-label="Modify Search Info">i</button>
-                                        <div class="fg-info-popup" id="modifySearchInfoPopup"
-                                            style="min-width:280px; max-width:340px; right: 0; left: auto;">
-                                            <p style="margin:0;">Food items do not always have accurate nutritional information. This button allows you to modify the portion size or enter correct nutrition information, preferred item name etc..</p>
-                                        </div>
-                                    </span>
+                                        style="background: #8b5cf6; padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">Modify Item</button>
                                 </div>
                             </div>
                         </div>
@@ -613,24 +604,11 @@
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
                                 <button onclick="showLogFoodModal()"
-                                    style="flex: 1; padding: 0; font-size: 0.85em; margin: 0; height: 38px; white-space: nowrap; border:none; border-radius:4px; cursor:pointer;">Log Food</button>
-                                
-                                <div style="flex: 1; display: flex; align-items: center; gap: 4px; height: 38px;">
-                                    <button onclick="saveCurrentToMyFoods()"
-                                        style="flex: 1; background: var(--warning); padding: 0; font-size: 0.85em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">⭐ Save to My Foods</button>
-                                    <span class="fg-info-wrap" style="align-self: center;">
-                                        <button type="button" class="fg-info-btn" id="saveMyFoodsInfoBtn"
-                                            onclick="toggleSaveMyFoodsInfo(event)"
-                                            aria-label="Save to My Foods Info">i</button>
-                                        <div class="fg-info-popup" id="saveMyFoodsInfoPopup"
-                                            style="min-width:280px; max-width:340px; right: 0; left: auto;">
-                                            <p style="margin:0;">My Foods is a local database you create. It allows you to customize based on the foods you consume often. You can create an item from scratch, add a scanned or searched item, fix bad info from online items, modify nutrition info based on preferred serving sizes. All searches will place items from 'My Foods' at the top of the list.</p>
-                                        </div>
-                                    </span>
-                                </div>
-
+                                    style="flex: 1.5; padding: 0; font-size: 0.85em; margin: 0; height: 38px; white-space: nowrap; border:none; border-radius:4px; cursor:pointer;">Log Food</button>
+                                <button onclick="saveCurrentToMyFoods()"
+                                    style="flex: 1; background: var(--warning); padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">Save to My Foods</button>
                                 <button onclick="showNewFoodEntryModal()"
-                                    style="flex: 1; background: #3b82f6; padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">➕ New Food Entry</button>
+                                    style="flex: 1; background: #3b82f6; padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">New Food Entry</button>
                             </div>
                         </div>
 
@@ -679,7 +657,7 @@
                                     <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
                                 </button>
                                 <div id="myFoodsDropdown" class="dropdown-menu-list">
-                                    <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">📋 View
+                                    <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">View
                                         &amp;
                                         Manage My Foods</button>
                                     <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create
@@ -847,8 +825,18 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y: auto;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto;">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Modify Search Item / New Food
-                Entry</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom: 15px;">
+                <h3 style="margin:0;">Modify Item</h3>
+                <span class="fg-info-wrap">
+                    <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
+                        onclick="toggleModifySearchInfo(event)"
+                        aria-label="Modify Search Info">i</button>
+                    <div class="fg-info-popup" id="modifySearchInfoPopup"
+                        style="min-width:280px; max-width:340px; right: 0; left: auto; top: calc(100% + 8px);">
+                        <p style="margin:0;">Food items do not always have accurate nutritional information. This button allows you to modify the portion size or enter correct nutrition information, preferred item name etc..</p>
+                    </div>
+                </span>
+            </div>
 
             <div class="form-group"><label>Food Name</label><input type="text" id="cf-name"
                     placeholder="e.g. Mom's Lasagna"></div>
@@ -1486,7 +1474,18 @@
             style="background:white; padding:25px; border-radius:12px; width:95%; max-width:600px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: 20px auto; display:flex; flex-direction:column; max-height: 90vh;">
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
-                <h3 style="margin:0; color:#8b5cf6;">📋 Manage My Foods</h3>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h3 style="margin:0; color:#8b5cf6;">Manage My Foods</h3>
+                    <span class="fg-info-wrap">
+                        <button type="button" class="fg-info-btn" id="saveMyFoodsInfoBtn"
+                            onclick="toggleSaveMyFoodsInfo(event)"
+                            aria-label="Save to My Foods Info">i</button>
+                        <div class="fg-info-popup" id="saveMyFoodsInfoPopup"
+                            style="min-width:280px; max-width:340px; left: 0;">
+                            <p style="margin:0;">My Foods is a local database you create. It allows you to customize based on the foods you consume often. You can create an item from scratch, add a scanned or searched item, fix bad info from online items, modify nutrition info based on preferred serving sizes. All searches will place items from 'My Foods' at the top of the list.</p>
+                        </div>
+                    </span>
+                </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <button onclick="sortMyFoodsAlphabetically()" id="myFoodsSortBtn"
                         style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤
