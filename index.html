@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v6.1</title>
+    <title>EatMyPyramid v7.0</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
-        const APP_VERSION = "5.2";
+        const APP_VERSION = "7.0";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -417,6 +417,20 @@
         .fg-info-btn:hover {
             background: #bae6fd;
         }
+
+        @media (max-width: 600px) {
+            .fg-info-popup {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90vw !important;
+                max-width: 350px !important;
+                min-width: unset !important;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+                z-index: 20000 !important;
+            }
+        }
     </style>
 </head>
 
@@ -449,7 +463,7 @@
                             </span>
                         </div>
                         <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid
-                            v6.1)</div>
+                            v7.0)</div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                         <button id="recall-week-btn" onclick="showRecallWeekModal()"
@@ -506,7 +520,17 @@
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"
                                     style="width:60px; padding: 6px 8px; height: 34px;">
-                                <button onclick="showCalculatorModal()"
+                                <button type="button" onclick="showCalculatorModal(event)"
+                                    style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Protein Goal (g)</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="proteinGoalInput" value="0"
+                                    onchange="updateTarget('ProteinGrams', this.value)" min="0"
+                                    style="width:60px; padding: 6px 8px; height: 34px;">
+                                <button type="button" onclick="showProteinCalculatorModal(event)"
                                     style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
                             </div>
                         </div>
@@ -519,12 +543,13 @@
                     <!-- Data & API Keys -->
                     <div
                         style="flex-basis: 100%; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button onclick="exportAppData()"
+                        <button type="button" onclick="event.preventDefault(); exportAppData()"
                             style="background:#3b82f6; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                             📤 Export App Data
                         </button>
                         <div>
-                            <button onclick="document.getElementById('importAppDataInput').click()"
+                            <button type="button"
+                                onclick="event.preventDefault(); document.getElementById('importAppDataInput').click()"
                                 style="background:#10b981; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 📥 Import App Data
                             </button>
@@ -532,12 +557,13 @@
                                 onchange="importAppData(event)">
                         </div>
 
-                        <button onclick="showManageStorageModal()"
+                        <button type="button" onclick="event.preventDefault(); showManageStorageModal()"
                             style="background:#f59e0b; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                             🧹 Manage Storage
                         </button>
                         <div>
-                            <button onclick="document.getElementById('viewArchiveInput').click()"
+                            <button type="button"
+                                onclick="event.preventDefault(); document.getElementById('viewArchiveInput').click()"
                                 style="background:#ef4444; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 📂 View Archive
                             </button>
@@ -546,20 +572,20 @@
                         </div>
 
                         <div style="display:flex; flex-direction:column; align-items:center;">
-                            <button onclick="showUsdaApiKeyModal()"
+                            <button type="button" onclick="event.preventDefault(); showUsdaApiKeyModal()"
                                 style="background:#6b7280; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
                                 🔑 USDA API Key
                             </button>
                             <div
                                 style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px;">
-                                <button onclick="showDatabaseConfigModal()"
+                                <button type="button" onclick="event.preventDefault(); showDatabaseConfigModal()"
                                     style="padding: 2px 6px; font-size: 0.75em; background: #64748b; color:white; white-space:nowrap; border:none; border-radius:4px; cursor:pointer;">⚙️
                                     Databases</button>
                                 <span id="apiKeyStatus" style="font-size:0.75em; color:#6b7280;"></span>
                             </div>
                         </div>
 
-                        <button onclick="showAiKeySetupModal()"
+                        <button type="button" onclick="event.preventDefault(); showAiKeySetupModal()"
                             style="background:#8b5cf6; color:white; padding:8px 14px; font-size:0.85em; font-weight:600; border-radius:6px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; width:100%; height:fit-content;">
                             🤖 AI Key Setup
                         </button>
@@ -741,7 +767,7 @@
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('foodGroupsHelpPopup').style.display = document.getElementById('foodGroupsHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
                                 <div class="fg-info-popup" id="foodGroupsHelpPopup"
-                                    style="min-width:300px; max-width:380px; left:0;">
+                                    style="width:300px; max-width:90vw; right:0; left:auto;">
                                     <p style="margin:0;">This section is to help you focus on eating Whole Foods or
                                         items that contain a high percentage of a food group. If the item is logged and
                                         pre-assigned to a food group, you'll see it here. You can manually bump the bars
@@ -1057,6 +1083,64 @@
                     <button onclick="closeCalculatorModal()"
                         style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
                     <button onclick="applyCalculatedPoints()"
+                        style="background:var(--primary); flex:1; padding:12px;">Apply
+                        Goal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PROTEIN CALCULATOR MODAL ==================== -->
+        <div id="proteinCalculatorModal"
+            style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+            <div
+                style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5); margin: auto;">
+                <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Protein Target Calculator
+                </h3>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="prot-weight">Weight (lbs)</label>
+                    <input type="number" id="prot-weight" placeholder="Enter weight (e.g. 150)" min="0"
+                        onchange="calculateProteinTarget()">
+                </div>
+
+                <div class="form-group">
+                    <label for="prot-activity">Daily Activity Level</label>
+                    <select id="prot-activity" onchange="calculateProteinTarget()">
+                        <option value="1.2" selected>Sedentary (Little or no exercise)</option>
+                        <option value="1.375">Lightly active (1-3 days/week)</option>
+                        <option value="1.55">Moderately active (3-5 days/week)</option>
+                        <option value="1.725">Very active (6-7 days/week)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="prot-goal">Health Goal</label>
+                    <select id="prot-goal" onchange="calculateProteinTarget()">
+                        <option value="maintenance" selected>Maintenance</option>
+                        <option value="fat_loss">Fat Loss</option>
+                        <option value="muscle_gain">Muscle Gain (Hypertrophy)</option>
+                        <option value="endurance">Endurance Performance</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="prot-diet">Dietary Context</label>
+                    <select id="prot-diet" onchange="calculateProteinTarget()">
+                        <option value="standard" selected>Standard / Omnivore</option>
+                        <option value="plant_based">Vegan / Vegetarian (+10%)</option>
+                    </select>
+                </div>
+
+                <div id="prot-output"
+                    style="margin-top: 1.5rem; padding: 1rem; background-color: #e8f4f8; border-radius: 8px; text-align: center; font-size: 1.5em; font-weight: bold; color: #2980b9;">
+                    Target = 0g
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button type="button"
+                        onclick="document.getElementById('proteinCalculatorModal').style.display='none'"
+                        style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
+                    <button type="button" onclick="applyProteinTarget()"
                         style="background:var(--primary); flex:1; padding:12px;">Apply
                         Goal</button>
                 </div>
@@ -1921,7 +2005,7 @@
                 wwGoal: 0,
                 usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
                 // Macro targets represent percentages (30%, 30%, 40%)
-                targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
+                targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, ProteinGrams: 0, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
                 history: {},
                 myFoods: [],
                 visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true }
@@ -1936,7 +2020,7 @@
             function createEmptyDay() {
                 return {
                     current: {
-                        Calories: 0, Protein: 0, Fat: 0, Carbs: 0,
+                        Calories: 0, Protein: 0, Fat: 0, Carbs: 0, ProteinGrams: 0,
                         Fruit: 0, Vegetable: 0, 'Proteins': 0, Dairy: 0, Grain: 0, Water: 0,
                         exercisePoints: 0,
                         flexPoints: 0,
@@ -2180,6 +2264,8 @@
                 document.getElementById('goalDateInput').value = appData.goalDate || '';
                 document.getElementById('calorieGoalInput').value = appData.calorieGoal;
                 document.getElementById('wwGoalInput').value = appData.wwGoal;
+                const protInput = document.getElementById('proteinGoalInput');
+                if (protInput && appData.targets) protInput.value = appData.targets.ProteinGrams || 0;
             }
 
             // ==================== WEEK ARCHIVING / RECALL A WEEK HELPER ====================
@@ -3366,12 +3452,20 @@
             }
 
             // ==================== POINTS CALCULATOR FUNCTIONS ====================
-            function showCalculatorModal() {
-                document.getElementById('calculatorModal').style.display = 'flex';
+            function showCalculatorModal(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                const modal = document.getElementById('calculatorModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
                 // Auto-fill weight if it's already set in the main app
-                if (appData.weight > 0) {
-                    document.getElementById('calc-weight').value = appData.weight;
-                    calculatePoints();
+                if (typeof appData !== 'undefined' && appData.weight && parseFloat(appData.weight) > 0) {
+                    const wInput = document.getElementById('calc-weight');
+                    if (wInput) wInput.value = parseFloat(appData.weight);
+                    if (typeof calculatePoints === 'function') calculatePoints();
                 }
             }
 
@@ -3409,6 +3503,71 @@
                     }
                 }
                 closeCalculatorModal();
+            }
+
+            // ==================== PROTEIN CALCULATOR FUNCTIONS ====================
+            function showProteinCalculatorModal(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                const modal = document.getElementById('proteinCalculatorModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+                if (typeof appData !== 'undefined' && appData.weight && parseFloat(appData.weight) > 0) {
+                    const wInput = document.getElementById('prot-weight');
+                    if (wInput) wInput.value = parseFloat(appData.weight);
+                    calculateProteinTarget();
+                }
+            }
+
+            function calculateProteinTarget() {
+                const weightLbs = parseFloat(document.getElementById('prot-weight').value) || 0;
+                if (weightLbs <= 0) {
+                    document.getElementById('prot-output').innerText = 'Target = 0g';
+                    return 0;
+                }
+
+                const weightKg = weightLbs / 2.20462;
+                const goal = document.getElementById('prot-goal').value;
+                const activityMultiplier = parseFloat(document.getElementById('prot-activity').value) || 1.2;
+
+                let baseMultiplier = 0.8; // default sedentary maintenance
+
+                if (goal === 'fat_loss') {
+                    baseMultiplier = 2.5; // High protein to preserve lean mass
+                } else if (goal === 'muscle_gain') {
+                    baseMultiplier = 1.8;
+                } else if (goal === 'endurance') {
+                    baseMultiplier = 1.5;
+                } else {
+                    // Maintenance scales with activity level
+                    if (activityMultiplier >= 1.7) baseMultiplier = 1.6;
+                    else if (activityMultiplier >= 1.5) baseMultiplier = 1.4;
+                    else if (activityMultiplier >= 1.3) baseMultiplier = 1.0;
+                    else baseMultiplier = 0.8;
+                }
+
+                let targetGrams = weightKg * baseMultiplier;
+
+                // Dietary Context adjustment (+10% for plant-based to offset bioavailability)
+                if (document.getElementById('prot-diet').value === 'plant_based') {
+                    targetGrams *= 1.1;
+                }
+
+                const finalTarget = Math.round(targetGrams);
+                document.getElementById('prot-output').innerText = `Target = ${finalTarget}g`;
+                return finalTarget;
+            }
+
+            function applyProteinTarget() {
+                const finalTarget = calculateProteinTarget();
+                if (finalTarget > 0) {
+                    document.getElementById('proteinGoalInput').value = finalTarget;
+                    updateTarget('ProteinGrams', finalTarget);
+                }
+                document.getElementById('proteinCalculatorModal').style.display = 'none';
             }
 
             // ==================== AI MEAL LOGGER FUNCTIONS ====================
@@ -3912,6 +4071,8 @@
 
             // ==================== UI RENDERING ====================
             function renderBarometers() {
+                if (state.current) state.current.ProteinGrams = state.current.Protein || 0;
+
                 const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
                 const exer = state.current.exercisePoints || 0;
                 const flex = state.current.flexPoints || 0;
@@ -3990,6 +4151,17 @@
                 };
 
                 renderGroup(['Calories', 'Protein', 'Fat', 'Carbs'], 'macroBarometersContainer', { Calories: '#3b82f6', Protein: '#ef4444', Fat: '#f59e0b', Carbs: '#14b8a6' }, true);
+
+                const macroCont = document.getElementById('macroBarometersContainer');
+                if (macroCont) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.id = 'proteinGramsContainer';
+                    macroCont.appendChild(tempDiv);
+                    renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
+                    const labelStr = tempDiv.querySelector('strong');
+                    if (labelStr) labelStr.innerText = 'Protein (g/lb)';
+                }
+
                 renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
             }
             function renderLog() {
