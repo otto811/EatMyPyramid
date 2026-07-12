@@ -566,20 +566,9 @@
                             <div style="display: flex; gap: 8px; width: 100%; align-items: stretch;">
                                 <button onclick="startBarcodeScan()"
                                     style="background:#10b981; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">📷 Barcode</button>
-                                
-                                <div style="display:flex; flex: 1; gap:4px;">
-                                    <button onclick="openEnterMealModal()"
-                                        style="background:#8b5cf6; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">✨ Search a Meal</button>
-                                    <button id="searchMealInfoBtn" onclick="toggleSearchMealInfo(event)"
-                                        style="background:none; border:none; color:var(--primary); font-size:1.2em; cursor:pointer; padding:0 4px;"
-                                        title="Search a Meal Info">ℹ️</button>
-                                </div>
+                                <button onclick="openEnterMealModal()"
+                                    style="background:#8b5cf6; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">Search a Meal</button>
                             </div>
-                        </div>
-
-                        <div id="searchMealInfoPopup"
-                            style="display:none; background:#e0e7ff; color:#374151; border:1px solid #c7d2fe; border-radius:6px; padding:10px; font-size:0.85em; margin-bottom:10px;">
-                            Search a Meal allows two options for you to enter multiple items at a time. There is a manual meal builder or you can describe what you had to eat and let Gemini AI parse it into a list. Note: parsing and lookups may not always render accurately, but you can adjust by selecting the correct items from a dropdown search field and make edits as needed before committing the meal to the daily log.
                         </div>
 
                         <div class="form-group">
@@ -602,13 +591,13 @@
                         </div>
 
                         <div class="form-group">
-                            <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+                            <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
                                 <button onclick="showLogFoodModal()"
-                                    style="flex: 1.5; padding: 0; font-size: 0.85em; margin: 0; height: 38px; white-space: nowrap; border:none; border-radius:4px; cursor:pointer;">Log Food</button>
+                                    style="flex: 1.2; padding: 8px 4px; font-size: 0.85em; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Log Food</button>
                                 <button onclick="saveCurrentToMyFoods()"
-                                    style="flex: 1; background: var(--warning); padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">Save to My Foods</button>
+                                    style="flex: 1; background: var(--warning); padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Save to My Foods</button>
                                 <button onclick="showNewFoodEntryModal()"
-                                    style="flex: 1; background: #3b82f6; padding: 0; font-size: 0.85em; color: white; margin: 0; height: 38px; border:none; border-radius:4px; cursor:pointer; white-space: nowrap;">New Food Entry</button>
+                                    style="flex: 1; background: #3b82f6; padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">New Food Entry</button>
                             </div>
                         </div>
 
@@ -1175,7 +1164,18 @@
             style="background:white; padding:25px; border-radius:12px; width:95%; max-width:600px; box-shadow:0 10px 25px rgba(0,0,0,0.5); max-height:95vh; overflow-y:auto; display:flex; flex-direction:column;">
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <h3 style="margin:0; color:#8b5cf6;">✨ Enter Meal Builder</h3>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h3 style="margin:0; color:#8b5cf6;">Enter Meal Builder</h3>
+                    <span class="fg-info-wrap">
+                        <button type="button" class="fg-info-btn" id="searchMealInfoBtn"
+                            onclick="toggleSearchMealInfo(event)"
+                            aria-label="Search a Meal Info">i</button>
+                        <div class="fg-info-popup" id="searchMealInfoPopup"
+                            style="min-width:280px; max-width:340px; left:0;">
+                            <p style="margin:0;">Search a Meal allows two options for you to enter multiple items at a time. There is a manual meal builder or you can describe what you had to eat and let Gemini AI parse it into a list. Note: parsing and lookups may not always render accurately, but you can adjust by selecting the correct items from a dropdown search field and make edits as needed before committing the meal to the daily log.</p>
+                        </div>
+                    </span>
+                </div>
                 <button onclick="closeEnterMealModal()"
                     style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
@@ -5493,13 +5493,9 @@
             }
         }
         function toggleSearchMealInfo(event) {
-            event.preventDefault();
+            event.stopPropagation();
             const popup = document.getElementById('searchMealInfoPopup');
-            if (popup.style.display === 'none') {
-                popup.style.display = 'block';
-            } else {
-                popup.style.display = 'none';
-            }
+            popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
         }
 
         // ==================== MANUAL MULTI-ITEM WORKFLOW ====================
