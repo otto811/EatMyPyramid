@@ -535,7 +535,7 @@
                             </div>
                         </div>
                         <div>
-                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Protein Goal (g)</label>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Protein Goal (grams)</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <input type="number" id="proteinGoalInput" value="0"
                                     onchange="updateTarget('ProteinGrams', this.value)" min="0"
@@ -821,7 +821,7 @@
                             <div class="exercise-box">
                                 <label
                                     style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                                    <strong>Exercise and Flex Points</strong>&nbsp;(subtracts from total daily points)
+                                    <strong>EMP Exercise & Flex Points</strong>&nbsp;(subtracts from total daily points)
                                     <span class="fg-info-wrap">
                                         <span style="white-space:nowrap;">(Time = minutes)</span>
                                         <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
@@ -868,7 +868,7 @@
                                 </div>
                                 <div style="display:flex; gap:15px; align-items:center; flex-wrap: wrap;">
                                     <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                                        <span style="font-size:0.9em; font-weight:600;">Exercise Points:</span>
+                                        <span style="font-size:0.9em; font-weight:600;">EMP Exercise Points:</span>
                                         <input type="number" id="exerciseInput" value="0" min="0" step="0.5"
                                             onchange="updateExercisePoints()" style="width:60px;">
                                     </div>
@@ -876,9 +876,10 @@
                                         <span style="font-size:0.9em; font-weight:600;">Flex Points:</span>
                                         <input type="number" id="flexPointsInput" value="0" min="0" step="0.5"
                                             onchange="updateFlexPoints()" style="width:60px;">
+                                        <span style="font-size:0.8em; color:#64748b; font-style:italic; margin-left:2px; white-space:normal; line-height:1.2;">Eat away! Award yourself more for the day</span>
                                     </div>
                                     <div style="display:flex; align-items:center; gap:5px; white-space:nowrap;">
-                                        <span style="font-size:0.9em; font-weight:600;">Flex week max = 35:</span>
+                                        <span style="font-size:0.9em; font-weight:600;">Weekly EMP Flex Points Maximum = 35:</span>
                                         <input type="number" id="weekFlexPointsTotal" value="0"
                                             style="width:60px; background:#f1f5f9; color:#6b7280; font-weight:bold; text-align:center;"
                                             readonly title="Total Flex Points for the week (Cannot be manually edited)">
@@ -4188,7 +4189,7 @@
                 macroCont.appendChild(tempDiv);
                 renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
                 const labelStr = tempDiv.querySelector('strong');
-                if (labelStr) labelStr.innerText = 'Protein (g/lb of Body Weight)';
+                if (labelStr) labelStr.innerText = 'Daily Protein in Grams';
             }
 
             renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
