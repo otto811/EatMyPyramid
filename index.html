@@ -449,7 +449,7 @@
                 <div style="display:flex; align-items:center; flex-wrap:wrap; gap:15px; flex-grow:1;">
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <h2 style="margin:0;">Your Profile & Setup</h2>
+                            <h2 style="margin:0; color:#4f46e5;">Your Profile & Setup</h2>
                             <span class="fg-info-wrap">
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('profileSetupHelpPopup').style.display = document.getElementById('profileSetupHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
@@ -478,7 +478,7 @@
                     </div>
                 </div>
                 <button id="profile-toggle" onclick="toggleSection('profile')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px; flex-shrink:0; margin-left:10px;">−</button>
+                    style="background:#4f46e5; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold; margin-top:2px; flex-shrink:0; margin-left:10px;">−</button>
             </div>
             <div id="profile-content">
                 <div class="profile-bar" style="padding: 10px 15px; gap: 12px; align-items: flex-end;">
@@ -600,7 +600,7 @@
                     <div
                         style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; position: relative;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <h2 style="margin:0;">Search & Log Food</h2>
+                            <h2 style="margin:0; color:#10b981;">Search & Log Food</h2>
                             <button id="searchInfoBtn" onclick="toggleSearchInfo(event)"
                                 style="background:none; border:none; color:var(--primary); font-size:1.2em; cursor:pointer; padding:0;"
                                 title="Search Database Info">ℹ️</button>
@@ -654,18 +654,18 @@
                                         style="width: 50px; height: 44px; padding: 0 4px; font-size: 0.85em; box-sizing: border-box;">
                                 </div>
                                 <div style="flex: none; display: flex; align-items: center; gap: 4px; height: 44px;">
-                                    <button onclick="showCustomFoodModal()"
-                                        style="background: #8b5cf6; padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">Modify
-                                        Item</button>
+                                    <button onclick="showLogFoodModal()"
+                                        style="padding: 0 8px; font-size: 0.8em; color: white; margin: 0; height: 100%; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">Log
+                                        Food</button>
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
-                                <button onclick="showLogFoodModal()"
-                                    style="flex: 1.2; padding: 8px 4px; font-size: 0.85em; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Log
-                                    Food</button>
+                                <button onclick="showCustomFoodModal()"
+                                    style="flex: 1.2; background: #8b5cf6; padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Modify
+                                    Item</button>
                                 <button onclick="saveCurrentToMyFoods()"
                                     style="flex: 1; background: var(--purple); padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Save
                                     to My Foods</button>
@@ -749,9 +749,9 @@
                 <!-- Macros & Energy Section (split from old Daily Targets) -->
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h2 style="margin:0;">Macros &amp; Energy</h2>
+                        <h2 style="margin:0; color:#f97316;">Macros &amp; Energy</h2>
                         <button id="macros-toggle" onclick="toggleSection('macros')"
-                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                            style="background:#f97316; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
                     <div id="macros-content">
                         <div id="macroBarometersContainer"></div>
@@ -762,7 +762,7 @@
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <h2 style="margin:0;">Food Groups (Servings)</h2>
+                            <h2 style="margin:0; color:#84cc16;">Food Groups (Servings)</h2>
                             <span class="fg-info-wrap">
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('foodGroupsHelpPopup').style.display = document.getElementById('foodGroupsHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
@@ -788,7 +788,7 @@
                             </span>
                         </div>
                         <button id="foodgroups-toggle" onclick="toggleSection('foodgroups')"
-                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                            style="background:#84cc16; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
                     <div id="foodgroups-content">
                         <div id="groupBarometersContainer"></div>
@@ -798,9 +798,9 @@
                 <!-- New WW Daily Points Tracker Section -->
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h2 style="margin:0;">WW Daily Points Tracker</h2>
+                        <h2 style="margin:0; color:#8b5cf6;">WW Daily Points Tracker</h2>
                         <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
-                            style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                            style="background:#8b5cf6; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
                     <div id="wwTracker-content">
                         <div
@@ -883,9 +883,9 @@
 
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0;">Daily Log</h2>
+                <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
                 <button id="log-toggle" onclick="toggleSection('log')"
-                    style="background:#10b981; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+                    style="background:#f43f5e; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
             <div id="log-content">
                 <div id="logContainer">
