@@ -468,7 +468,7 @@
                                     <p style="margin:0;">This program is set up to track your daily food intake one week
                                         at a time. Each week is saved and can be recalled using the recall a week
                                         Button. You can track your results by macros and energy food group servings,
-                                        original Weight Watchers points or all three.</p>
+                                        original EMP points or all three.</p>
                                 </div>
                             </span>
                         </div>
@@ -526,7 +526,7 @@
                                 style="width:80px; padding: 6px 8px; height: 34px;">
                         </div>
                         <div>
-                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily Points Goal</label>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Daily EMP Points Goal</label>
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 <input type="number" id="wwGoalInput" value="0" onchange="updateWWGoal()" min="0"
                                     style="width:60px; padding: 6px 8px; height: 34px;">
@@ -805,17 +805,17 @@
                     </div>
                 </div>
 
-                <!-- New WW Daily Points Tracker Section -->
+                <!-- New EMP Daily Points Tracker Section -->
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h2 style="margin:0; color:#8b5cf6;">WW Daily Points Tracker</h2>
+                        <h2 style="margin:0; color:#8b5cf6;">EMP Daily Points Tracker</h2>
                         <button id="wwTracker-toggle" onclick="toggleSection('wwTracker')"
                             style="background:#8b5cf6; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
                     <div id="wwTracker-content">
                         <div
                             style="margin-top:0; padding:15px; background:linear-gradient(135deg,#f3e8ff,#e0e7ff); border-radius:10px;">
-                            <strong style="color:var(--purple);">Daily WW Points</strong>
+                            <strong style="color:var(--purple);">Daily EMP Points</strong>
                             <div class="barometer-container" id="wwBarometer"></div>
 
                             <div class="exercise-box">
@@ -1059,7 +1059,7 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center;">
         <div
             style="background:white; padding:25px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">Points Calculator</h3>
+            <h3 style="margin-top:0; border-bottom:2px solid #eee; padding-bottom:10px;">EMP Points Calculator</h3>
 
             <div class="form-group" style="margin-top: 15px;">
                 <label for="calc-gender">Gender</label>
@@ -1769,7 +1769,7 @@
             <p style="font-size:0.9em; color:#374151; line-height:1.45; margin-bottom:12px;">
                 Pick a date (or use the dropdown) from any past week. The Day selector, Daily Log, Macros, Food
                 Groups,
-                and WW Points will switch to show that week's saved data for browsing.
+                and EMP Points will switch to show that week's saved data for browsing.
             </p>
 
             <div class="form-group">
@@ -2974,7 +2974,7 @@
                     if (id === 1003 || id === 203) nut.protein = val;
                     if (id === 1004 || id === 204) nut.fat = val;
                     if (id === 1005 || id === 205) nut.carbs = val;
-                    if (id === 1079 || id === 291) nut.fiber = val; // Still tracked for WW calculation
+                    if (id === 1079 || id === 291) nut.fiber = val; // Still tracked for EMP calculation
                 }
             }
             return nut;
@@ -3072,7 +3072,7 @@
             <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
-            <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. WW Points: ${ww.toFixed(1)}</span>
+            <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. EMP Points: ${ww.toFixed(1)}</span>
         `;
         }
         //===============LOG FOOD FUNCTION=======================
@@ -3457,7 +3457,7 @@
                 alert("Reset Week is disabled while viewing an archived week.");
                 return;
             }
-            if (confirm("⚠️ This will PERMANENTLY clear ALL logged foods, exercise points, and serving totals for EVERY day of the week.\n\nYour profile settings (weight, calorie goal, WW goal, macro %, custom targets) will NOT be changed.\n\nAre you sure?")) {
+            if (confirm("⚠️ This will PERMANENTLY clear ALL logged foods, exercise points, and serving totals for EVERY day of the week.\n\nYour profile settings (weight, calorie goal, EMP goal, macro %, custom targets) will NOT be changed.\n\nAre you sure?")) {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const defaultW = appData.weight || 0;
 
@@ -3479,7 +3479,7 @@
             }
         }
 
-        // ==================== POINTS CALCULATOR FUNCTIONS ====================
+        // ==================== EMP POINTS CALCULATOR FUNCTIONS ====================
         function showCalculatorModal(e) {
             if (e) {
                 e.preventDefault();
@@ -3519,7 +3519,7 @@
         function applyCalculatedPoints() {
             const totalPoints = calculatePoints();
             if (totalPoints > 0) {
-                // Apply the calculated WW Points goal
+                // Apply the calculated EMP Points goal
                 document.getElementById('wwGoalInput').value = totalPoints;
                 updateWWGoal(); // trigger save and UI update
 
@@ -4110,7 +4110,7 @@
 
             document.getElementById('wwBarometer').innerHTML = `
             <div class="barometer-header">
-                <strong>WW Points Used</strong><span>${net.toFixed(1)} / ${goal}</span>
+                <strong>EMP Points Used</strong><span>${net.toFixed(1)} / ${goal}</span>
             </div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" style="width:${Math.min((net / goal) * 100, 100)}%;background:linear-gradient(90deg,#8b5cf6,#a855f7);"></div>
@@ -4258,7 +4258,7 @@
                             div.innerHTML = `
                                 <div style="flex-grow:1; padding-right:10px;">
                                     <strong>${item.name}</strong><br>
-                                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • WW: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
+                                    <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • EMP: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                                 </div>
                                 <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
                                     <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
