@@ -949,9 +949,9 @@
                 <div class="form-group">
                     <label>Serving Size</label>
                     <div style="display:flex; gap:10px; align-items:flex-end;">
-                        <input type="number" id="cf-serving" value="100" step="0.1"
+                        <input type="number" id="cf-serving" value="100" step="0.1" oninput="adjustCustomFoodNutrients()"
                             style="flex:2; padding:12px; font-size:1em;">
-                        <select id="cf-serving-unit" style="flex:1; padding:12px; font-size:1em;">
+                        <select id="cf-serving-unit" style="flex:1; padding:12px; font-size:1em;" onchange="adjustCustomFoodNutrients()">
                             <option value="g">grams (g)</option>
                             <option value="oz">ounces (oz)</option>
                         </select>
@@ -963,18 +963,18 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group"><label>Calories (per serving)</label><input type="number" id="cf-cal"
-                            value="0">
+                            value="0" onchange="setBaseServingInfo()">
                     </div>
                     <div class="form-group"><label>Protein (g per serving)</label><input type="number" id="cf-pro"
-                            value="0"></div>
+                            value="0" onchange="setBaseServingInfo()"></div>
                     <div class="form-group"><label>Fat (g per serving)</label><input type="number" id="cf-fat"
-                            value="0">
+                            value="0" onchange="setBaseServingInfo()">
                     </div>
                     <div class="form-group"><label>Carbs (g per serving)</label><input type="number" id="cf-carb"
-                            value="0">
+                            value="0" onchange="setBaseServingInfo()">
                     </div>
                     <div class="form-group"><label>Fiber (g per serving)</label><input type="number" id="cf-fib"
-                            value="0">
+                            value="0" onchange="setBaseServingInfo()">
                     </div>
                 </div>
 
@@ -4647,6 +4647,43 @@
             }
         }
 
+        let baseServingVal = 100;
+        let baseServingUnit = 'g';
+        let baseNutrients = { cal: 0, pro: 0, fat: 0, carb: 0, fib: 0 };
+
+        function setBaseServingInfo() {
+            baseServingVal = parseFloat(document.getElementById('cf-serving').value) || 100;
+            if (baseServingVal <= 0) baseServingVal = 1;
+            baseServingUnit = document.getElementById('cf-serving-unit').value || 'g';
+            
+            baseNutrients.cal = parseFloat(document.getElementById('cf-cal').value) || 0;
+            baseNutrients.pro = parseFloat(document.getElementById('cf-pro').value) || 0;
+            baseNutrients.fat = parseFloat(document.getElementById('cf-fat').value) || 0;
+            baseNutrients.carb = parseFloat(document.getElementById('cf-carb').value) || 0;
+            baseNutrients.fib = parseFloat(document.getElementById('cf-fib').value) || 0;
+        }
+
+        function adjustCustomFoodNutrients() {
+            const newServingVal = parseFloat(document.getElementById('cf-serving').value) || 0;
+            const newServingUnit = document.getElementById('cf-serving-unit').value || 'g';
+            
+            if (newServingVal <= 0) return;
+
+            let baseGrams = baseServingVal;
+            if (baseServingUnit === 'oz') baseGrams *= 28.3495;
+
+            let newGrams = newServingVal;
+            if (newServingUnit === 'oz') newGrams *= 28.3495;
+
+            const ratio = newGrams / baseGrams;
+
+            document.getElementById('cf-cal').value = (baseNutrients.cal * ratio).toFixed(1);
+            document.getElementById('cf-pro').value = (baseNutrients.pro * ratio).toFixed(1);
+            document.getElementById('cf-fat').value = (baseNutrients.fat * ratio).toFixed(1);
+            document.getElementById('cf-carb').value = (baseNutrients.carb * ratio).toFixed(1);
+            document.getElementById('cf-fib').value = (baseNutrients.fib * ratio).toFixed(1);
+        }
+
         let editingMyFoodIndex = -1;
 
         function showCustomFoodModal(index = -1) {
@@ -4712,6 +4749,7 @@
                     document.querySelector('#customFoodModal h3').innerText = 'Modify Item';
                 }
             }
+            setBaseServingInfo();
             document.getElementById('customFoodModal').style.display = 'flex';
         }
 
@@ -4730,6 +4768,7 @@
             if (unitSel) unitSel.value = 'g';
             const catSel = document.getElementById('cf-category');
             if (catSel) catSel.value = 'Other';
+            setBaseServingInfo();
         }
 
         function saveCustomFood(copyToDayAfter = false) {
