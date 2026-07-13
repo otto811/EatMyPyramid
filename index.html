@@ -2057,6 +2057,7 @@
             const saved = localStorage.getItem('foodTrackerData');
             if (saved) {
                 Object.assign(appData, JSON.parse(saved));
+                state.targets = appData.targets; // Keep state in sync with loaded targets
 
                 if (!appData.myFoods) appData.myFoods = []; // Ensure old saves migrate correctly
 
@@ -4153,7 +4154,7 @@
                 macroCont.appendChild(tempDiv);
                 renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
                 const labelStr = tempDiv.querySelector('strong');
-                if (labelStr) labelStr.innerText = 'Protein (g/lb)';
+                if (labelStr) labelStr.innerText = 'Protein (g/lb of Body Weight)';
             }
 
             renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
