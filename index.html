@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+    EatMyPyramid
+    Copyright (c) 2026. All rights reserved.
+
+    Permission and Attribution Notices:
+    - Nutrition Data is provided by Open Food Facts (https://world.openfoodfacts.org/) under the Open Database License (ODbL).
+    - Uses html5-qrcode (https://github.com/mebjas/html5-qrcode) licensed under the Apache License 2.0.
+    - Uses Chart.js (https://github.com/chartjs/Chart.js) licensed under the MIT License.
+-->
 <html lang="en">
 
 <head>
@@ -450,6 +459,7 @@
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <h2 style="margin:0; color:#4f46e5;">Your Profile & Setup</h2>
+                            <button type="button" onclick="document.getElementById('disclaimerModal').style.display='flex'" style="background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;" title="Medical Disclaimer">!</button>
                             <span class="fg-info-wrap">
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('profileSetupHelpPopup').style.display = document.getElementById('profileSetupHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
@@ -906,6 +916,30 @@
                     </div>
                 </div>
             </div> <!-- end log-content (collapsible) -->
+        </div>
+    </div>
+
+    <div id="disclaimerModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.95); z-index:10000; align-items:center; justify-content:center; padding: 20px;">
+        <div style="background:white; padding:25px; border-radius:12px; width:100%; max-width:600px; box-shadow:0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom: 15px;">
+                <h3 style="margin:0; color:#ef4444; display:flex; align-items:center; gap:8px;">
+                    <span style="background:#ef4444; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">!</span> 
+                    Medical & Liability Disclaimer
+                </h3>
+            </div>
+            
+            <div style="font-size: 0.95em; color: #374151; line-height: 1.5;">
+                <p><strong>Educational Purposes Only:</strong> EatMyPyramid is designed for educational and informational purposes only. It is not intended to be a substitute for professional medical advice, diagnosis, or treatment.</p>
+                <p><strong>Not Medical Advice:</strong> Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition, dietary changes, or weight management goals. Never disregard professional medical advice or delay in seeking it because of something you have read or calculated on this application.</p>
+                <p><strong>Limitation of Liability:</strong> The developers and publishers of EatMyPyramid make no warranties or representations regarding the accuracy of the nutritional data, points calculations, or macro targets provided by this application. By using this application, you agree that the developer shall not be held liable for any damages, health issues, or adverse effects resulting from your use of this tool.</p>
+                <p><strong>Data Privacy:</strong> All your personal data, logs, and profile settings are stored locally on your device. We do not transmit, collect, or sell your personal information.</p>
+            </div>
+
+            <div style="margin-top:20px; text-align:right;">
+                <button onclick="document.getElementById('disclaimerModal').style.display='none'"
+                    style="background:var(--primary); color:white; border:none; padding:12px 24px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 1em;">I Acknowledge</button>
+            </div>
         </div>
     </div>
 
