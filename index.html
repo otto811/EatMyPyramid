@@ -483,18 +483,18 @@
                                 onclick="document.getElementById('disclaimerModal').style.display='flex'"
                                 style="background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;"
                                 title="Medical Disclaimer">!</button>
-                            <span class="fg-info-wrap">
+                            <div class="fg-info-wrap">
                                 <button type="button" class="fg-info-btn"
-                                    onclick=\"document.getElementById('profileSetupHelpPopup').style.display=''; document.getElementById('profileSetupHelpPopup').classList.toggle('open'); event.stopPropagation();\">i</button>
+                                    onclick="document.getElementById('profileSetupHelpPopup').style.display=''; document.getElementById('profileSetupHelpPopup').classList.toggle('open'); event.stopPropagation();">i</button>
                                 <div class="fg-info-popup" id="profileSetupHelpPopup"
-                                    style="position:relative; min-width:280px; max-width:340px; left:0;">
-<button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open');" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
-                                    <p style="position:relative; margin:0; padding-right:15px;">This program is set up to track your daily food intake one week
+                                    style="min-width:280px; max-width:340px; left:0;">
+                                    <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                                    <p style="margin:0; padding-right:15px;">This program is set up to track your daily food intake one week
                                         at a time. Each week is saved and can be recalled using the recall a week
                                         Button. You can track your results by macros and energy food group servings,
                                         original EMP points or all three.</p>
                                 </div>
-                            </span>
+                            </div>
                         </div>
                         <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid
                             v7.0)</div>
@@ -761,8 +761,7 @@
                                         onclick="showCustomFoodModal(-1, 'Create Custom Food'); closeDropdown('myFoodsDropdown')">Create
                                         Custom
                                         Food</button>
-                                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">Create &amp;
-                                        Recall Recipes</button>
+                                    <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">Recipes</button>
                                     <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My
                                         Foods</button>
                                     <button
@@ -798,13 +797,13 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <h2 style="margin:0; color:#84cc16;">Food Groups (Servings)</h2>
-                            <span class="fg-info-wrap">
+                            <div class="fg-info-wrap">
                                 <button type="button" class="fg-info-btn"
-                                    onclick=\"document.getElementById('foodGroupsHelpPopup').style.display=''; document.getElementById('foodGroupsHelpPopup').classList.toggle('open'); event.stopPropagation();\">i</button>
+                                    onclick="document.getElementById('foodGroupsHelpPopup').style.display=''; document.getElementById('foodGroupsHelpPopup').classList.toggle('open'); event.stopPropagation();">i</button>
                                 <div class="fg-info-popup" id="foodGroupsHelpPopup"
-                                    style="position:relative; width:300px; max-width:90vw; right:0; left:auto;">
-<button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open');" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
-                                    <p style="position:relative; margin:0; padding-right:15px;">This section is to help you focus on eating Whole Foods or
+                                    style="width:300px; max-width:90vw; right:0; left:auto;">
+                                    <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                                    <p style="margin:0; padding-right:15px;">This section is to help you focus on eating Whole Foods or
                                         items that contain a high percentage of a food group. If the item is logged and
                                         pre-assigned to a food group, you'll see it here. You can manually bump the bars
                                         up or down 1/2 servings at a time if a food assignment was missed. Set your
@@ -848,14 +847,15 @@
                                 <label
                                     style="margin-bottom: 8px; display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
                                     <strong>EMP Exercise & Flex Points</strong>&nbsp;(subtracts from total daily points)
-                                    <span class="fg-info-wrap">
+                                    <div class="fg-info-wrap">
                                         <span style="white-space:nowrap;">(Time = minutes)</span>
                                         <button type="button" class="fg-info-btn" id="exIntensityInfoBtn"
-                                            onclick="toggleExIntensityInfo(event)"
+                                            onclick="document.getElementById('exIntensityInfoPopup').style.display=''; document.getElementById('exIntensityInfoPopup').classList.toggle('open'); event.stopPropagation();"
                                             aria-label="Exercise intensity info">i</button>
                                         <div class="fg-info-popup" id="exIntensityInfoPopup"
                                             style="min-width:280px; max-width:340px;">
-                                            <strong style="font-size:0.95em; display:block; margin-bottom:6px;">Exercise
+                                            <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                                            <strong style="font-size:0.95em; display:block; margin-bottom:6px; padding-right:15px;">Exercise
                                                 Intensity Guide</strong>
                                             <p style="margin:0 0 5px;"><strong>1. Low Intensity</strong> – ex. Casual
                                                 walking.<br>
@@ -876,7 +876,7 @@
                                                 minutes.
                                                 You can only speak briefly and cannot sing at all.</p>
                                         </div>
-                                    </span>
+                                    </div>
                                 </label>
                                 <div
                                     style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
@@ -962,13 +962,10 @@
             style="background:white; padding:25px; border-radius:16px; width:100%; max-width:600px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-height: 90vh; overflow-y: auto;">
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom: 15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                    <h3 style="margin:0; color:#ef4444; display:flex; align-items:center; gap:8px;">
-                        <span style="background:#ef4444; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">!</span>
-                        Medical & Liability Disclaimer
-                    </h3>
-                    <button onclick="closeDisclaimerModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-                </div>
+                <h3 style="margin:0; color:#ef4444; display:flex; align-items:center; gap:8px;">
+                    <span style="background:#ef4444; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">!</span>
+                    Medical & Liability Disclaimer
+                </h3>
                 <button onclick="closeDisclaimerModal()"
                     style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
@@ -1007,17 +1004,17 @@
     <h3 style="margin:0;">Modify Item</h3>
     <button onclick="document.getElementById('customFoodModal').style.display='none'" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
 </div>
-                <span class="fg-info-wrap">
+                <div class="fg-info-wrap">
                     <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
-                        onclick="toggleModifySearchInfo(event)" aria-label="Modify Search Info">i</button>
+                        onclick="document.getElementById('modifySearchInfoPopup').style.display=''; document.getElementById('modifySearchInfoPopup').classList.toggle('open'); event.stopPropagation();" aria-label="Modify Search Info">i</button>
                     <div class="fg-info-popup" id="modifySearchInfoPopup"
-                        style="position:relative; min-width:280px; max-width:340px; right: 0; left: auto; top: calc(100% + 8px);">
-<button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open');" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
-                        <p style="position:relative; margin:0; padding-right:15px;">Food items do not always have accurate nutritional information. This button
+                        style="min-width:280px; max-width:340px; right: 0; left: auto; top: calc(100% + 8px);">
+                        <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                        <p style="margin:0; padding-right:15px;">Food items do not always have accurate nutritional information. This button
                             allows you to modify the portion size or enter correct nutrition information, preferred item
                             name etc..</p>
                     </div>
-                </span>
+                </div>
             </div>
 
             <div style="overflow-y:auto; flex-grow:1; padding-right:10px;">
@@ -1449,19 +1446,19 @@
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <h3 style="margin:0; color:#8b5cf6;">Enter Meal Builder</h3>
-                    <span class="fg-info-wrap">
+                    <div class="fg-info-wrap">
                         <button type="button" class="fg-info-btn" id="searchMealInfoBtn"
-                            onclick="toggleSearchMealInfo(event)" aria-label="Search a Meal Info">i</button>
+                            onclick="document.getElementById('searchMealInfoPopup').style.display=''; document.getElementById('searchMealInfoPopup').classList.toggle('open'); event.stopPropagation();" aria-label="Search a Meal Info">i</button>
                         <div class="fg-info-popup" id="searchMealInfoPopup"
-                            style="position:relative; min-width:280px; max-width:340px; left:0;">
-<button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open');" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
-                            <p style="position:relative; margin:0; padding-right:15px;">Search a Meal allows two options for you to enter multiple items at
+                            style="min-width:280px; max-width:340px; left:0;">
+                            <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                            <p style="margin:0; padding-right:15px;">Search a Meal allows two options for you to enter multiple items at
                                 a time. There is a manual meal builder or you can describe what you had to eat and
                                 let Gemini AI parse it into a list. Note: parsing and lookups may not always render
                                 accurately, but you can adjust by selecting the correct items from a dropdown search
                                 field and make edits as needed before committing the meal to the daily log.</p>
                         </div>
-                    </span>
+                    </div>
                 </div>
                 <button onclick="closeEnterMealModal()"
                     style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
@@ -1721,13 +1718,13 @@
         <div
             style="background:white; padding:25px; border-radius:16px; width:95%; max-width:650px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); margin:20px auto; height:95%; max-height:95%; display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:#14b8a6;">Recipes</h3>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <h3 style="margin:0; color:#14b8a6;">Recipes</h3>
                     <button onclick="showRecallRecipeModal()"
                         style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.9em; white-space:nowrap; height:fit-content;">Recall Recipe</button>
+                    <button onclick="closeRecipeModal()"
+                        style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
                 </div>
-                <button onclick="closeRecipeModal()"
-                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
             </div>
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:2px;">
                 <div class="form-group" style="margin-bottom:0;">
@@ -1844,19 +1841,19 @@
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px;">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <h3 style="margin:0; color:#8b5cf6;">Manage My Foods</h3>
-                    <span class="fg-info-wrap">
+                    <div class="fg-info-wrap">
                         <button type="button" class="fg-info-btn" id="saveMyFoodsInfoBtn"
-                            onclick="toggleSaveMyFoodsInfo(event)" aria-label="Save to My Foods Info">i</button>
+                            onclick="document.getElementById('saveMyFoodsInfoPopup').style.display=''; document.getElementById('saveMyFoodsInfoPopup').classList.toggle('open'); event.stopPropagation();" aria-label="Save to My Foods Info">i</button>
                         <div class="fg-info-popup" id="saveMyFoodsInfoPopup"
-                            style="position:relative; min-width:280px; max-width:340px; left: 0;">
-<button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open');" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
-                            <p style="position:relative; margin:0; padding-right:15px;">My Foods is a local database you create. It allows you to customize
+                            style="min-width:280px; max-width:340px; left: 0;">
+                            <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
+                            <p style="margin:0; padding-right:15px;">My Foods is a local database you create. It allows you to customize
                                 based on the foods you consume often. You can create an item from scratch, add a
                                 scanned or searched item, fix bad info from online items, modify nutrition info
                                 based on preferred serving sizes. All searches will place items from 'My Foods' at
                                 the top of the list.</p>
                         </div>
-                    </span>
+                    </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <button onclick="sortMyFoodsAlphabetically()" id="myFoodsSortBtn"
@@ -4315,13 +4312,13 @@
 
                     const infoTitle = isMacroPercentage ? "Learn more" : "What counts as 1 serving?";
                     const infoBtn = `
-                        <span class="fg-info-wrap">
+                        <div class="fg-info-wrap">
                             <button class="fg-info-btn" onclick="showFoodGroupInfo(this,'${cat}')" title="${infoTitle}">i</button>
-                            <span class="fg-info-popup" style="position:relative; padding-right:15px;">
-                                <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                            <div class="fg-info-popup" style="padding-right:15px;">
+                                <button onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
                                 ${FOOD_GROUP_INFO[cat] || ''}
-                            </span>
-                        </span>
+                            </div>
+                        </div>
                     `;
 
                     let charCount = 3;
@@ -5723,6 +5720,7 @@
             document.getElementById('recipeServings').value = recipe.servings;
             currentRecipeIngredients = JSON.parse(JSON.stringify(recipe.ingredients));
 
+            renderRecipeIngredients();
             updateRecipeSummary();
             closeRecallRecipeModal();
             // Alert user that it was loaded
