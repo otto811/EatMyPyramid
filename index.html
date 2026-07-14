@@ -695,9 +695,9 @@
 
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
-                                <button onclick="showCustomFoodModal()"
+                                <button onclick="showCustomFoodModal(-1, 'Modify Search Item')"
                                     style="flex: 1.2; background: #8b5cf6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Modify
-                                    Item</button>
+                                    Search Item</button>
                                 <button onclick="saveCurrentToMyFoods()"
                                     style="flex: 1; background: var(--purple); padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Save
                                     to My Foods</button>
@@ -755,7 +755,7 @@
                                     <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">View
                                         &amp;
                                         Manage My Foods</button>
-                                    <button onclick="showCustomFoodModal(); closeDropdown('myFoodsDropdown')">➕ Create
+                                    <button onclick="showCustomFoodModal(-1, 'Create Custom Food'); closeDropdown('myFoodsDropdown')">➕ Create
                                         Custom
                                         Food</button>
                                     <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">🍳 Create
@@ -4789,7 +4789,7 @@
 
         let editingMyFoodIndex = -1;
 
-        function showCustomFoodModal(index = -1) {
+        function showCustomFoodModal(index = -1, customTitle = null) {
             editingMyFoodIndex = index;
             if (index >= 0) {
                 const food = appData.myFoods[index];
@@ -4820,7 +4820,7 @@
                 document.getElementById('cf-carb').value = (carb * multiplier).toFixed(1);
                 document.getElementById('cf-fib').value = (fib * multiplier).toFixed(1);
 
-                document.querySelector('#customFoodModal h3').innerText = 'Edit Custom Food';
+                document.querySelector('#customFoodModal h3').innerText = customTitle || 'Edit';
             } else {
                 const sel = document.getElementById('foodSelect');
                 const selectedIdx = sel ? sel.value : null;
@@ -4846,10 +4846,10 @@
                     document.getElementById('cf-carb').value = (nut.carbs * multiplier).toFixed(1);
                     document.getElementById('cf-fib').value = (nut.fiber * multiplier).toFixed(1);
 
-                    document.querySelector('#customFoodModal h3').innerText = 'Modify Item';
+                    document.querySelector('#customFoodModal h3').innerText = customTitle || 'Modify Search Item';
                 } else {
                     clearCustomFoodModalFields();
-                    document.querySelector('#customFoodModal h3').innerText = 'Modify Item';
+                    document.querySelector('#customFoodModal h3').innerText = customTitle || 'Modify Search Item';
                 }
             }
             setBaseServingInfo();
