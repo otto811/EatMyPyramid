@@ -1680,14 +1680,14 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
         <div
             style="background:white; padding:25px; border-radius:16px; width:95%; max-width:650px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); margin:20px auto; max-height:95vh; display:flex; flex-direction:column;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <h3 style="margin:0; color:#14b8a6;">Create &amp; Recall Recipes</h3>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="showRecallRecipeModal()" style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.9em;">Recall Recipe</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:5px;">
+                <h3 style="margin:0; color:#14b8a6;">Recipes</h3>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="showRecallRecipeModal()" style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.9em; white-space:nowrap; height:fit-content;">Recall Recipe</button>
                     <button onclick="closeRecipeModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:15px;">
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:5px;">
                 <div class="form-group">
                     <label>Recipe Name</label>
                     <input type="text" id="recipeName" placeholder="e.g. Mom's Chicken Stir Fry"
@@ -1700,8 +1700,8 @@
             </div>
 
             <div
-                style="border:1px solid #e5e7eb; border-radius:8px; padding:15px; margin-bottom:15px; background:#f9fafb;">
-                <strong style="color:#14b8a6;">Add Ingredients (use Search or Barcode)</strong>
+                style="border:1px solid #e5e7eb; border-radius:8px; padding:15px; margin-bottom:5px; background:#f9fafb;">
+                <strong style="color:#14b8a6;">Add Ingredients</strong>
                 <div style="display:flex; gap:8px; margin:10px 0; align-items: stretch;">
                     <input type="text" id="recipeSearchInput" placeholder="Search foods for recipe..."
                         style="flex:1; min-width:0; padding:10px;">
