@@ -688,7 +688,7 @@
                                 </div>
                                 <div style="flex: none; display: flex; align-items: center; gap: 4px;">
                                     <button onclick="showLogFoodModal()"
-                                        style="padding: 8px 12px; font-size: 0.85em; color: white; background: #10b981; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2; height: 44px;">Log Food</button>
+                                        style="padding: 8px 12px; font-size: 0.85em; color: white; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2; height: 44px;">Log Food</button>
                                 </div>
                             </div>
                         </div>
@@ -1738,17 +1738,20 @@
 
             <div
                 style="flex:1; overflow-y:auto; border:1px solid #e5e7eb; border-radius:8px; padding:10px; margin-bottom:15px; min-height:120px; background:white;">
-                <strong>Recipe Ingredients</strong>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>Recipe Ingredients</strong>
+                    <button type="button" onclick="toggleRecipeSummary()" style="padding:6px 10px; font-size:0.85em; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer;">Nutrition Summary</button>
+                </div>
                 <div id="recipeIngredientsList" style="margin-top:8px; font-size:0.95em;"></div>
             </div>
 
             <div id="recipeSummary"
-                style="background:#ecfdf5; border:1px solid #10b981; border-radius:8px; padding:12px; margin-bottom:15px; font-size:0.95em;">
+                style="display:none; background:#ecfdf5; border:1px solid #10b981; border-radius:8px; padding:12px; margin-bottom:15px; font-size:0.95em;">
                 <strong>Nutrition Summary (will be averaged per serving)</strong><br>
                 <span id="recipeSummaryText">Add ingredients to see totals...</span>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:10px; margin-top:auto;">
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:auto; padding-bottom: 20px;">
                 <div style="display:flex; gap:10px;">
                     <button onclick="clearRecipeIngredients()" style="background:#f59e0b; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Clear All</button>
                     <button onclick="closeRecipeModal()" style="background:#6b7280; flex:1; padding:12px; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Cancel</button>
@@ -5457,6 +5460,15 @@
                 currentRecipeIngredients = [];
                 renderRecipeIngredients();
                 updateRecipeSummary();
+            }
+        }
+
+        function toggleRecipeSummary() {
+            const summary = document.getElementById('recipeSummary');
+            if (summary.style.display === 'none') {
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
             }
         }
 
