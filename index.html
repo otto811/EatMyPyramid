@@ -2668,9 +2668,20 @@
 
             const newWeight = parseFloat(document.getElementById('weightInput').value) || 0;
 
-            // Save weight to the *current day only* (allows independent daily body weight)
+            // Save weight to the current day and future days of the current week
             if (state.current) {
                 state.current.bodyWeight = newWeight;
+                const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const currentDay = document.getElementById('daySelect').value;
+                const startIndex = daysOfWeek.indexOf(currentDay);
+                if (startIndex !== -1 && appData.history) {
+                    for (let i = startIndex + 1; i < daysOfWeek.length; i++) {
+                        const futureDay = daysOfWeek[i];
+                        if (appData.history[futureDay] && appData.history[futureDay].current) {
+                            appData.history[futureDay].current.bodyWeight = newWeight;
+                        }
+                    }
+                }
             }
 
             // Keep global appData.weight as the "latest known weight" (used for new days, Weight Tracker summary, defaults, etc.)
