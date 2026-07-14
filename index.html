@@ -487,8 +487,9 @@
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('profileSetupHelpPopup').style.display = document.getElementById('profileSetupHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
                                 <div class="fg-info-popup" id="profileSetupHelpPopup"
-                                    style="min-width:280px; max-width:340px; left:0;">
-                                    <p style="margin:0;">This program is set up to track your daily food intake one week
+                                    style="position:relative; min-width:280px; max-width:340px; left:0;">
+<button onclick="this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                                    <p style="position:relative; margin:0; padding-right:15px;">This program is set up to track your daily food intake one week
                                         at a time. Each week is saved and can be recalled using the recall a week
                                         Button. You can track your results by macros and energy food group servings,
                                         original EMP points or all three.</p>
@@ -801,8 +802,9 @@
                                 <button type="button" class="fg-info-btn"
                                     onclick="document.getElementById('foodGroupsHelpPopup').style.display = document.getElementById('foodGroupsHelpPopup').style.display === 'block' ? 'none' : 'block'; event.stopPropagation();">i</button>
                                 <div class="fg-info-popup" id="foodGroupsHelpPopup"
-                                    style="width:300px; max-width:90vw; right:0; left:auto;">
-                                    <p style="margin:0;">This section is to help you focus on eating Whole Foods or
+                                    style="position:relative; width:300px; max-width:90vw; right:0; left:auto;">
+<button onclick="this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                                    <p style="position:relative; margin:0; padding-right:15px;">This section is to help you focus on eating Whole Foods or
                                         items that contain a high percentage of a food group. If the item is logged and
                                         pre-assigned to a food group, you'll see it here. You can manually bump the bars
                                         up or down 1/2 servings at a time if a food assignment was missed. Set your
@@ -1009,8 +1011,9 @@
                     <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
                         onclick="toggleModifySearchInfo(event)" aria-label="Modify Search Info">i</button>
                     <div class="fg-info-popup" id="modifySearchInfoPopup"
-                        style="min-width:280px; max-width:340px; right: 0; left: auto; top: calc(100% + 8px);">
-                        <p style="margin:0;">Food items do not always have accurate nutritional information. This button
+                        style="position:relative; min-width:280px; max-width:340px; right: 0; left: auto; top: calc(100% + 8px);">
+<button onclick="this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                        <p style="position:relative; margin:0; padding-right:15px;">Food items do not always have accurate nutritional information. This button
                             allows you to modify the portion size or enter correct nutrition information, preferred item
                             name etc..</p>
                     </div>
@@ -1450,8 +1453,9 @@
                         <button type="button" class="fg-info-btn" id="searchMealInfoBtn"
                             onclick="toggleSearchMealInfo(event)" aria-label="Search a Meal Info">i</button>
                         <div class="fg-info-popup" id="searchMealInfoPopup"
-                            style="min-width:280px; max-width:340px; left:0;">
-                            <p style="margin:0;">Search a Meal allows two options for you to enter multiple items at
+                            style="position:relative; min-width:280px; max-width:340px; left:0;">
+<button onclick="this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                            <p style="position:relative; margin:0; padding-right:15px;">Search a Meal allows two options for you to enter multiple items at
                                 a time. There is a manual meal builder or you can describe what you had to eat and
                                 let Gemini AI parse it into a list. Note: parsing and lookups may not always render
                                 accurately, but you can adjust by selecting the correct items from a dropdown search
@@ -1716,19 +1720,14 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
         <div
             style="background:white; padding:25px; border-radius:16px; width:95%; max-width:650px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); margin:20px auto; height:95%; max-height:95%; display:flex; flex-direction:column;">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-    <h3 style="margin:0; color:#14b8a6;">Recipes</h3>
-    <button onclick="closeRecipeModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
-</div>
-                <div style="display:flex; gap:8px; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <h3 style="margin:0; color:#14b8a6;">Recipes</h3>
                     <button onclick="showRecallRecipeModal()"
-                        style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.9em; white-space:nowrap; height:fit-content;">Recall
-                        Recipe</button>
-                    <button onclick="closeRecipeModal()"
-                        style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+                        style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.9em; white-space:nowrap; height:fit-content;">Recall Recipe</button>
                 </div>
+                <button onclick="closeRecipeModal()"
+                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
             </div>
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:2px;">
                 <div class="form-group" style="margin-bottom:0;">
@@ -1849,8 +1848,9 @@
                         <button type="button" class="fg-info-btn" id="saveMyFoodsInfoBtn"
                             onclick="toggleSaveMyFoodsInfo(event)" aria-label="Save to My Foods Info">i</button>
                         <div class="fg-info-popup" id="saveMyFoodsInfoPopup"
-                            style="min-width:280px; max-width:340px; left: 0;">
-                            <p style="margin:0;">My Foods is a local database you create. It allows you to customize
+                            style="position:relative; min-width:280px; max-width:340px; left: 0;">
+<button onclick="this.parentElement.classList.remove('open')" style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1;">&times;</button>
+                            <p style="position:relative; margin:0; padding-right:15px;">My Foods is a local database you create. It allows you to customize
                                 based on the foods you consume often. You can create an item from scratch, add a
                                 scanned or searched item, fix bad info from online items, modify nutrition info
                                 based on preferred serving sizes. All searches will place items from 'My Foods' at
@@ -1898,7 +1898,7 @@
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0;   color:#8b5cf6;">📅 Recall a
                     Week's Tracking History</h3>
-                <button onclick="closeRecallModal()"
+                <button onclick="closeRecallWeekModal()"
                     style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
             <div id="recallWeekDateRange"
