@@ -678,18 +678,17 @@
                                 <div style="flex: 1; min-width: 0;">
                                     <label style="margin-bottom: 4px;">Search Results</label>
                                     <select id="foodSelect" onchange="updatePreview()"
-                                        style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2;"></select>
+                                        style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;"></select>
                                 </div>
                                 <div style="flex: none;">
                                     <label style="margin-bottom: 4px;">Servings</label>
                                     <input type="number" id="servingInput" value="1" min="0.1" step="0.1"
                                         onchange="updatePreview()"
-                                        style="width: 50px; padding: 8px 4px; font-size: 0.85em; box-sizing: border-box; line-height: 1.2;">
+                                        style="width: 50px; padding: 8px 4px; font-size: 0.85em; box-sizing: border-box; line-height: 1.2; height: 44px;">
                                 </div>
                                 <div style="flex: none; display: flex; align-items: center; gap: 4px;">
                                     <button onclick="showLogFoodModal()"
-                                        style="padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2;">Log
-                                        Food</button>
+                                        style="padding: 8px 12px; font-size: 0.85em; color: white; background: #10b981; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2; height: 44px;">Log Food</button>
                                 </div>
                             </div>
                         </div>
@@ -697,13 +696,13 @@
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
                                 <button onclick="showCustomFoodModal()"
-                                    style="flex: 1.2; background: #8b5cf6; padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Modify
+                                    style="flex: 1.2; background: #8b5cf6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Modify
                                     Item</button>
                                 <button onclick="saveCurrentToMyFoods()"
-                                    style="flex: 1; background: var(--purple); padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">Save
+                                    style="flex: 1; background: var(--purple); padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Save
                                     to My Foods</button>
                                 <button onclick="showNewFoodEntryModal()"
-                                    style="flex: 1; background: #3b82f6; padding: 8px 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer;">New
+                                    style="flex: 1; background: #3b82f6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">New
                                     Food Entry</button>
                             </div>
                         </div>
@@ -964,8 +963,7 @@
                 </h3>
                 <button onclick="closeDisclaimerModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <div style="font-size: 0.95em; color: #374151; line-height: 1.5;">
+<div style="font-size: 0.95em; color: #374151; line-height: 1.5;">
                 <p><strong>Educational Purposes Only:</strong> EatMyPyramid is designed for educational and
                     informational purposes only. It is not intended to be a substitute for professional medical advice,
                     diagnosis, or treatment.</p>
@@ -994,15 +992,8 @@
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
         <div
             style="background:white; padding:25px; border-radius:16px; width:90%; max-width:500px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); margin: 20px auto; display:flex; flex-direction:column; max-height:95vh;">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom: 15px; flex-shrink:0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom: 15px; flex-shrink:0;">
                 <h3 style="margin:0;">Modify Item</h3>
-                <button onclick="closeModifyModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-                <button onclick="closeModifyModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
                 <span class="fg-info-wrap">
                     <button type="button" class="fg-info-btn" id="modifySearchInfoBtn"
                         onclick="toggleModifySearchInfo(event)" aria-label="Modify Search Info">i</button>
@@ -1381,8 +1372,7 @@
                 Wizard</h3>
                 <button onclick="closeSetupModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <p style="font-size:0.95em; color:#374151; line-height:1.5;">
+<p style="font-size:0.95em; color:#374151; line-height:1.5;">
                 To use the <strong>AI Meal Logger</strong>, you need a free Gemini API key from Google. Follow these
                 steps:
             </p>
@@ -1514,13 +1504,10 @@
         <div
             style="background:white; padding:25px; border-radius:16px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#10b981;">Add Items Manually</h3>
                 <button onclick="closeManualModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-                <button onclick="closeManualModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-            <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type the name of a food item and click
+<p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type the name of a food item and click
                 'Next
                 Item' to rapidly build a list. Click 'Search All Items' when finished.</p>
 
@@ -1561,8 +1548,7 @@
             </h3>
                 <button onclick="closeEditLoggedModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <div class="form-group" style="margin-top: 15px;">
+<div class="form-group" style="margin-top: 15px;">
                 <label>Name</label>
                 <input type="text" id="edit-name" style="padding:12px; font-size:1em;">
             </div>
@@ -1622,16 +1608,10 @@
         <div
             style="background:white; padding:25px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:var(--primary);">Select Meal</h3>
                 <button onclick="closeMealSelectModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-                <button onclick="closeMealSelectModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-                    <button onclick="closeMealSelectModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-                </div>
-            <p style="color:var(--text-muted); font-size:0.95em; margin-bottom:20px;">Which meal is this food for?
+<p style="color:var(--text-muted); font-size:0.95em; margin-bottom:20px;">Which meal is this food for?
             </p>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <button onclick="logFood('Breakfast')"
@@ -1660,7 +1640,7 @@
                 to Day</h3>
                 <button onclick="closeCopyModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-            <p id="copyToDayDesc" style="color:var(--text-muted); font-size:0.95em; margin-bottom:15px;">Select
+<p id="copyToDayDesc" style="color:var(--text-muted); font-size:0.95em; margin-bottom:15px;">Select
                 which
                 day to copy this item to:</p>
             <div class="form-group">
@@ -1707,8 +1687,7 @@
                 → Save as 1 Serving in My Foods</h3>
                 <button onclick="closeRecipeModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:15px;">
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:15px; margin-bottom:15px;">
                 <div class="form-group">
                     <label>Recipe Name (unique)</label>
                     <input type="text" id="recipeName" placeholder="e.g. Mom's Chicken Stir Fry"
@@ -1843,8 +1822,7 @@
                 Week's Tracking History</h3>
                 <button onclick="closeRecallModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <div id="recallWeekDateRange"
+<div id="recallWeekDateRange"
                 style="display:none; margin-bottom:10px; padding:8px 12px; background:#f3e8ff; border-radius:6px; font-size:0.9em; color:#6d28d9; font-weight:600; text-align:center;">
             </div>
 
@@ -1894,8 +1872,7 @@
                 Tracker &amp; History</h3>
                 <button onclick="closeWeightTrackerModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-
-            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; align-items:flex-start;">
+<div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; align-items:flex-start;">
                 <!-- Info summary -->
                 <div
                     style="flex:1; min-width:180px; background:#ecfdf5; padding:12px; border-radius:8px; border:1px solid #10b981;">
@@ -1954,16 +1931,10 @@
         <div
             style="background:white; padding:25px; border-radius:16px; width:95%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); margin: 20px auto; display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#f59e0b;">Manage Storage</h3>
                 <button onclick="closeStorageModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
             </div>
-                <button onclick="closeStorageModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-                <button onclick="closeStorageModal()" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-            <p style="font-size:0.9em; color:#4b5563; margin-bottom:15px;">Your daily logs take up space. Free up
+<p style="font-size:0.9em; color:#4b5563; margin-bottom:15px;">Your daily logs take up space. Free up
                 space by permanently deleting old logs. Your custom foods and goals will not be affected.</p>
 
             <div style="background:#f3f4f6; padding:10px; border-radius:6px; margin-bottom:15px; text-align:center;">
@@ -6288,8 +6259,8 @@
             const runOff = appData.dbOffEnabled !== false;
             const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
 
-            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=5`;
-            const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=5`;
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=20`;
+            const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=20`;
             const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
 
             const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
@@ -6365,7 +6336,7 @@
                 return String(a.description || '').localeCompare(String(b.description || ''));
             });
 
-            return combined.slice(0, 15);
+            return combined.slice(0, 50);
         }
 
         async function searchBestFoodMatch(query) {
