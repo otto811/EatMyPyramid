@@ -108,9 +108,15 @@
 
         .card.collapsed {
             background-color: #f8fafc;
-            border: 1px dashed #cbd5e1;
+            border: 1px solid #e2e8f0;
             box-shadow: none;
-            opacity: 0.92;
+            padding: 10px 20px;
+        }
+        .card.collapsed > div:first-child {
+            margin-bottom: 0 !important;
+        }
+        .card.collapsed h2 {
+            font-size: 1.1em;
         }
 
         .full-width {
@@ -2115,13 +2121,29 @@
             const isHidden = content.style.display === 'none';
 
             if (isHidden) {
+                // Auto-collapse others
+                const sections = ['profile', 'search', 'macros', 'foodgroups', 'wwTracker', 'log'];
+                sections.forEach(sec => {
+                    if (sec !== section) {
+                        const otherContent = document.getElementById(sec + '-content');
+                        const otherBtn = document.getElementById(sec + '-toggle');
+                        if (otherContent && otherBtn) {
+                            otherContent.style.display = 'none';
+                            otherBtn.innerHTML = '&#9660;';
+                            const otherCard = otherBtn.closest('.card');
+                            if (otherCard) otherCard.classList.add('collapsed');
+                            if (appData.visibility) appData.visibility[sec] = false;
+                        }
+                    }
+                });
+
                 content.style.display = 'block';
-                btn.textContent = '−';
+                btn.innerHTML = '&#9650;';
                 if (card) card.classList.remove('collapsed');
                 if (appData.visibility) appData.visibility[section] = true;
             } else {
                 content.style.display = 'none';
-                btn.textContent = '+';
+                btn.innerHTML = '&#9660;';
                 if (card) card.classList.add('collapsed');
                 if (appData.visibility) appData.visibility[section] = false;
             }
@@ -2136,7 +2158,7 @@
                 if (content && btn && appData.visibility) {
                     const isVisible = appData.visibility[key] !== false;
                     content.style.display = isVisible ? 'block' : 'none';
-                    btn.textContent = isVisible ? '−' : '+';
+                    btn.innerHTML = isVisible ? '&#9650;' : '&#9660;';
 
                     // Apply collapsed shading to the card when hidden
                     const card = btn.closest('.card');
