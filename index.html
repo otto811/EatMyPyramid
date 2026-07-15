@@ -5560,7 +5560,8 @@
                     });
 
                     saveData();
-                    updateUI(); // re-renders the log and the barometers
+                    renderLog();
+                    renderBarometers();
                     alert(`Successfully imported ${importedCount} items directly into your Daily Log!`);
 
                 } catch (err) {
