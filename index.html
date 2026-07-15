@@ -494,7 +494,7 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid #e2e8f0;
-            z-index: 999999;
+            z-index: 9999;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -836,7 +836,7 @@
                                         Custom
                                         Food</button>
                                     <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">Recipes</button>
-                                    <button onclick="exportMyFoods(); closeDropdown('myFoodsDropdown')">📤 Export My
+                                    <button onclick="showExportMyFoodsModal(); closeDropdown('myFoodsDropdown')">📤 Export My
                                         Foods</button>
                                     <button
                                         onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
@@ -1930,9 +1930,14 @@
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="sortMyFoodsAlphabetically()" id="myFoodsSortBtn"
-                        style="background:#8b5cf6; color:white; padding:6px 12px; border-radius:4px; border:none; cursor:pointer; font-size:0.85em; font-weight:600;">🔤
-                        Sort A-Z</button>
+                    <select id="myFoodsFilterSelect" onchange="renderMyFoodsList()" style="padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 0.85em; font-weight: 600; cursor: pointer; color: #475569;">
+                        <option value="All">All Foods</option>
+                        <option value="A-E">A - E</option>
+                        <option value="F-J">F - J</option>
+                        <option value="K-O">K - O</option>
+                        <option value="P-T">P - T</option>
+                        <option value="U-Z">U - Z</option>
+                    </select>
                     <button onclick="closeManageMyFoodsModal()"
                         style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
                 </div>
@@ -1940,7 +1945,7 @@
 
             <div style="margin-top: 15px;">
                 <div style="display:flex; gap:8px; margin-bottom: 10px;">
-                    <button onclick="exportMyFoodsData()"
+                    <button onclick="showExportMyFoodsModal()"
                         style="flex:1; background:#3b82f6; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📤
                         Export My Foods</button>
                     <button onclick="document.getElementById('importMyFoodsInput').click()"
@@ -1957,6 +1962,42 @@
             <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
                 <!-- List goes here -->
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== EXPORT MY FOODS MODAL ==================== -->
+    <div id="exportMyFoodsModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div style="background:white; padding:25px; border-radius:16px; width:90%; max-width:600px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); margin: 20px auto; display:flex; flex-direction:column; max-height:85vh;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid #e2e8f0; margin-bottom: 15px;">
+                <div>
+                    <h3 style="margin:0; color:#1e293b;">Export My Foods</h3>
+                    <p style="margin:4px 0 0 0; font-size:0.85em; color:#64748b;">Select items to export.</p>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="closeExportMyFoodsModal()"
+                        style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom: 15px; align-items: center;">
+                <input type="text" id="exportMyFoodsSearchInput" placeholder="Search by name..."
+                    onkeyup="renderExportMyFoodsList()"
+                    style="flex-grow:1; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="exportSelectAllCheck" onchange="toggleExportSelectAll()" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="exportSelectAllCheck" style="font-weight: 600; color: #334155; cursor: pointer;">Select All</label>
+            </div>
+
+            <div id="exportMyFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-bottom:15px; padding-right:10px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
+                <!-- List goes here -->
+            </div>
+            
+            <button onclick="executeExportSelectedMyFoods()" style="width:100%; background:#10b981; color:white; padding:12px; border-radius:8px; border:none; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16, 185, 129, 0.4);">
+                Export Selected Data
+            </button>
         </div>
     </div>
 
@@ -5173,24 +5214,109 @@
 
         // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
 
-        function exportMyFoods() {
+        function showExportMyFoodsModal() {
             if (!appData.myFoods || appData.myFoods.length === 0) {
                 return alert("Your My Foods database is currently empty. Nothing to export.");
             }
+            document.getElementById('exportMyFoodsModal').style.display = 'flex';
+            document.getElementById('exportMyFoodsSearchInput').value = '';
+            document.getElementById('exportSelectAllCheck').checked = false;
+            // Initialize selection state
+            window.exportMyFoodsSelection = {};
+            renderExportMyFoodsList();
+        }
 
-            const dataStr = JSON.stringify(appData.myFoods, null, 2);
+        function closeExportMyFoodsModal() {
+            document.getElementById('exportMyFoodsModal').style.display = 'none';
+        }
+
+        function toggleExportSelectAll() {
+            const isChecked = document.getElementById('exportSelectAllCheck').checked;
+            const checkboxes = document.querySelectorAll('.export-food-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = isChecked;
+                window.exportMyFoodsSelection[cb.value] = isChecked;
+            });
+        }
+        
+        function updateExportSelection(index, isChecked) {
+            window.exportMyFoodsSelection[index] = isChecked;
+            updateSelectAllCheckboxState();
+        }
+        
+        function updateSelectAllCheckboxState() {
+            const checkboxes = document.querySelectorAll('.export-food-checkbox');
+            const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+            document.getElementById('exportSelectAllCheck').checked = allChecked;
+        }
+
+        function renderExportMyFoodsList() {
+            const container = document.getElementById('exportMyFoodsListContainer');
+            const searchInput = document.getElementById('exportMyFoodsSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            // Ensure sorted alphabetically
+            appData.myFoods.sort((a, b) => {
+                const descA = String(a.description || '').toLowerCase();
+                const descB = String(b.description || '').toLowerCase();
+                return descA.localeCompare(descB);
+            });
+
+            let html = '';
+            let matchedCount = 0;
+            appData.myFoods.forEach((food, index) => {
+                const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
+                const searchStr = (food.description + brandStr).toLowerCase();
+
+                if (searchTerm && !searchStr.includes(searchTerm)) {
+                    return; // Skip if doesn't match
+                }
+                matchedCount++;
+                
+                const isChecked = window.exportMyFoodsSelection[index] ? 'checked' : '';
+
+                html += `
+                <div style="padding:10px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap: 10px;">
+                    <input type="checkbox" class="export-food-checkbox" value="${index}" ${isChecked} onchange="updateExportSelection(${index}, this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                    <div style="flex-grow:1;">
+                        <strong style="color:#334155;">${food.description}${brandStr}</strong>
+                    </div>
+                </div>
+                `;
+            });
+
+            if (matchedCount === 0) {
+                html = '<p style="color:gray;text-align:center;margin-top:20px;">No matching foods found.</p>';
+            }
+
+            container.innerHTML = html;
+            updateSelectAllCheckboxState();
+        }
+
+        function executeExportSelectedMyFoods() {
+            if (!window.exportMyFoodsSelection) return;
+            
+            const selectedIndices = Object.keys(window.exportMyFoodsSelection).filter(k => window.exportMyFoodsSelection[k]);
+            if (selectedIndices.length === 0) {
+                return alert("Please select at least one item to export.");
+            }
+            
+            const selectedFoods = selectedIndices.map(index => appData.myFoods[index]);
+            
+            const dataStr = JSON.stringify(selectedFoods, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
             a.href = url;
-            // Fixed: clean filename without comma from split('T')
             a.download = `MyFoods_Export_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
             document.body.appendChild(a);
             a.click();
 
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            
+            closeExportMyFoodsModal();
         }
 
         function importMyFoods(event) {
@@ -5294,8 +5420,25 @@
                 return;
             }
 
+            // Always sort A-Z by default in place
+            appData.myFoods.sort((a, b) => {
+                const descA = String(a.description || '').toLowerCase();
+                const descB = String(b.description || '').toLowerCase();
+                return descA.localeCompare(descB);
+            });
+
             const searchInput = document.getElementById('myFoodsSearchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const filterSelect = document.getElementById('myFoodsFilterSelect');
+            const filterValue = filterSelect ? filterSelect.value : 'All';
+
+            const filterRegex = {
+                'A-E': /^[a-e]/i,
+                'F-J': /^[f-j]/i,
+                'K-O': /^[k-o]/i,
+                'P-T': /^[p-t]/i,
+                'U-Z': /^[u-z]/i
+            };
 
             let html = '';
             let matchedCount = 0;
@@ -5305,6 +5448,10 @@
 
                 if (searchTerm && !searchStr.includes(searchTerm)) {
                     return; // Skip if doesn't match
+                }
+                
+                if (filterValue !== 'All' && filterRegex[filterValue]) {
+                    if (!filterRegex[filterValue].test(String(food.description).trim())) return;
                 }
                 matchedCount++;
 
@@ -6655,21 +6802,7 @@
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
         // ==================== STORAGE & ARCHIVE FEATURES ====================
-        function exportMyFoodsData() {
-            if (!appData.myFoods || appData.myFoods.length === 0) {
-                return alert("No custom foods to export.");
-            }
-            const dataStr = JSON.stringify(appData.myFoods, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `EatMyPyramid_MyFoods_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+        // Replaced by showExportMyFoodsModal
 
         function importMyFoodsData(event) {
             const file = event.target.files[0];
