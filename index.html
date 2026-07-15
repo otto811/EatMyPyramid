@@ -108,15 +108,9 @@
 
         .card.collapsed {
             background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            border: 1px dashed #cbd5e1;
             box-shadow: none;
-            padding: 10px 20px;
-        }
-        .card.collapsed > div:first-child {
-            margin-bottom: 0 !important;
-        }
-        .card.collapsed h2 {
-            font-size: 1.1em;
+            opacity: 0.92;
         }
 
         .full-width {
@@ -465,6 +459,51 @@
                 box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
                 z-index: 20000 !important;
             }
+        }
+        body { 
+            padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important; 
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            height: calc(65px + env(safe-area-inset-bottom, 0px));
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+            z-index: 999999;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.65em;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            flex: 1 1 0;
+            min-width: 0;
+            height: 100%;
+            padding: 0;
+        }
+        .nav-item.active {
+            color: #4f46e5;
+            font-weight: bold;
+        }
+        .nav-icon {
+            font-size: 1.5em;
+            margin-bottom: 2px;
         }
     </style>
 </head>
@@ -2112,65 +2151,51 @@
 
 
         // ==================== HIDE / REVEAL SECTION FUNCTIONS (new in v2.3.3) ====================
-        function toggleSection(section) {
-            const content = document.getElementById(section + '-content');
-            const btn = document.getElementById(section + '-toggle');
-            if (!content || !btn) return;
+        function switchTab(tabName, btnElement) {
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach(c => c.style.display = 'none');
 
-            const card = btn.closest('.card');
-            const isHidden = content.style.display === 'none';
-
-            if (isHidden) {
-                // Auto-collapse others
-                const sections = ['profile', 'search', 'macros', 'foodgroups', 'wwTracker', 'log'];
-                sections.forEach(sec => {
-                    if (sec !== section) {
-                        const otherContent = document.getElementById(sec + '-content');
-                        const otherBtn = document.getElementById(sec + '-toggle');
-                        if (otherContent && otherBtn) {
-                            otherContent.style.display = 'none';
-                            otherBtn.innerHTML = '&#9660;';
-                            const otherCard = otherBtn.closest('.card');
-                            if (otherCard) otherCard.classList.add('collapsed');
-                            if (appData.visibility) appData.visibility[sec] = false;
-                        }
-                    }
-                });
-
-                content.style.display = 'block';
-                btn.innerHTML = '&#9650;';
-                if (card) card.classList.remove('collapsed');
-                if (appData.visibility) appData.visibility[section] = true;
-            } else {
-                content.style.display = 'none';
-                btn.innerHTML = '&#9660;';
-                if (card) card.classList.add('collapsed');
-                if (appData.visibility) appData.visibility[section] = false;
+            if (tabName === 'profile') {
+                const c = document.getElementById('profile-content');
+                if(c) c.closest('.card').style.display = 'block';
+            } else if (tabName === 'search') {
+                const c = document.getElementById('search-content');
+                if(c) c.closest('.card').style.display = 'block';
+            } else if (tabName === 'macros') {
+                const m = document.getElementById('macros-content');
+                if(m) m.closest('.card').style.display = 'block';
+            } else if (tabName === 'foodgroups') {
+                const f = document.getElementById('foodgroups-content');
+                if(f) f.closest('.card').style.display = 'block';
+            } else if (tabName === 'wwTracker') {
+                const w = document.getElementById('wwTracker-content');
+                if(w) w.closest('.card').style.display = 'block';
+            } else if (tabName === 'log') {
+                const l = document.getElementById('log-content');
+                if(l) l.closest('.card').style.display = 'block';
             }
-            saveData();
+
+            const allContents = document.querySelectorAll('[id$="-content"]');
+            allContents.forEach(c => {
+                 c.style.display = 'block';
+                 const card = c.closest('.card');
+                 if(card) card.classList.remove('collapsed');
+            });
+
+            if (btnElement) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+            window.scrollTo(0, 0);
         }
 
-        function applyVisibility() {
-            const sections = ['profile', 'search', 'macros', 'foodgroups', 'log', 'wwTracker'];
-            sections.forEach(key => {
-                const content = document.getElementById(key + '-content');
-                const btn = document.getElementById(key + '-toggle');
-                if (content && btn && appData.visibility) {
-                    const isVisible = appData.visibility[key] !== false;
-                    content.style.display = isVisible ? 'block' : 'none';
-                    btn.innerHTML = isVisible ? '&#9650;' : '&#9660;';
+        function toggleSection(section) { }
 
-                    // Apply collapsed shading to the card when hidden
-                    const card = btn.closest('.card');
-                    if (card) {
-                        if (isVisible) {
-                            card.classList.remove('collapsed');
-                        } else {
-                            card.classList.add('collapsed');
-                        }
-                    }
-                }
-            });
+        function applyVisibility() {
+            const profileTab = document.querySelector('.nav-item');
+            if (profileTab) profileTab.click();
+            
+            document.querySelectorAll('[id$="-toggle"]').forEach(btn => btn.style.display = 'none');
         }
 
         // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
@@ -6746,6 +6771,32 @@
 
         init();
     </script>
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('profile', this)">
+            <span class="nav-icon">👤</span>
+            Profile
+        </button>
+        <button class="nav-item" onclick="switchTab('search', this)">
+            <span class="nav-icon">🔍</span>
+            Search
+        </button>
+        <button class="nav-item" onclick="switchTab('macros', this)">
+            <span class="nav-icon">📈</span>
+            Macros
+        </button>
+        <button class="nav-item" onclick="switchTab('foodgroups', this)">
+            <span class="nav-icon">🍎</span>
+            Groups
+        </button>
+        <button class="nav-item" onclick="switchTab('wwTracker', this)">
+            <span class="nav-icon">⭐️</span>
+            Tracker
+        </button>
+        <button class="nav-item" onclick="switchTab('log', this)">
+            <span class="nav-icon">📝</span>
+            Log
+        </button>
+    </nav>
 </body>
 
 </html>
