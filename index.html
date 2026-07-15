@@ -1064,9 +1064,19 @@
 
         <div class="card full-width">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
+                    <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()" style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share Items</button>
+                </div>
                 <button id="log-toggle" onclick="toggleSection('log')"
                     style="background:#f43f5e; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
+            </div>
+            <div id="log-sharing-actions" style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:10px; border-radius:8px; margin-bottom:15px; align-items:center; justify-content:space-between;">
+                <span style="color:#b45309; font-size:0.9em; font-weight:bold;">Select items to share:</span>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="toggleLogSharingMode()" style="background:#d1d5db; color:#374151; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Cancel</button>
+                    <button onclick="exportSelectedLogItems()" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Export Selected</button>
+                </div>
             </div>
             <div id="log-content">
                 <div id="logContainer">
@@ -3540,6 +3550,7 @@
             const item = {
                 name: food.description,
                 upc: upcCode,
+                source: food.source || 'Unknown',
                 amount: logAmount,
                 unit: logUnit,
                 category: cat,
@@ -4085,7 +4096,8 @@
                         const displayCals = (nut.calories * rMultiplier).toFixed(0);
 
                         const isSelected = (match && r.description === match.description) ? 'selected' : '';
-                        selectHtml += `<option value="${rIdx}" ${isSelected}>${r.description}${brand} - ${displayCals} kcal</option>`;
+                        const sourceIndicator = r.source === 'My Foods' ? '★ ' : '';
+                        selectHtml += `<option value="${rIdx}" ${isSelected}>${sourceIndicator}${r.description}${brand} - ${displayCals} kcal</option>`;
                     });
                     selectHtml += `</select>`;
                 } else {
@@ -4364,6 +4376,7 @@
                 const item = {
                     name: food.description || "Unknown Food",
                     upc: upcCode,
+                    source: food.source || 'Unknown',
                     amount: logAmount,
                     unit: logUnit,
                     category: cat,
@@ -4733,10 +4746,18 @@
 
                             // Format the UPC for display if it exists in the saved item data
                             const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
+                            const sourceDisplay = item.source === 'My Foods' ? ` <span style="font-size:0.75em; background:#fcd34d; color:#b45309; padding:2px 6px; border-radius:12px; font-weight:bold; margin-left:6px; vertical-align:middle;">★ My Foods</span>` : '';
+
+                            const sharingCheckboxHtml = window.isLogSharingMode ? `
+                                <div style="margin-right:10px; display:flex; align-items:center;">
+                                    <input type="checkbox" onchange="toggleShareLogItem(${index}, this.checked)" style="width:20px; height:20px; cursor:pointer;" ${window.selectedLogItemsToShare && window.selectedLogItemsToShare.has(index) ? 'checked' : ''}>
+                                </div>
+                            ` : '';
 
                             div.innerHTML = `
+                                ${sharingCheckboxHtml}
                                 <div style="flex-grow:1; padding-right:10px;">
-                                    <strong>${item.name}</strong><br>
+                                    <strong>${item.name}</strong>${sourceDisplay}<br>
                                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • EMP: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                                 </div>
                                 <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
@@ -4818,6 +4839,7 @@
                 const item = {
                     name: food.description,
                     upc: food.upc || null,
+                    source: food.source || 'Unknown',
                     amount: 1,
                     unit: 'serving',
                     category: category,
@@ -5455,6 +5477,83 @@
         }
 
         // ---> NEW FUNCTIONS TO IMPORT AND EXPORT MY FOODS DATABASE --------> 
+
+        window.isLogSharingMode = false;
+        window.selectedLogItemsToShare = new Set();
+
+        function toggleLogSharingMode() {
+            window.isLogSharingMode = !window.isLogSharingMode;
+            window.selectedLogItemsToShare.clear();
+            const actionDiv = document.getElementById('log-sharing-actions');
+            if (actionDiv) {
+                actionDiv.style.display = window.isLogSharingMode ? 'flex' : 'none';
+            }
+            const shareBtn = document.getElementById('shareLogItemsBtn');
+            if (shareBtn) {
+                shareBtn.style.display = window.isLogSharingMode ? 'none' : 'block';
+            }
+            renderLog();
+        }
+
+        function toggleShareLogItem(index, isChecked) {
+            if (isChecked) {
+                window.selectedLogItemsToShare.add(index);
+            } else {
+                window.selectedLogItemsToShare.delete(index);
+            }
+        }
+
+        function exportSelectedLogItems() {
+            if (window.selectedLogItemsToShare.size === 0) {
+                return alert("Please select at least one item to share.");
+            }
+
+            const itemsToExport = [];
+            window.selectedLogItemsToShare.forEach(index => {
+                const item = state.log[index];
+                if (!item) return;
+
+                const cals100 = (item.calsPerUnit || 0) * 100;
+                const prot100 = (item.protPerUnit || 0) * 100;
+                const fat100 = (item.fatPerUnit || 0) * 100;
+                const carb100 = (item.carbsPerUnit || 0) * 100;
+                const fib100 = (item.fibPerUnit || 0) * 100;
+
+                const sharedFood = {
+                    description: item.name,
+                    brandOwner: '',
+                    foodCategory: item.category || 'Other',
+                    servingSize: 100,
+                    householdServingFullText: `${item.amount || 1} ${item.unit || 'serving'}`,
+                    upc: item.upc || '',
+                    foodNutrients: [
+                        { nutrientId: 1008, value: cals100 },
+                        { nutrientId: 1003, value: prot100 },
+                        { nutrientId: 1004, value: fat100 },
+                        { nutrientId: 1005, value: carb100 },
+                        { nutrientId: 1079, value: fib100 }
+                    ],
+                    wwPoints: calculateWWPoints(cals100, fat100, fib100),
+                    custom: true,
+                    dateAdded: new Date().toISOString()
+                };
+                itemsToExport.push(sharedFood);
+            });
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                eatMyPyramidExport: true,
+                data: itemsToExport
+            }, null, 2));
+
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `EatMyPyramid_Shared_Items_${new Date().getTime()}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            toggleLogSharingMode(); // exit sharing mode
+        }
 
         function showExportMyFoodsModal() {
             if (!appData.myFoods || appData.myFoods.length === 0) {
