@@ -1066,16 +1066,22 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
-                    <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()" style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share Items</button>
+                    <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()"
+                        style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share
+                        Items</button>
                 </div>
                 <button id="log-toggle" onclick="toggleSection('log')"
                     style="background:#f43f5e; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
-            <div id="log-sharing-actions" style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:10px; border-radius:8px; margin-bottom:15px; align-items:center; justify-content:space-between;">
+            <div id="log-sharing-actions"
+                style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:10px; border-radius:8px; margin-bottom:15px; align-items:center; justify-content:space-between;">
                 <span style="color:#b45309; font-size:0.9em; font-weight:bold;">Select items to share:</span>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="toggleLogSharingMode()" style="background:#d1d5db; color:#374151; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Cancel</button>
-                    <button onclick="exportSelectedLogItems()" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Export Selected</button>
+                    <button onclick="toggleLogSharingMode()"
+                        style="background:#d1d5db; color:#374151; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Cancel</button>
+                    <button onclick="exportSelectedLogItems()"
+                        style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Export
+                        Selected</button>
                 </div>
             </div>
             <div id="log-content">
@@ -5540,17 +5546,17 @@
                 itemsToExport.push(sharedFood);
             });
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-                eatMyPyramidExport: true,
-                data: itemsToExport
-            }, null, 2));
+            const exportDataStr = JSON.stringify(itemsToExport, null, 2);
+            const blob = new Blob([exportDataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
 
             const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("href", url);
             downloadAnchorNode.setAttribute("download", `EatMyPyramid_Shared_Items_${new Date().getTime()}.json`);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            document.body.removeChild(downloadAnchorNode);
+            URL.revokeObjectURL(url);
 
             toggleLogSharingMode(); // exit sharing mode
         }
