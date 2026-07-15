@@ -825,16 +825,15 @@
                             <div class="dropdown-menu-wrap" style="width:100%;">
                                 <button class="dropdown-toggle" onclick="toggleDropdown('myFoodsDropdown', this)"
                                     style="background:var(--purple); width:100%; padding:10px 16px; font-size:0.95em; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                                    <span>⚙️ Create &amp; Manage My Foods</span><span id="myFoodsDropdownArrow">▼</span>
+                                    <span>⚙️ Manage My Foods &amp; Recipes</span><span id="myFoodsDropdownArrow">▼</span>
                                 </button>
                                 <div id="myFoodsDropdown" class="dropdown-menu-list">
                                     <button onclick="showManageMyFoodsModal(); closeDropdown('myFoodsDropdown')">View
                                         &amp;
                                         Manage My Foods</button>
                                     <button
-                                        onclick="showCustomFoodModal(-1, 'Create Custom Food'); closeDropdown('myFoodsDropdown')">Create
-                                        Custom
-                                        Food</button>
+                                        onclick="showNewFoodEntryModal(); closeDropdown('myFoodsDropdown')">New
+                                        Food Entry</button>
                                     <button onclick="showRecipeModal(); closeDropdown('myFoodsDropdown')">Recipes</button>
                                     <button onclick="showExportMyFoodsModal(); closeDropdown('myFoodsDropdown')">📤 Export My
                                         Foods</button>
@@ -1090,6 +1089,8 @@
                     <button onclick="document.getElementById('customFoodModal').style.display='none'" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
                 </div>
             </div>
+
+            <button type="button" onclick="startCustomFoodBarcodeScan()" style="width:100%; padding:10px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-bottom:15px; flex-shrink:0;">📷 Scan Barcode to Auto-Fill</button>
 
             <div style="overflow-y:auto; flex-grow:1; padding-right:10px;">
                 <div class="form-group"><label>Food Name</label><input type="text" id="cf-name"
@@ -1449,6 +1450,23 @@
                             style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
                     </div>
                 </div>
+                
+                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:15px; background:#f8fafc;">
+                    <label style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#10b981;">
+                        <input type="checkbox" id="dbNutritionixToggle" style="width:20px; height:20px;">
+                        Nutritionix (Restaurants & Branded)
+                    </label>
+                    <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API keys from <a
+                            href="https://developer.nutritionix.com/" target="_blank"
+                            style="color:#3b82f6;">developer.nutritionix.com</a>.
+                    </p>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <input type="text" id="nutritionixAppIdInput" placeholder="Nutritionix App ID"
+                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                        <input type="text" id="nutritionixKeyInput" placeholder="Nutritionix App Key"
+                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                    </div>
+                </div>
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
@@ -1547,9 +1565,14 @@
                     <option value="Dinner">Dinner</option>
                     <option value="Discretionary">Snacks/Discretionary</option>
                 </select>
-                <button onclick="openBuilderManualEntryModal()"
-                    style="margin-top:10px; width:100%; padding:10px; background:#10b981; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">+
-                    Add Items Manually</button>
+                <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-top:15px; margin-bottom:15px;">
+                    <h4 style="margin-top:0; color:#374151;">✍️ Add Items Manually</h4>
+                    <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type items separated by commas to auto-match and add them below.</p>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" id="builderManualInlineInput" placeholder="e.g. 1 cup of milk, 2 eggs" style="flex:1; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-family:inherit; font-size:16px;" onkeypress="if(event.key==='Enter') builderManualInlineAdd()">
+                        <button type="button" id="builderManualInlineBtn" onclick="builderManualInlineAdd()" style="padding:10px 15px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap;">+ Add</button>
+                    </div>
+                </div>
             </div>
 
             <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-bottom:15px;">
@@ -1601,48 +1624,7 @@
 
 
 
-    <!-- Multi-Item Manual Entry Modal -->
-    <div id="builderManualEntryModal"
-        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10001; align-items:center; justify-content:center;">
-        <div
-            style="background:white; padding:25px; border-radius:16px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column;">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <h3 style="margin:0; color:#10b981;">Add Items Manually</h3>
-                <button onclick="closeManualModal()"
-                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
-            </div>
-            <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type the name of a food item and click
-                'Next
-                Item' to rapidly build a list. Click 'Search All Items' when finished.</p>
 
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" id="builderManualInput"
-                    style="flex:1; padding:10px; font-size:16px; border-radius:5px; border:1px solid #d1d5db;"
-                    placeholder="e.g. 1 apple" onkeypress="if(event.key==='Enter') builderManualNextItem()">
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <button onclick="builderManualNextItem()"
-                    style="width:100%; padding:10px; background:#f59e0b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Next
-                    Item</button>
-            </div>
-
-            <div id="builderManualEntryList"
-                style="border:1px solid #e5e7eb; border-radius:6px; min-height:80px; max-height:350px; overflow-y:auto; padding:10px; margin-bottom:15px; background:#fafafa; font-size:0.9em; display:flex; flex-direction:column; gap:5px;">
-                <!-- Manual items list goes here -->
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button
-                    onclick="document.getElementById('builderManualEntryModal').style.display='none'; closeEnterMealModal();"
-                    style="flex:1; padding:12px; background:var(--text-muted); color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Cancel</button>
-                <button id="builderManualSearchBtn" onclick="builderManualAddSelected()"
-                    style="flex:1; padding:12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:1.1em; font-weight:bold; cursor:pointer;">Log
-                    Meal</button>
-            </div>
-        </div>
-    </div>
     <div id="editLogModal"
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10005; align-items:center; justify-content:center;">
         <div
@@ -1981,6 +1963,14 @@
             </div>
 
             <div style="display:flex; gap:10px; margin-bottom: 15px; align-items: center;">
+                <select id="exportMyFoodsFilterSelect" onchange="renderExportMyFoodsList()" style="padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; background: #f8fafc; font-size: 0.95em; font-weight: 600; cursor: pointer; color: #475569; box-sizing: border-box;">
+                    <option value="All">All</option>
+                    <option value="A-E">A-E</option>
+                    <option value="F-J">F-J</option>
+                    <option value="K-O">K-O</option>
+                    <option value="P-T">P-T</option>
+                    <option value="U-Z">U-Z</option>
+                </select>
                 <input type="text" id="exportMyFoodsSearchInput" placeholder="Search by name..."
                     onkeyup="renderExportMyFoodsList()"
                     style="flex-grow:1; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
@@ -2292,6 +2282,9 @@
             calorieGoal: 0,
             wwGoal: 0,
             usdaApiKey: 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7',  // Default demo key; user can override via the button
+            nutritionixAppId: '',
+            nutritionixApiKey: '',
+            dbNutritionixEnabled: false,
             // Macro targets represent percentages (30%, 30%, 40%)
             targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, ProteinGrams: 0, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
@@ -2999,6 +2992,26 @@
             wrap.insertBefore(footer, sel);
         }
 
+        // Helper to format Nutritionix API response into our internal app schema
+        function formatNutritionixData(p) {
+            return {
+                description: p.food_name || 'Unknown Item',
+                brandOwner: p.brand_name || '',
+                foodCategory: 'Other',
+                servingSize: parseFloat(p.serving_weight_grams) || 100,
+                householdServingFullText: `${p.serving_qty || 1} ${p.serving_unit || 'serving'}`,
+                upc: '',
+                source: 'Nutritionix',
+                foodNutrients: [
+                    { nutrientId: 1008, value: parseFloat(p.nf_calories) || 0 },
+                    { nutrientId: 1003, value: parseFloat(p.nf_protein) || 0 },
+                    { nutrientId: 1004, value: parseFloat(p.nf_total_fat) || 0 },
+                    { nutrientId: 1005, value: parseFloat(p.nf_total_carbohydrate) || 0 },
+                    { nutrientId: 1079, value: parseFloat(p.nf_dietary_fiber) || 0 }
+                ]
+            };
+        }
+
         async function searchDatabases() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) return;
@@ -3087,21 +3100,33 @@
                 const runUsda = appData.dbUsdaEnabled !== false;
                 const runOff = appData.dbOffEnabled !== false;
                 const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
+                const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=15`;
                 const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=15`;
                 const legacyOffUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
                 const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+                const nutritionixUrl = `https://trackapi.nutritionix.com/v2/natural/nutrients`;
 
                 const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
+                const fetchOptionsNutritionix = {
+                    method: 'POST',
+                    headers: {
+                        'x-app-id': appData.nutritionixAppId,
+                        'x-app-key': appData.nutritionixApiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                };
 
                 const fetchPromises = [];
                 fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
                 fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
                 fetchPromises.push(runOff ? fetchJSON(legacyOffUrl) : Promise.resolve(null));
                 fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
+                fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
 
-                const [usdaData, searchALData, legacyOffData, apiNinjasData] = await Promise.all(fetchPromises);
+                const [usdaData, searchALData, legacyOffData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
 
                 let usdaFoods = [];
                 if (usdaData && usdaData.foods) {
@@ -3182,7 +3207,12 @@
                     }));
                 }
 
-                const rawApiResults = [...apiNinjasFoods, ...usdaFoods, ...searchALFoods, ...legacyOffFoods];
+                let nutritionixFoods = [];
+                if (nutritionixData && nutritionixData.foods && Array.isArray(nutritionixData.foods)) {
+                    nutritionixFoods = nutritionixData.foods.map(formatNutritionixData);
+                }
+
+                const rawApiResults = [...nutritionixFoods, ...apiNinjasFoods, ...usdaFoods, ...searchALFoods, ...legacyOffFoods];
 
                 // Sort API results by closeness of match
                 rawApiResults.sort((a, b) => {
@@ -4777,7 +4807,10 @@
 
         async function fetchOpenFoodFacts(barcode) {
             const preview = document.getElementById('nutritionPreview');
-            if (!recipeBarcodeMode) {
+            
+            if (customFoodBarcodeMode) {
+                document.getElementById('customFoodModal').style.display = 'flex'; // Re-show modal
+            } else if (!recipeBarcodeMode) {
                 preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
             } else {
                 const sel = document.getElementById('recipeFoodSelect');
@@ -4787,7 +4820,24 @@
             // Check My Foods database first
             const localMatch = appData.myFoods.find(f => f.upc === barcode);
             if (localMatch) {
-                if (recipeBarcodeMode) {
+                if (customFoodBarcodeMode) {
+                    document.getElementById('cf-name').value = localMatch.description || '';
+                    document.getElementById('cf-brand').value = localMatch.brandOwner || '';
+                    document.getElementById('cf-category').value = guessCategory(localMatch);
+                    document.getElementById('cf-upc').value = barcode;
+                    const servingSizeVal = parseFloat(localMatch.servingSize) || 100;
+                    document.getElementById('cf-serving').value = servingSizeVal;
+                    document.getElementById('cf-serving-unit').value = 'g';
+                    const nut = getAllNutrients(localMatch);
+                    const multiplier = servingSizeVal / 100;
+                    document.getElementById('cf-cal').value = (nut.calories * multiplier).toFixed(1);
+                    document.getElementById('cf-pro').value = (nut.protein * multiplier).toFixed(1);
+                    document.getElementById('cf-fat').value = (nut.fat * multiplier).toFixed(1);
+                    document.getElementById('cf-carb').value = (nut.carbs * multiplier).toFixed(1);
+                    document.getElementById('cf-fib').value = (nut.fiber * multiplier).toFixed(1);
+                    setBaseServingInfo();
+                    customFoodBarcodeMode = false;
+                } else if (recipeBarcodeMode) {
                     currentRecipeSearchResults = [{ ...localMatch, source: 'My Foods' }];
                     const sel = document.getElementById('recipeFoodSelect');
                     sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
@@ -4809,7 +4859,10 @@
                 const data = await res.json();
 
                 if (data.status === 0 || !data.product) {
-                    if (recipeBarcodeMode) {
+                    if (customFoodBarcodeMode) {
+                        alert("Product not found in Open Food Facts. You can enter details manually.");
+                        customFoodBarcodeMode = false;
+                    } else if (recipeBarcodeMode) {
                         const sel = document.getElementById('recipeFoodSelect');
                         sel.innerHTML = `<option value="" disabled selected>Product not found in Open Food Facts.</option>`;
                         recipeBarcodeMode = false;
@@ -4835,6 +4888,25 @@
 
                 const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
                 const sQuantity = parseFloat(p.serving_quantity) || 100;
+
+                if (customFoodBarcodeMode) {
+                    document.getElementById('cf-name').value = name;
+                    document.getElementById('cf-brand').value = brandText === "Open Food Facts" ? "" : brandText;
+                    document.getElementById('cf-category').value = "Other"; // Try to leave generic if mapped
+                    document.getElementById('cf-upc').value = barcode;
+                    document.getElementById('cf-serving').value = sQuantity;
+                    document.getElementById('cf-serving-unit').value = 'g';
+                    
+                    const multiplier = sQuantity / 100;
+                    document.getElementById('cf-cal').value = (nut.calories * multiplier).toFixed(1);
+                    document.getElementById('cf-pro').value = (nut.protein * multiplier).toFixed(1);
+                    document.getElementById('cf-fat').value = (nut.fat * multiplier).toFixed(1);
+                    document.getElementById('cf-carb').value = (nut.carbs * multiplier).toFixed(1);
+                    document.getElementById('cf-fib').value = (nut.fiber * multiplier).toFixed(1);
+                    setBaseServingInfo();
+                    customFoodBarcodeMode = false;
+                    return;
+                }
 
                 const fakeFood = {
                     description: name,
@@ -4870,7 +4942,10 @@
 
             } catch (e) {
                 console.error("Barcode fetch/parse error:", e);
-                if (recipeBarcodeMode) {
+                if (customFoodBarcodeMode) {
+                    alert("Error reading product data.");
+                    customFoodBarcodeMode = false;
+                } else if (recipeBarcodeMode) {
                     const sel = document.getElementById('recipeFoodSelect');
                     sel.innerHTML = `<option value="" disabled selected>Error reading product data.</option>`;
                     recipeBarcodeMode = false;
@@ -5035,7 +5110,7 @@
                 document.getElementById('cf-carb').value = (carb * multiplier).toFixed(1);
                 document.getElementById('cf-fib').value = (fib * multiplier).toFixed(1);
 
-                document.querySelector('#customFoodModal h3').innerText = customTitle || 'Edit';
+                document.querySelector('#customFoodModal h3').innerText = customTitle || 'Edit Food Entry';
             } else {
                 const sel = document.getElementById('foodSelect');
                 const selectedIdx = sel ? sel.value : null;
@@ -5256,6 +5331,16 @@
             const container = document.getElementById('exportMyFoodsListContainer');
             const searchInput = document.getElementById('exportMyFoodsSearchInput');
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const filterSelect = document.getElementById('exportMyFoodsFilterSelect');
+            const filterValue = filterSelect ? filterSelect.value : 'All';
+
+            const filterRegex = {
+                'A-E': /^[a-e]/i,
+                'F-J': /^[f-j]/i,
+                'K-O': /^[k-o]/i,
+                'P-T': /^[p-t]/i,
+                'U-Z': /^[u-z]/i
+            };
 
             // Ensure sorted alphabetically
             appData.myFoods.sort((a, b) => {
@@ -5272,6 +5357,13 @@
 
                 if (searchTerm && !searchStr.includes(searchTerm)) {
                     return; // Skip if doesn't match
+                }
+                
+                if (filterValue !== 'All' && filterRegex[filterValue]) {
+                    const descMatch = String(food.description || '').trim();
+                    if (!filterRegex[filterValue].test(descMatch)) {
+                        return; // Skip if doesn't match alphabetical filter
+                    }
                 }
                 matchedCount++;
                 
@@ -5591,11 +5683,17 @@
 
             // Then external APIs (append)
             try {
-                const fetchJSON = async (url) => {
+                const runUsda = appData.dbUsdaEnabled !== false;
+                const runOff = appData.dbOffEnabled !== false;
+                const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
+                const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
+
+                const fetchJSON = async (url, options = {}) => {
                     try {
                         const controller = new AbortController();
                         const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
-                        const res = await fetch(url, { signal: controller.signal });
+                        options.signal = controller.signal;
+                        const res = await fetch(url, options);
                         if (!res.ok) {
                             clearTimeout(id);
                             return null;
@@ -5608,8 +5706,27 @@
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=10`;
                 const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=10`;
+                const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+                const nutritionixUrl = `https://trackapi.nutritionix.com/v2/natural/nutrients`;
 
-                const [usdaData, offData] = await Promise.all([fetchJSON(usdaUrl), fetchJSON(offUrl)]);
+                const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
+                const fetchOptionsNutritionix = {
+                    method: 'POST',
+                    headers: {
+                        'x-app-id': appData.nutritionixAppId,
+                        'x-app-key': appData.nutritionixApiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query: query })
+                };
+
+                const fetchPromises = [];
+                fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
+                fetchPromises.push(runOff ? fetchJSON(offUrl) : Promise.resolve(null));
+                fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
+                fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
+
+                const [usdaData, offData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
 
                 let usdaFoods = usdaData && usdaData.foods ? usdaData.foods.map(f => ({ ...f, source: 'USDA' })) : [];
                 let offFoods = [];
@@ -5631,8 +5748,33 @@
                     }));
                 }
 
+                let apiNinjasFoods = [];
+                if (apiNinjasData && Array.isArray(apiNinjasData)) {
+                    apiNinjasFoods = apiNinjasData.map(p => ({
+                        description: p.name,
+                        brandOwner: '',
+                        foodCategory: 'Other',
+                        servingSize: parseFloat(p.serving_size_g) || 100,
+                        householdServingFullText: `${p.serving_size_g}g`,
+                        upc: '',
+                        source: 'API Ninjas',
+                        foodNutrients: [
+                            { nutrientId: 1008, value: parseFloat(p.calories) || 0 },
+                            { nutrientId: 1003, value: parseFloat(p.protein_g) || 0 },
+                            { nutrientId: 1004, value: parseFloat(p.fat_total_g) || 0 },
+                            { nutrientId: 1005, value: parseFloat(p.carbohydrates_total_g) || 0 },
+                            { nutrientId: 1079, value: parseFloat(p.fiber_g) || 0 }
+                        ]
+                    }));
+                }
+
+                let nutritionixFoods = [];
+                if (nutritionixData && nutritionixData.foods && Array.isArray(nutritionixData.foods)) {
+                    nutritionixFoods = nutritionixData.foods.map(formatNutritionixData);
+                }
+
                 const apiStart = currentRecipeSearchResults.length;
-                const rawApiResults = [...usdaFoods, ...offFoods];
+                const rawApiResults = [...nutritionixFoods, ...apiNinjasFoods, ...usdaFoods, ...offFoods];
 
                 // Include results from USDA and Open Food Facts even if names overlap with My Foods.
                 const apiResults = rawApiResults.filter(apiFood => {
@@ -5962,9 +6104,16 @@
 
         // Helper to start barcode specifically for recipe modal (reuses main scanner but routes result)
         let recipeBarcodeMode = false;
+        let customFoodBarcodeMode = false;
 
         function startRecipeBarcodeScan() {
             startBarcodeScan(true);
+        }
+
+        function startCustomFoodBarcodeScan() {
+            customFoodBarcodeMode = true;
+            document.getElementById('customFoodModal').style.display = 'none'; // Hide it temporarily
+            startBarcodeScan(false);
         }
 
         // Note: For a more seamless barcode in recipe, we could enhance fetchOpenFoodFacts to check recipeBarcodeMode and add directly, but this keeps it working.
@@ -6459,9 +6608,12 @@
             document.getElementById('dbUsdaToggle').checked = appData.dbUsdaEnabled !== false;
             document.getElementById('dbOffToggle').checked = appData.dbOffEnabled !== false;
             document.getElementById('dbApiNinjasToggle').checked = appData.dbApiNinjasEnabled || false;
+            document.getElementById('dbNutritionixToggle').checked = appData.dbNutritionixEnabled || false;
 
             // Set keys
             document.getElementById('apiNinjasKeyInput').value = appData.apiNinjasApiKey || '';
+            document.getElementById('nutritionixAppIdInput').value = appData.nutritionixAppId || '';
+            document.getElementById('nutritionixKeyInput').value = appData.nutritionixApiKey || '';
         }
 
         function closeDatabaseConfigModal() {
@@ -6472,9 +6624,11 @@
             appData.dbUsdaEnabled = document.getElementById('dbUsdaToggle').checked;
             appData.dbOffEnabled = document.getElementById('dbOffToggle').checked;
             appData.dbApiNinjasEnabled = document.getElementById('dbApiNinjasToggle').checked;
+            appData.dbNutritionixEnabled = document.getElementById('dbNutritionixToggle').checked;
 
             appData.apiNinjasApiKey = document.getElementById('apiNinjasKeyInput').value.trim();
-            appData.apiNinjasApiKey = document.getElementById('apiNinjasKeyInput').value.trim();
+            appData.nutritionixAppId = document.getElementById('nutritionixAppIdInput').value.trim();
+            appData.nutritionixApiKey = document.getElementById('nutritionixKeyInput').value.trim();
 
             saveData();
             closeDatabaseConfigModal();
@@ -6496,149 +6650,72 @@
         }
 
         // ==================== MANUAL MULTI-ITEM WORKFLOW ====================
-        let manualEntryItems = [];
+        // ==================== MANUAL INLINE MULTI-ITEM WORKFLOW ====================
+        async function builderManualInlineAdd() {
+            const input = document.getElementById('builderManualInlineInput');
+            const rawVal = input.value.trim();
+            if (!rawVal) return;
 
-        function openBuilderManualEntryModal() {
-            manualEntryItems = [];
-            document.getElementById('builderManualInput').value = '';
-            document.getElementById('builderManualEntryModal').style.display = 'flex';
-            renderManualEntryList();
-            setTimeout(() => document.getElementById('builderManualInput').focus(), 100);
-        }
+            const btn = document.getElementById('builderManualInlineBtn');
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
 
-        function renderManualEntryList() {
-            const listDiv = document.getElementById('builderManualEntryList');
-            listDiv.innerHTML = '';
-            if (manualEntryItems.length === 0) {
-                listDiv.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:20px 0;">No items added yet.</div>';
-                return;
-            }
-            manualEntryItems.forEach((itemObj, index) => {
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex; flex-direction:column; background:white; padding:10px; border-radius:6px; border:1px solid #e5e7eb; margin-bottom:8px;';
+            // Split by comma for multiple items
+            const vals = rawVal.split(',').map(v => v.trim()).filter(v => v);
 
-                const topRow = document.createElement('div');
-                topRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
-
-                const nameSpan = document.createElement('span');
-                nameSpan.style.fontWeight = 'bold';
-                nameSpan.innerHTML = `<span style="background:#e0e7ff; color:#4f46e5; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.85em; margin-right:5px;">${itemObj.amount || 1} ${itemObj.unit || 'serving'}</span> ${index + 1}. ${itemObj.query}`;
-
-                const btnContainer = document.createElement('div');
-                btnContainer.style.cssText = 'display:flex; gap:5px; align-items:center;';
-
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Edit';
-                editBtn.style.cssText = 'background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.85em; cursor:pointer;';
-                editBtn.onclick = () => openBuilderItemEditModal(index, 'manual');
-
-                const delBtn = document.createElement('button');
-                delBtn.textContent = '✖';
-                delBtn.style.cssText = 'background:none; border:none; color:#ef4444; cursor:pointer; padding:5px;';
-                delBtn.onclick = () => {
-                    manualEntryItems.splice(index, 1);
-                    renderManualEntryList();
-                };
-
-                btnContainer.appendChild(editBtn);
-                btnContainer.appendChild(delBtn);
-
-                topRow.appendChild(nameSpan);
-                topRow.appendChild(btnContainer);
-                row.appendChild(topRow);
-
-                if (itemObj.loading) {
-                    const loadingText = document.createElement('div');
-                    loadingText.style.cssText = 'font-size:0.85em; color:#64748b; margin-top:5px; font-style:italic;';
-                    loadingText.textContent = '⏳ Searching databases...';
-                    row.appendChild(loadingText);
-                } else if (itemObj.results) {
-                    const select = document.createElement('select');
-                    select.id = `manualResultSelect_${index}`;
-                    select.style.cssText = 'margin-top:8px; padding:6px; border-radius:4px; border:1px solid #cbd5e1; font-size:0.9em; width:100%;';
-
-                    let match = null;
-                    if (itemObj.results.length === 0) {
-                        const opt = document.createElement('option');
-                        opt.value = '';
-                        opt.textContent = 'No matches found';
-                        select.appendChild(opt);
-                        select.disabled = true;
-                    } else {
-                        let currentIdx = itemObj.selectedMatchIdx || 0;
-                        match = itemObj.results[currentIdx];
-
-                        itemObj.results.forEach((r, rIdx) => {
-                            const opt = document.createElement('option');
-                            opt.value = rIdx;
-                            const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
-                            const nut = getAllNutrients(r);
-
-                            const logAmount = parseFloat(itemObj.amount) || 1;
-                            const logUnit = itemObj.unit || "serving";
-                            const servingSize = parseFloat(r.servingSize) || 100;
-                            let gramsPerUnit = servingSize;
-                            if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
-                            else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
-                            const rMultiplier = (logAmount * gramsPerUnit) / 100;
-                            const displayCals = (nut.calories * rMultiplier).toFixed(0);
-
-                            opt.textContent = `${r.description}${brand} - ${displayCals} kcal`;
-                            if (rIdx === currentIdx) opt.selected = true;
-                            select.appendChild(opt);
-                        });
-
-                        select.onchange = (e) => {
-                            itemObj.selectedMatchIdx = parseInt(e.target.value, 10);
-                            renderManualEntryList();
-                        };
-                    }
-                    row.appendChild(select);
-
-                    if (match) {
-                        const nut = getAllNutrients(match);
-                        const nutDiv = document.createElement('div');
-                        nutDiv.style.cssText = 'font-size:0.85em; color:#6b7280; margin-top:4px;';
-                        nutDiv.innerHTML = `🔥 ${Number(nut.calories).toFixed(0)} kcal | 🥩 ${Number(nut.protein).toFixed(1)}g P | 🧈 ${Number(nut.fat).toFixed(1)}g F | 🍞 ${Number(nut.carbs).toFixed(1)}g C`;
-                        row.appendChild(nutDiv);
-                    }
-                }
-
-                listDiv.appendChild(row);
-            });
-        }
-
-        function builderManualNextItem() {
-            const input = document.getElementById('builderManualInput');
-            const val = input.value.trim();
-            if (val) {
-                const match = val.match(/^([\d.]+)\s*([a-zA-Z]+)?\s+(.*)$/);
+            for (const val of vals) {
+                const matchRegex = val.match(/^([\d.]+)\s*([a-zA-Z]+)?\s+(.*)$/);
                 let amount = 1;
                 let unit = 'serving';
                 let queryStr = val;
 
-                if (match) {
-                    amount = parseFloat(match[1]);
-                    unit = match[2] || 'serving';
-                    queryStr = match[3];
+                if (matchRegex) {
+                    amount = parseFloat(matchRegex[1]);
+                    unit = matchRegex[2] || 'serving';
+                    queryStr = matchRegex[3];
                 }
 
-                const item = { query: queryStr, amount: amount, unit: unit, results: null, loading: true, original: val };
-                manualEntryItems.push(item);
-                input.value = '';
-                renderManualEntryList();
-                input.focus();
-
-                searchFoodMatches(queryStr).then(matches => {
-                    item.results = matches;
-                    item.loading = false;
-                    renderManualEntryList();
-                }).catch(() => {
-                    item.results = [];
-                    item.loading = false;
-                    renderManualEntryList();
-                });
+                // Treat queryStr as the item description and try to find the best match
+                const bestMatch = await searchBestFoodMatch(queryStr);
+                
+                if (bestMatch) {
+                    pendingMealItems.push({
+                        name: bestMatch.description || queryStr,
+                        amount: amount,
+                        unit: unit,
+                        calories: bestMatch.calories || getAllNutrients(bestMatch).calories || 0,
+                        protein: bestMatch.protein || getAllNutrients(bestMatch).protein || 0,
+                        fat: bestMatch.fat || getAllNutrients(bestMatch).fat || 0,
+                        carbs: bestMatch.carbs || getAllNutrients(bestMatch).carbs || 0,
+                        group: getFoodCategory(bestMatch) || 'Other',
+                        food: bestMatch,
+                        parsed: { description: queryStr, amount: amount, unit: unit },
+                        loading: false,
+                        results: [bestMatch]
+                    });
+                } else {
+                    // Fallback to basic string if no matches found
+                    pendingMealItems.push({
+                        name: queryStr,
+                        amount: amount,
+                        unit: unit,
+                        calories: 0,
+                        protein: 0,
+                        fat: 0,
+                        carbs: 0,
+                        group: 'Other',
+                        food: { description: queryStr },
+                        parsed: { description: queryStr, amount: amount, unit: unit },
+                        loading: false,
+                        results: []
+                    });
+                }
             }
+
+            input.value = '';
+            btn.disabled = false;
+            btn.textContent = '+ Add';
+            renderPendingMealItems();
         }
 
         async function searchFoodMatches(query) {
@@ -6685,12 +6762,23 @@
             const runUsda = appData.dbUsdaEnabled !== false;
             const runOff = appData.dbOffEnabled !== false;
             const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
+            const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
 
             const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=20`;
             const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=20`;
             const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+            const nutritionixUrl = `https://trackapi.nutritionix.com/v2/natural/nutrients`;
 
             const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
+            const fetchOptionsNutritionix = {
+                method: 'POST',
+                headers: {
+                    'x-app-id': appData.nutritionixAppId,
+                    'x-app-key': appData.nutritionixApiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            };
 
             const fetchJSON = async (url, options = {}) => {
                 try {
@@ -6709,10 +6797,15 @@
             fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
             fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
             fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
+            fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
 
-            const [usdaData, searchALData, apiNinjasData] = await Promise.all(fetchPromises);
+            const [usdaData, searchALData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
 
             let apiFoods = [];
+
+            if (nutritionixData && nutritionixData.foods && Array.isArray(nutritionixData.foods)) {
+                apiFoods.push(...nutritionixData.foods.map(formatNutritionixData));
+            }
 
             if (apiNinjasData && Array.isArray(apiNinjasData)) {
                 apiFoods.push(...apiNinjasData.map(p => ({
@@ -6771,36 +6864,6 @@
             return matches.length > 0 ? matches[0] : null;
         }
 
-        function builderManualAddSelected() {
-            manualEntryItems.forEach((item, index) => {
-                const select = document.getElementById(`manualResultSelect_${index}`);
-                if (select && select.value !== '') {
-                    const matchIdx = parseInt(select.value, 10);
-                    const match = item.results[matchIdx];
-                    if (match) {
-                        pendingMealItems.push({
-                            name: match.description || item.query,
-                            amount: item.amount || 1,
-                            unit: item.unit || 'serving',
-                            calories: match.calories || getAllNutrients(match).calories || 0,
-                            protein: match.protein || getAllNutrients(match).protein || 0,
-                            fat: match.fat || getAllNutrients(match).fat || 0,
-                            carbs: match.carbs || getAllNutrients(match).carbs || 0,
-                            group: item.groupOverride || match.group || getFoodCategory(match) || 'Other',
-                            food: match,
-                            parsed: { description: item.query, amount: item.amount || 1, unit: item.unit || 'serving' },
-                            loading: false,
-                            results: item.results
-                        });
-                    }
-                }
-            });
-
-            manualEntryItems = [];
-            document.getElementById('builderManualEntryModal').style.display = 'none';
-            renderPendingMealItems();
-            builderLogMeal();
-        }
 
         // --->END IMPORT/EXPORT MY FOODS DATABASE 6/6/2026 11:58<---
         // ==================== STORAGE & ARCHIVE FEATURES ====================
