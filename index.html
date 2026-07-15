@@ -1566,42 +1566,50 @@
                     <option value="Discretionary">Snacks/Discretionary</option>
                 </select>
                 <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-top:15px; margin-bottom:15px;">
-                    <h4 style="margin-top:0; color:#374151;">✍️ Add Items Manually</h4>
-                    <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type items separated by commas to auto-match and add them below.</p>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <input type="text" id="builderManualInlineInput" placeholder="e.g. 1 cup of milk, 2 eggs" style="flex:1; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-family:inherit; font-size:16px;" onkeypress="if(event.key==='Enter') builderManualInlineAdd()">
-                        <button type="button" id="builderManualInlineBtn" onclick="builderManualInlineAdd()" style="padding:10px 15px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap;">+ Add</button>
+                    <h4 style="margin-top:0; color:#374151; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleMealInput('builderManualBody')">
+                        Add Items Manually <span id="builderManualBody-icon" style="font-size:0.8em; color:#6b7280;">▼</span>
+                    </h4>
+                    <div id="builderManualBody">
+                        <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type items separated by commas to auto-match and add them below.</p>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="text" id="builderManualInlineInput" placeholder="e.g. 1 cup of milk, 2 eggs" style="flex:1; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-family:inherit; font-size:16px;" onkeypress="if(event.key==='Enter') builderManualInlineAdd()">
+                            <button type="button" id="builderManualInlineBtn" onclick="builderManualInlineAdd()" style="padding:10px 15px; background:#10b981; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap;">+ Add</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-bottom:15px;">
-                <h4 style="margin-top:0; color:#374151;">✨ AI Parse Meal</h4>
-                <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Upload a photo or describe what you
-                    ate. The AI will
-                    identify items and quantities, and add them to your pending list below.</p>
-                <textarea id="builderAiDescription" rows="2"
-                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; resize:vertical; font-family:inherit; margin-bottom:10px; font-size:16px;"
-                    placeholder="e.g. I had two slices of pepperoni pizza and a cup of orange juice."></textarea>
+                <h4 style="margin-top:0; color:#374151; cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleMealInput('builderAiBody')">
+                    AI Parse Meal <span id="builderAiBody-icon" style="font-size:0.8em; color:#6b7280;">▼</span>
+                </h4>
+                <div id="builderAiBody">
+                    <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Upload a photo or describe what you
+                        ate. The AI will
+                        identify items and quantities, and add them to your pending list below.</p>
+                    <textarea id="builderAiDescription" rows="2"
+                        style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; resize:vertical; font-family:inherit; margin-bottom:10px; font-size:16px;"
+                        placeholder="e.g. I had two slices of pepperoni pizza and a cup of orange juice."></textarea>
 
-                <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-                    <input type="file" id="aiImageInput" accept="image/*" capture="environment" style="display:none;"
-                        onchange="handleAiImageUpload(event)">
-                    <button type="button" id="aiImageBtn" onclick="document.getElementById('aiImageInput').click()"
-                        style="padding:8px 12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:0.9em; font-weight:bold; cursor:pointer; flex: 1; white-space: nowrap;">📷
-                        Attach Photo</button>
-                    <div id="aiImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
-                        <img id="aiImagePreview" src=""
-                            style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #d1d5db;">
-                        <button type="button" onclick="removeAiImage()"
-                            style="background:none; border:none; color:#ef4444; font-size:1.5em; cursor:pointer; line-height: 1; padding: 0 4px;"
-                            title="Remove Photo">&times;</button>
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                        <input type="file" id="aiImageInput" accept="image/*" capture="environment" style="display:none;"
+                            onchange="handleAiImageUpload(event)">
+                        <button type="button" id="aiImageBtn" onclick="document.getElementById('aiImageInput').click()"
+                            style="padding:8px 12px; background:#4f46e5; color:white; border:none; border-radius:6px; font-size:0.9em; font-weight:bold; cursor:pointer; flex: 1; white-space: nowrap;">📷
+                            Attach Photo</button>
+                        <div id="aiImagePreviewContainer" style="display:none; align-items:center; gap:8px;">
+                            <img id="aiImagePreview" src=""
+                                style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #d1d5db;">
+                            <button type="button" onclick="removeAiImage()"
+                                style="background:none; border:none; color:#ef4444; font-size:1.5em; cursor:pointer; line-height: 1; padding: 0 4px;"
+                                title="Remove Photo">&times;</button>
+                        </div>
                     </div>
-                </div>
 
-                <button id="builderAiProcessBtn" onclick="builderProcessAiMeal()"
-                    style="width:100%; padding:10px; background:#8b5cf6; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">Parse
-                    Items</button>
+                    <button id="builderAiProcessBtn" onclick="builderProcessAiMeal()"
+                        style="width:100%; padding:10px; background:#8b5cf6; color:white; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">Parse
+                        Items</button>
+                </div>
             </div>
 
             <div>
@@ -3917,13 +3925,37 @@
             document.getElementById('enterMealModal').style.display = 'none';
         }
 
+        function toggleMealInput(id) {
+            const body = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                body.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
         function renderPendingMealItems() {
             const container = document.getElementById('builderPendingItemsList');
             container.innerHTML = '';
 
+            const manualBody = document.getElementById('builderManualBody');
+            const manualIcon = document.getElementById('builderManualBody-icon');
+            const aiBody = document.getElementById('builderAiBody');
+            const aiIcon = document.getElementById('builderAiBody-icon');
+
             if (pendingMealItems.length === 0) {
                 container.innerHTML = '<p style="color:#9ca3af; font-size:0.9em; text-align:center;">No items added yet. Describe your meal above or add manually.</p>';
+                container.style.maxHeight = '250px';
+                if (manualBody) { manualBody.style.display = 'block'; manualIcon.textContent = '▼'; }
+                if (aiBody) { aiBody.style.display = 'block'; aiIcon.textContent = '▼'; }
                 return;
+            } else {
+                container.style.maxHeight = '400px';
+                if (manualBody) { manualBody.style.display = 'none'; manualIcon.textContent = '▶'; }
+                if (aiBody) { aiBody.style.display = 'none'; aiIcon.textContent = '▶'; }
             }
 
             pendingMealItems.forEach((item, index) => {
