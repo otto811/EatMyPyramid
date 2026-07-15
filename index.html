@@ -505,6 +505,17 @@
             font-size: 1.5em;
             margin-bottom: 2px;
         }
+        .nav-img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 2px;
+            mix-blend-mode: multiply;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+        .nav-item.active .nav-img {
+            transform: scale(1.15);
+        }
     </style>
 </head>
 
@@ -6773,27 +6784,27 @@
     </script>
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('profile', this)">
-            <span class="nav-icon">👤</span>
+            <img src="icons/icon_profile.jpg" class="nav-img" alt="Profile">
             Profile
         </button>
         <button class="nav-item" onclick="switchTab('search', this)">
-            <span class="nav-icon">🔍</span>
+            <img src="icons/icon_search.jpg" class="nav-img" alt="Search">
             Search
         </button>
         <button class="nav-item" onclick="switchTab('macros', this)">
-            <span class="nav-icon">📈</span>
+            <img src="icons/icon_macros.jpg" class="nav-img" alt="Macros">
             Macros
         </button>
         <button class="nav-item" onclick="switchTab('foodgroups', this)">
-            <span class="nav-icon">🍎</span>
+            <img src="icons/icon_foodgroups.jpg" class="nav-img" alt="Groups">
             Groups
         </button>
         <button class="nav-item" onclick="switchTab('wwTracker', this)">
-            <span class="nav-icon">⭐️</span>
-            Tracker
+            <img src="icons/icon_emppoints.jpg" class="nav-img" alt="EMP Points">
+            EMP Pts
         </button>
         <button class="nav-item" onclick="switchTab('log', this)">
-            <span class="nav-icon">📝</span>
+            <img src="icons/icon_dailylog.jpg" class="nav-img" alt="Log">
             Log
         </button>
     </nav>
