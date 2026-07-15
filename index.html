@@ -4034,7 +4034,7 @@
             btn.textContent = 'Parsing...';
 
             try {
-                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
                 let textContext = text ? `from this meal description/image context: "${text}".` : `from the attached image of the meal.`;
                 const prompt = `Extract the food items and their quantities ${textContext} 
@@ -4064,7 +4064,8 @@
                 });
 
                 if (!response.ok && response.status === 404) {
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+                    // Fall back to the 1.0 model which we know the user has access to
+                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-latest:generateContent?key=${apiKey}`;
                     response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
