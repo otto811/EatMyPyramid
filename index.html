@@ -6840,8 +6840,9 @@
                     queryStr = matchRegex[3];
                 }
 
-                // Treat queryStr as the item description and try to find the best match
-                const bestMatch = await searchBestFoodMatch(queryStr);
+                // Treat queryStr as the item description and try to find matches
+                const allMatches = await searchFoodMatches(queryStr);
+                const bestMatch = allMatches.length > 0 ? allMatches[0] : null;
 
                 if (bestMatch) {
                     pendingMealItems.push({
@@ -6856,7 +6857,7 @@
                         food: bestMatch,
                         parsed: { description: queryStr, amount: amount, unit: unit },
                         loading: false,
-                        results: [bestMatch]
+                        results: allMatches
                     });
                 } else {
                     // Fallback to basic string if no matches found
