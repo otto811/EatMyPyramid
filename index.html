@@ -1796,12 +1796,7 @@
                 </select>
             </div>
 
-            <div class="form-group" style="margin-top: 15px;">
-                <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
-                    <input type="checkbox" id="edit-save-myfoods" style="width:18px; height:18px;">
-                    Save to My Foods after editing
-                </label>
-            </div>
+
 
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="closeEditModal()"
@@ -3650,7 +3645,6 @@
             currentEditIndex = index;
 
             document.getElementById('edit-name').value = item.name || '';
-            document.getElementById('edit-save-myfoods').checked = false;
             document.getElementById('edit-amount').value = item.amount;
             document.getElementById('edit-unit-display').textContent = item.unit || '';
 
@@ -3694,7 +3688,6 @@
             }
 
             document.getElementById('edit-name').value = name || '';
-            document.getElementById('edit-save-myfoods').checked = false;
             document.getElementById('edit-amount').value = amount;
             document.getElementById('edit-unit-display').textContent = unit;
 
@@ -3731,10 +3724,6 @@
                 item.groupOverride = newCat; // we'll use this in builderLogMeal
                 // meal override isn't strictly necessary per-item since builder logs the whole meal together, but we can set it
                 renderPendingMealItems();
-
-                if (document.getElementById('edit-save-myfoods').checked && item.food) {
-                    // It's a bit tricky to save unlogged item to my foods, skip for builder items for now or implement if needed
-                }
                 closeEditModal();
                 return;
             } else if (currentEditContext === 'manual') {
@@ -3748,6 +3737,8 @@
             }
 
             const item = state.log[currentEditIndex];
+            const oldName = item.name;
+            const oldCat = item.category;
 
             // Calculate old food group servings to subtract
             let oldFgAmount = item.foodGroupAmount || 1;
@@ -3820,8 +3811,8 @@
             renderLog();
             renderBarometers();
 
-            if (document.getElementById('edit-save-myfoods') && document.getElementById('edit-save-myfoods').checked) {
-                saveLogItemToMyFoods(currentEditIndex);
+            if (newName !== oldName || newCat !== oldCat) {
+                saveLogItemToMyFoods(currentEditIndex, null, oldName);
             }
 
             closeEditModal();
@@ -5188,7 +5179,7 @@
             if (fgSelect2) fgSelect2.value = '';
         }
 
-        function saveLogItemToMyFoods(index, btnElement) {
+        function saveLogItemToMyFoods(index, btnElement, silentSyncOldName = null) {
             const item = state.log[index];
             if (!item) return;
 
@@ -5204,8 +5195,8 @@
                 description: item.name,
                 brandOwner: '',
                 foodCategory: item.category || 'Other',
-                servingSize: 100,
-                householdServingFullText: `${item.amount || 1} ${item.unit || 'serving'}`,
+                servingSize: item.servingSize || 100,
+                householdServingFullText: (item.unit === 'g' || item.unit === 'oz') ? `${item.servingSize || 100}g` : (item.unit || '1 serving'),
                 upc: item.upc || '',
                 foodNutrients: [
                     { nutrientId: 1008, value: cals100 },
@@ -5215,6 +5206,22 @@
                     { nutrientId: 1079, value: fib100 }
                 ]
             };
+
+            if (silentSyncOldName) {
+                const existingIndex = appData.myFoods.findIndex(f => 
+                    (f.description || '').toLowerCase() === silentSyncOldName.toLowerCase() &&
+                    (f.upc || '') === (newFood.upc || '')
+                );
+                
+                if (existingIndex >= 0) {
+                    appData.myFoods[existingIndex].description = newFood.description;
+                    appData.myFoods[existingIndex].foodCategory = newFood.foodCategory;
+                } else {
+                    appData.myFoods.push(newFood);
+                }
+                saveData();
+                return;
+            }
 
             const exists = appData.myFoods.some(f =>
                 (f.description || '').toLowerCase() === newFood.description.toLowerCase() &&
