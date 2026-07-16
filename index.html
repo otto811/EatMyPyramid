@@ -824,8 +824,8 @@
                                 <input type="number" id="amountInput" placeholder="e.g. 250 or 8"
                                     onchange="updatePreview()">
                                 <select id="unitSelect" onchange="updatePreview()">
+                                    <option value="oz" selected>ounces (oz)</option>
                                     <option value="g">grams (g)</option>
-                                    <option value="oz">ounces (oz)</option>
                                 </select>
                             </div>
                         </div>
@@ -3499,7 +3499,7 @@
 
             document.getElementById('nutritionPreview').innerHTML = `
             <strong>${food.description}</strong><br>
-            <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br><br>
+            <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. EMP Points: ${ww.toFixed(1)}</span>
