@@ -1066,18 +1066,27 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
-                    <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()" style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share Items</button>
-                    <button id="importSharedLogBtn" onclick="document.getElementById('importSharedLogInput').click()" style="background:#10b981; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Import Shared</button>
-                    <input type="file" id="importSharedLogInput" accept=".json" style="display:none;" onchange="importSharedLogData(event)">
+                    <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()"
+                        style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share
+                        Items</button>
+                    <button id="importSharedLogBtn" onclick="document.getElementById('importSharedLogInput').click()"
+                        style="background:#10b981; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Import
+                        Shared</button>
+                    <input type="file" id="importSharedLogInput" accept=".json" style="display:none;"
+                        onchange="importSharedLogData(event)">
                 </div>
                 <button id="log-toggle" onclick="toggleSection('log')"
                     style="background:#f43f5e; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
             </div>
-            <div id="log-sharing-actions" style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:10px; border-radius:8px; margin-bottom:15px; align-items:center; justify-content:space-between;">
+            <div id="log-sharing-actions"
+                style="display:none; background:#fffbeb; border:1px solid #fcd34d; padding:10px; border-radius:8px; margin-bottom:15px; align-items:center; justify-content:space-between;">
                 <span style="color:#b45309; font-size:0.9em; font-weight:bold;">Select items to share:</span>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="toggleLogSharingMode()" style="background:#d1d5db; color:#374151; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Cancel</button>
-                    <button onclick="exportSelectedLogItems()" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Export Selected</button>
+                    <button onclick="toggleLogSharingMode()"
+                        style="background:#d1d5db; color:#374151; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Cancel</button>
+                    <button onclick="exportSelectedLogItems()"
+                        style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Export
+                        Selected</button>
                 </div>
             </div>
             <div id="log-content">
@@ -5550,7 +5559,7 @@
                     }
 
                     let importedCount = 0;
-                    const trackedGroups = ['Vegetable', 'Fruit', 'Dairy', 'Protein', 'Grain', 'Sweets', 'Condiment', 'Water'];
+                    const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
                     imported.data.forEach(item => {
                         state.log.push(item);
                         state.current.Calories += (item.calories || 0);
@@ -5559,14 +5568,14 @@
                         state.current.Carbs += (item.carbs || 0);
 
                         const cat = item.category || 'Other';
-                        const fgAmount = parseFloat(item.fgAmount) || 0;
+                        const fgAmount = parseFloat(item.foodGroupAmount) || 0;
                         if (trackedGroups.includes(cat)) {
                             if (state.current[cat] === undefined) {
                                 state.current[cat] = 0;
                             }
                             state.current[cat] += fgAmount;
                         }
-                        
+
                         importedCount++;
                     });
 
