@@ -5550,12 +5550,23 @@
                     }
 
                     let importedCount = 0;
+                    const trackedGroups = ['Vegetable', 'Fruit', 'Dairy', 'Protein', 'Grain', 'Sweets', 'Condiment', 'Water'];
                     imported.data.forEach(item => {
                         state.log.push(item);
                         state.current.Calories += (item.calories || 0);
                         state.current.Protein += (item.protein || 0);
                         state.current.Fat += (item.fat || 0);
                         state.current.Carbs += (item.carbs || 0);
+
+                        const cat = item.category || 'Other';
+                        const fgAmount = parseFloat(item.fgAmount) || 0;
+                        if (trackedGroups.includes(cat)) {
+                            if (state.current[cat] === undefined) {
+                                state.current[cat] = 0;
+                            }
+                            state.current[cat] += fgAmount;
+                        }
+                        
                         importedCount++;
                     });
 
