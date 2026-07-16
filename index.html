@@ -624,8 +624,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid
-                            v8.0)</div>
+                        <div id="appVersionDisplay" style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid)</div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                         <button id="recall-week-btn" onclick="showRecallWeekModal()"
@@ -695,6 +694,14 @@
                                 <button type="button" onclick="showProteinCalculatorModal(event)"
                                     style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
                             </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 2px;">Preferred Unit</label>
+                            <select id="preferredUnitInput" onchange="savePreferredUnit()"
+                                style="width:110px; padding: 6px 8px; height: 34px;">
+                                <option value="oz">Ounces (oz)</option>
+                                <option value="g">Grams (g)</option>
+                            </select>
                         </div>
                     </div>
                     <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
@@ -2408,6 +2415,7 @@
         let isArchiveMode = false;    // Read-Only Archive mode flag
 
         let appData = {
+            preferredUnit: 'oz',
             weight: 0,
             goalWeight: 0,
             goalDate: '',
@@ -2588,6 +2596,7 @@
             // Ensure goal weight / goal date fields exist (forward migration)
             if (appData.goalWeight === undefined) appData.goalWeight = 0;
             if (appData.goalDate === undefined) appData.goalDate = '';
+            if (appData.preferredUnit === undefined) appData.preferredUnit = 'oz';
 
             // Migration 7: Ensure archivedWeeks and currentWeekStart exist for Recall a Week feature (non-breaking)
             if (!appData.archivedWeeks || typeof appData.archivedWeeks !== 'object') {
@@ -2678,6 +2687,8 @@
             document.getElementById('weightInput').value = appData.weight;
             document.getElementById('goalWeightInput').value = appData.goalWeight || '';
             document.getElementById('goalDateInput').value = appData.goalDate || '';
+            const puInput = document.getElementById('preferredUnitInput');
+            if (puInput) puInput.value = appData.preferredUnit || 'oz';
             document.getElementById('calorieGoalInput').value = appData.calorieGoal;
             document.getElementById('wwGoalInput').value = appData.wwGoal;
             const protInput = document.getElementById('proteinGoalInput');
@@ -2694,6 +2705,19 @@
         }
 
         function init() {
+            // Auto-detect version from filename (e.g., "EatMyPyramid v8.1.html" -> "v8.1")
+            try {
+                const filename = decodeURIComponent(window.location.pathname.split('/').pop());
+                const versionMatch = filename.match(/(v\d+(\.\d+)*)/i);
+                if (versionMatch && versionMatch[1]) {
+                    const versionDisplay = document.getElementById('appVersionDisplay');
+                    if (versionDisplay) versionDisplay.textContent = `(EatMyPyramid ${versionMatch[1]})`;
+                    document.title = `EatMyPyramid ${versionMatch[1]}`;
+                }
+            } catch (e) {
+                console.error("Could not parse version from filename", e);
+            }
+
             loadData();
 
             // ==================== ROLLOVER & AUTO-ARCHIVE LOGIC FOR RECALL A WEEK ====================
@@ -2745,6 +2769,12 @@
 
             // Apply saved hide/reveal state for the four main sections
             applyVisibility();
+            
+            // Set default unit selectors
+            const mainUnit = document.getElementById('unitSelect');
+            if(mainUnit) mainUnit.value = appData.preferredUnit || 'oz';
+            const recUnit = document.getElementById('recipeUnitSelect');
+            if(recUnit) recUnit.value = appData.preferredUnit || 'oz';
         }
 
         function changeDay() {
@@ -2870,6 +2900,19 @@
         }
 
         // ==================== GOALS & TARGETS LOGIC ====================
+        function savePreferredUnit() {
+            appData.preferredUnit = document.getElementById('preferredUnitInput').value || 'oz';
+            saveData();
+            // Automatically update unit dropdowns dynamically so user sees effect
+            const mainUnit = document.getElementById('unitSelect');
+            if(mainUnit && (mainUnit.value === 'oz' || mainUnit.value === 'g')) mainUnit.value = appData.preferredUnit;
+            
+            const recUnit = document.getElementById('recipeUnitSelect');
+            if(recUnit && (recUnit.value === 'oz' || recUnit.value === 'g')) recUnit.value = appData.preferredUnit;
+            
+            updatePreview();
+        }
+
         function saveGoalWeight() {
             appData.goalWeight = parseFloat(document.getElementById('goalWeightInput').value) || 0;
             saveData();
@@ -3458,6 +3501,16 @@
             return guessCategory(food);
         }
 
+        function formatWeight(grams) {
+            const val = parseFloat(grams);
+            if (isNaN(val)) return "";
+            if (appData.preferredUnit === 'g') {
+                return `${val.toFixed(0)} g`;
+            } else {
+                return `${(val / 28.3495).toFixed(1)} oz`.replace('.0 oz', ' oz');
+            }
+        }
+
         function getServingText(food) {
             if (!food) return "3.5 oz";
 
@@ -3627,6 +3680,8 @@
             document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>search results</option>';
             document.getElementById('servingInput').value = '';
             document.getElementById('amountInput').value = '';
+            const unitSel = document.getElementById('unitSelect');
+            if(unitSel) unitSel.value = appData.preferredUnit || 'oz';
             document.getElementById('nutritionPreview').innerHTML = "<em>Nutritional information for the selected item in Search Results field.</em>";
 
             // Reset override select after logging
@@ -5950,7 +6005,7 @@
             document.getElementById('recipeSearchInput').value = '';
             document.getElementById('recipeFoodSelect').innerHTML = '<option value="">Search above to add ingredients...</option>';
             document.getElementById('recipeAmountInput').value = '';
-            document.getElementById('recipeUnitSelect').value = 'g';
+            document.getElementById('recipeUnitSelect').value = appData.preferredUnit || 'oz';
             renderRecipeIngredients();
             updateRecipeSummary();
 
