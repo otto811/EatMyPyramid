@@ -541,6 +541,8 @@
         .nav-item.active .nav-img {
             transform: scale(1.15);
         }
+        #foodSelect:invalid, #recipeFoodSelect:invalid { color: #6b7280; }
+        #foodSelect option, #recipeFoodSelect option { color: #000; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
 </head>
@@ -801,7 +803,7 @@
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <select id="foodSelect" onchange="updatePreview()"
+                                    <select id="foodSelect" required onchange="onFoodSelectChange()"
                                         style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;"></select>
                                 </div>
                                 <div style="flex: none;">
@@ -3482,6 +3484,14 @@
 
         // ==================== LOGGING & EDITING FUNCTIONS ====================
         //============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
+        function onFoodSelectChange() {
+            const sel = document.getElementById('foodSelect');
+            if (sel.value !== "") {
+                document.getElementById('servingInput').value = 1;
+            }
+            updatePreview();
+        }
+
         function updatePreview() {
             const sel = document.getElementById('foodSelect');
             sel.size = 1;
