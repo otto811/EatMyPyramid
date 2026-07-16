@@ -2705,14 +2705,18 @@
         }
 
         function init() {
-            // Auto-detect version from filename (e.g., "EatMyPyramid v8.1.html" -> "v8.1")
+            // Auto-detect version from filename (e.g., "EatMyPyramid v8.1.html" or "EatMyPyramid 8.1.html")
             try {
-                const filename = decodeURIComponent(window.location.pathname.split('/').pop());
-                const versionMatch = filename.match(/(v\d+(\.\d+)*)/i);
-                if (versionMatch && versionMatch[1]) {
+                const filename = decodeURIComponent(window.location.href).split('/').pop();
+                const versionMatch = filename.match(/v?\d+(\.\d+)*/i);
+                if (versionMatch && versionMatch[0]) {
+                    let versionStr = versionMatch[0];
+                    if (!versionStr.toLowerCase().startsWith('v')) {
+                        versionStr = 'v' + versionStr;
+                    }
                     const versionDisplay = document.getElementById('appVersionDisplay');
-                    if (versionDisplay) versionDisplay.textContent = `(EatMyPyramid ${versionMatch[1]})`;
-                    document.title = `EatMyPyramid ${versionMatch[1]}`;
+                    if (versionDisplay) versionDisplay.textContent = `(EatMyPyramid ${versionStr})`;
+                    document.title = `EatMyPyramid ${versionStr}`;
                 }
             } catch (e) {
                 console.error("Could not parse version from filename", e);
