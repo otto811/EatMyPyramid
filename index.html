@@ -20,7 +20,8 @@
 
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
-        const APP_VERSION = "8.0";
+        // Update this string to automatically update the title and UI version display!
+        const APP_VERSION = "8.1";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -2705,21 +2706,16 @@
         }
 
         function init() {
-            // Auto-detect version from filename (e.g., "EatMyPyramid v8.1.html" or "EatMyPyramid 8.1.html")
+            // Automatically set version from APP_VERSION constant (line 24)
             try {
-                const filename = decodeURIComponent(window.location.href).split('/').pop();
-                const versionMatch = filename.match(/v?\d+(\.\d+)*/i);
-                if (versionMatch && versionMatch[0]) {
-                    let versionStr = versionMatch[0];
-                    if (!versionStr.toLowerCase().startsWith('v')) {
-                        versionStr = 'v' + versionStr;
-                    }
-                    const versionDisplay = document.getElementById('appVersionDisplay');
-                    if (versionDisplay) versionDisplay.textContent = `(EatMyPyramid ${versionStr})`;
-                    document.title = `EatMyPyramid ${versionStr}`;
-                }
+                let versionStr = APP_VERSION;
+                if (!versionStr.toLowerCase().startsWith('v')) versionStr = 'v' + versionStr;
+                
+                const versionDisplay = document.getElementById('appVersionDisplay');
+                if (versionDisplay) versionDisplay.textContent = `(EatMyPyramid ${versionStr})`;
+                document.title = `EatMyPyramid ${versionStr}`;
             } catch (e) {
-                console.error("Could not parse version from filename", e);
+                console.error("Could not set app version", e);
             }
 
             loadData();
