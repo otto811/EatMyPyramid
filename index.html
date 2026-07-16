@@ -200,7 +200,6 @@
             border-radius: 6px;
             font-size: 0.9em;
             border: 1px dashed #d1d5db;
-            min-height: 120px;
         }
 
         .barometer-container {
@@ -782,16 +781,7 @@
                     <div id="search-content">
 
                         <div class="form-group">
-
-
-                            <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans"
-                                    style="flex: 1;">
-                                <button id="searchBtn" onclick="searchDatabases()"
-                                    style="padding: 8px 12px; font-size: 0.85em; white-space:nowrap;">Search</button>
-                            </div>
-
-                            <div style="display: flex; gap: 8px; width: 100%; align-items: stretch;">
+                            <div style="display: flex; gap: 8px; width: 100%; align-items: stretch; margin-bottom:8px;">
                                 <button onclick="startBarcodeScan()"
                                     style="background:#10b981; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">📷
                                     Barcode</button>
@@ -799,12 +789,18 @@
                                     style="background:#8b5cf6; color:white; white-space: nowrap; padding: 8px 12px; font-size: 0.85em; flex: 1; border:none; border-radius:4px; cursor:pointer;">Search
                                     a Meal</button>
                             </div>
+
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans"
+                                    style="flex: 1;">
+                                <button id="searchBtn" onclick="searchDatabases()"
+                                    style="padding: 8px 12px; font-size: 0.85em; white-space:nowrap;">Search</button>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
                                 <div style="flex: 1; min-width: 0;">
-                                    <label style="margin-bottom: 4px;">Search Results</label>
                                     <select id="foodSelect" onchange="updatePreview()"
                                         style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;"></select>
                                 </div>
@@ -822,19 +818,6 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
-                                <button onclick="showCustomFoodModal(-1, 'Modify Search Item')"
-                                    style="flex: 1.2; background: #8b5cf6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Modify
-                                    Search Item</button>
-                                <button onclick="saveCurrentToMyFoods()"
-                                    style="flex: 1; background: var(--purple); padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Save
-                                    to My Foods</button>
-                                <button onclick="showNewFoodEntryModal()"
-                                    style="flex: 1; background: #3b82f6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">New
-                                    Food Entry</button>
-                            </div>
-                        </div>
 
                         <div class="form-group">
                             <label>Consumed Amount (overrides servings)</label>
@@ -871,6 +854,20 @@
                                 cups/day
                                 by
                                 default.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
+                                <button onclick="showCustomFoodModal(-1, 'Modify Search Item')"
+                                    style="flex: 1.2; background: #8b5cf6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Modify
+                                    Search Item</button>
+                                <button onclick="saveCurrentToMyFoods()"
+                                    style="flex: 1; background: var(--purple); padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Save
+                                    to My Foods</button>
+                                <button onclick="showNewFoodEntryModal()"
+                                    style="flex: 1; background: #3b82f6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">New
+                                    Food Entry</button>
+                            </div>
                         </div>
 
                         <!-- Create & Manage My Foods dropdown -->
@@ -3104,12 +3101,12 @@
             footer.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:0.82em; color:#6b7280;';
 
             const countSpan = document.createElement('span');
-            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length} results`;
+            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length}`;
             footer.appendChild(countSpan);
 
             if (remaining > 0) {
                 const moreBtn = document.createElement('button');
-                moreBtn.textContent = `Show ${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
+                moreBtn.textContent = `${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
                 moreBtn.style.cssText = 'background:none; color:#3b82f6; border:none; padding:2px 6px; font-size:0.9em; cursor:pointer; font-weight:600; text-decoration:underline;';
                 moreBtn.onclick = () => {
                     searchVisibleCount += SEARCH_MORE_STEP;
