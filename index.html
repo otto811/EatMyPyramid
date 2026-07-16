@@ -804,7 +804,9 @@
                             <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
                                 <div style="flex: 1; min-width: 0;">
                                     <select id="foodSelect" required onchange="onFoodSelectChange()"
-                                        style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;"></select>
+                                        style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;">
+                                        <option value="" disabled selected>search results</option>
+                                    </select>
                                 </div>
                                 <div style="flex: none;">
                                     <input type="number" id="servingInput" value="" placeholder="servings" min="0.1" step="0.1"
@@ -1924,7 +1926,9 @@
                     <div class="form-group" style="flex:1; margin-bottom:0; min-width:0;">
                         <label style="margin-bottom:2px; font-size:0.85em;">Search Results</label>
                         <select id="recipeFoodSelect"
-                            style="width:100%; height:36px; padding:4px 8px; font-size:0.9em; box-sizing:border-box;"></select>
+                            style="width:100%; height:36px; padding:4px 8px; font-size:0.9em; box-sizing:border-box;">
+                            <option value="" disabled selected>search results</option>
+                        </select>
                     </div>
                     <button onclick="startRecipeBarcodeScan()"
                         style="background:#10b981; white-space:nowrap; padding: 0 15px; height:36px; border:none; border-radius:4px; color:white; cursor:pointer; font-size:0.9em;">📷
@@ -3118,6 +3122,11 @@
 
             // Insert BEFORE the select so it appears above the dropdown
             wrap.insertBefore(footer, sel);
+
+            if (sel.options.length > 1) {
+                sel.selectedIndex = 1;
+                onFoodSelectChange();
+            }
         }
 
         // Helper to format Nutritionix API response into our internal app schema
