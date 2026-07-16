@@ -805,8 +805,7 @@
                                         style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;"></select>
                                 </div>
                                 <div style="flex: none;">
-                                    <label style="margin-bottom: 4px;">Servings</label>
-                                    <input type="number" id="servingInput" value="1" min="0.1" step="0.1"
+                                    <input type="number" id="servingInput" value="" placeholder="servings" min="0.1" step="0.1"
                                         onchange="updatePreview()"
                                         style="width: 50px; padding: 8px 4px; font-size: 0.85em; box-sizing: border-box; line-height: 1.2; height: 44px;">
                                 </div>
@@ -3183,7 +3182,7 @@
             }
 
             currentSearchResults = [...localMatches];
-            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            sel.innerHTML = '<option value="" disabled selected>search results</option>';
 
             // IMMEDIATE: Show local My Foods hits right away
             if (currentSearchResults.length > 0) {
@@ -3597,8 +3596,8 @@
             renderBarometers();
 
             document.getElementById('searchInput').value = '';
-            document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>Select a food...</option>';
-            document.getElementById('servingInput').value = 1;
+            document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>search results</option>';
+            document.getElementById('servingInput').value = '';
             document.getElementById('amountInput').value = '';
             document.getElementById('nutritionPreview').innerHTML = "<em>Nutritional information for the selected item in Search Results field.</em>";
 
@@ -5908,7 +5907,7 @@
                 // If a search dropdown is currently populated, clear it so user sees fresh state
                 const sel = document.getElementById('foodSelect');
                 if (sel) {
-                    sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+                    sel.innerHTML = '<option value="" disabled selected>search results</option>';
                 }
                 currentSearchResults = [];
             }
@@ -5980,7 +5979,7 @@
 
             currentRecipeSearchResults = [...localMatches];
 
-            sel.innerHTML = '<option value="" disabled selected>Select a food...</option>';
+            sel.innerHTML = '<option value="" disabled selected>search results</option>';
             localMatches.forEach((food, index) => {
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
