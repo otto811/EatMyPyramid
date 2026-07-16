@@ -3459,18 +3459,27 @@
         }
 
         function getServingText(food) {
-            if (!food) return "100g";
+            if (!food) return "3.5 oz";
 
-            const householdText = String(food.householdServingFullText || "");
-            const servingSize = String(food.servingSize || "");
+            let householdText = String(food.householdServingFullText || "");
+            const servingSizeGrams = parseFloat(food.servingSize) || 100;
+            const servingSizeOz = (servingSizeGrams / 28.3495).toFixed(1);
+            let ozStr = servingSizeOz.endsWith('.0') ? servingSizeOz.slice(0, -2) : servingSizeOz;
 
-            if (householdText && servingSize && householdText !== "100g" && !householdText.includes(servingSize)) {
-                return `${householdText} (${servingSize}g)`;
+            if (householdText === "100g" || householdText === "100 g") householdText = "";
+
+            if (householdText) {
+                if (householdText.toLowerCase().includes("oz") || householdText.toLowerCase().includes("ounce")) {
+                    return householdText;
+                }
+                return `${householdText} (${ozStr} oz)`;
             }
-            if (householdText && householdText !== "100g") return householdText;
-            if (servingSize && servingSize !== "100g") return `${servingSize}g`;
 
-            return "100g (Database Default)";
+            if (servingSizeGrams && servingSizeGrams !== 100) {
+                return `${ozStr} oz`;
+            }
+
+            return "3.5 oz (Database Default)";
         }
 
         function getMultiplier(food) {
