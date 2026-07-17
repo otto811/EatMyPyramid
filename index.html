@@ -2070,24 +2070,40 @@
                 </div>
             </div>
 
-            <div style="margin-top: 15px;">
-                <div style="display:flex; gap:8px; margin-bottom: 10px;">
-                    <button onclick="showExportMyFoodsModal()"
-                        style="flex:1; background:#3b82f6; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📤
-                        Export My Foods</button>
-                    <button onclick="document.getElementById('importMyFoodsInput').click()"
-                        style="flex:1; background:#10b981; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📥
-                        Import My Foods</button>
-                    <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
-                        onchange="importMyFoodsData(event)">
-                </div>
-                <input type="text" id="myFoodsSearchInput" placeholder="Search my foods..."
-                    onkeyup="renderMyFoodsList()"
-                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
+            <div style="display:flex; border-bottom:1px solid #e5e7eb; margin-top:15px; margin-bottom:15px; flex-shrink:0;">
+                <button id="tabCustomFoods" onclick="switchMyFoodsTab('custom')" style="flex:1; padding:10px; border:none; background:white; border-bottom:2px solid #8b5cf6; color:#8b5cf6; font-weight:bold; cursor:pointer; font-size:0.95em;">Custom Foods</button>
+                <button id="tabRestaurants" onclick="switchMyFoodsTab('restaurants')" style="flex:1; padding:10px; border:none; background:white; border-bottom:2px solid transparent; color:#6b7280; font-weight:bold; cursor:pointer; font-size:0.95em;">Restaurants</button>
             </div>
 
-            <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
-                <!-- List goes here -->
+            <div id="myFoodsCustomView" style="display:flex; flex-direction:column; flex-grow:1; overflow:hidden;">
+                <div>
+                    <div style="display:flex; gap:8px; margin-bottom: 10px;">
+                        <button onclick="showExportMyFoodsModal()"
+                            style="flex:1; background:#3b82f6; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📤
+                            Export My Foods</button>
+                        <button onclick="document.getElementById('importMyFoodsInput').click()"
+                            style="flex:1; background:#10b981; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📥
+                            Import My Foods</button>
+                        <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
+                            onchange="importMyFoodsData(event)">
+                    </div>
+                    <input type="text" id="myFoodsSearchInput" placeholder="Search my foods..."
+                        onkeyup="renderMyFoodsList()"
+                        style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
+                </div>
+
+                <div id="myFoodsListContainer" style="overflow-y:auto; flex-grow:1; margin-top:15px; padding-right:10px;">
+                    <!-- List goes here -->
+                </div>
+            </div>
+
+            <div id="myFoodsRestaurantsView" style="display:none; flex-direction:column; flex-grow:1; overflow:hidden;">
+                <div style="margin-bottom:10px;">
+                    <p style="margin:0 0 10px 0; font-size:0.9em; color:#4b5563;">Manage your imported restaurant menus here. Deleting a restaurant will remove all of its items from your database.</p>
+                </div>
+                <div id="myFoodsRestaurantsContainer" style="overflow-y:auto; flex-grow:1; padding-right:10px;">
+                    <!-- Restaurants List goes here -->
+                </div>
             </div>
         </div>
     </div>
@@ -5874,7 +5890,7 @@
             document.getElementById('manageMyFoodsModal').style.display = 'flex';
             const searchInput = document.getElementById('myFoodsSearchInput');
             if (searchInput) searchInput.value = '';
-            renderMyFoodsList();
+            switchMyFoodsTab('custom');
         }
 
         function closeManageMyFoodsModal() {
@@ -5944,6 +5960,8 @@
             let html = '';
             let matchedCount = 0;
             appData.myFoods.forEach((food, index) => {
+                if (food.foodCategory === 'Restaurant') return;
+                
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const searchStr = (food.description + brandStr).toLowerCase();
 
@@ -5991,6 +6009,88 @@
                 appData.myFoods.splice(index, 1);
                 saveData();
                 renderMyFoodsList();
+            }
+        }
+
+        function switchMyFoodsTab(tab) {
+            const tabCustom = document.getElementById('tabCustomFoods');
+            const tabRest = document.getElementById('tabRestaurants');
+            const viewCustom = document.getElementById('myFoodsCustomView');
+            const viewRest = document.getElementById('myFoodsRestaurantsView');
+            
+            if (tab === 'custom') {
+                if (tabCustom) tabCustom.style.borderBottom = '2px solid #8b5cf6';
+                if (tabCustom) tabCustom.style.color = '#8b5cf6';
+                if (tabRest) tabRest.style.borderBottom = '2px solid transparent';
+                if (tabRest) tabRest.style.color = '#6b7280';
+                if (viewCustom) viewCustom.style.display = 'flex';
+                if (viewRest) viewRest.style.display = 'none';
+                renderMyFoodsList();
+            } else {
+                if (tabRest) tabRest.style.borderBottom = '2px solid #8b5cf6';
+                if (tabRest) tabRest.style.color = '#8b5cf6';
+                if (tabCustom) tabCustom.style.borderBottom = '2px solid transparent';
+                if (tabCustom) tabCustom.style.color = '#6b7280';
+                if (viewCustom) viewCustom.style.display = 'none';
+                if (viewRest) viewRest.style.display = 'flex';
+                renderRestaurantsList();
+            }
+        }
+
+        function renderRestaurantsList() {
+            const container = document.getElementById('myFoodsRestaurantsContainer');
+            if (!container) return;
+            if (!appData.myFoods || appData.myFoods.length === 0) {
+                container.innerHTML = '<p style="color:gray;text-align:center;">No restaurants found.</p>';
+                return;
+            }
+
+            const restaurants = {};
+            appData.myFoods.forEach(food => {
+                if (food.foodCategory === 'Restaurant') {
+                    const brand = food.brandOwner || 'Unknown';
+                    if (!restaurants[brand]) restaurants[brand] = 0;
+                    restaurants[brand]++;
+                }
+            });
+
+            const brands = Object.keys(restaurants).sort();
+
+            if (brands.length === 0) {
+                container.innerHTML = '<p style="color:gray;text-align:center;">No restaurants found.</p>';
+                return;
+            }
+
+            let html = '';
+            brands.forEach(brand => {
+                const count = restaurants[brand];
+                html += `
+                <div style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
+                    <div style="flex-grow:1; padding-right:10px;">
+                        <strong style="color:var(--text-main); font-size:1.1em;">${brand}</strong><br>
+                        <small style="color:var(--text-muted);">${count} items</small>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="deleteRestaurant('${brand.replace(/'/g, "\\'")}')" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete Menu</button>
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function deleteRestaurant(brand) {
+            if (confirm(`Are you sure you want to completely delete all items for "${brand}"? This action cannot be undone.`)) {
+                appData.myFoods = appData.myFoods.filter(food => !(food.foodCategory === 'Restaurant' && (food.brandOwner || 'Unknown') === brand));
+                saveData();
+                renderRestaurantsList();
+                
+                // Clear dropdown if open
+                const sel = document.getElementById('foodSelect');
+                if (sel) {
+                    sel.innerHTML = '<option value="" disabled selected>search results</option>';
+                }
+                if (typeof currentSearchResults !== 'undefined') currentSearchResults = [];
             }
         }
 
