@@ -7472,45 +7472,6 @@
         // ==================== STORAGE & ARCHIVE FEATURES ====================
         // Replaced by showExportMyFoodsModal
 
-        function importMyFoodsData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!confirm("This will merge the imported foods with your existing 'My Foods' database. Duplicate IDs will be overwritten. Continue?")) {
-                event.target.value = "";
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                try {
-                    const importedFoods = JSON.parse(e.target.result);
-                    if (!Array.isArray(importedFoods)) throw new Error("Format is not a list of foods.");
-
-                    if (!appData.myFoods) appData.myFoods = [];
-                    let addedCount = 0;
-
-                    importedFoods.forEach(food => {
-                        const existingIdx = appData.myFoods.findIndex(f => f.id === food.id);
-                        if (existingIdx !== -1) {
-                            appData.myFoods[existingIdx] = food; // Overwrite
-                        } else {
-                            appData.myFoods.push(food);
-                            addedCount++;
-                        }
-                    });
-
-                    saveData();
-                    renderMyFoodsList();
-                    alert(`Import complete! Merged ${importedFoods.length} foods (${addedCount} new).`);
-                } catch (error) {
-                    alert("Failed to import 'My Foods'. Invalid file format.");
-                } finally {
-                    event.target.value = "";
-                }
-            };
-            reader.readAsText(file);
-        }
 
         function showManageStorageModal() {
             try {
