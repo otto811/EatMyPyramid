@@ -2183,10 +2183,16 @@
                 <!-- List goes here -->
             </div>
 
-            <button onclick="executeExportSelectedMyFoods()"
-                style="width:100%; background:#10b981; color:white; padding:12px; border-radius:8px; border:none; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16, 185, 129, 0.4);">
-                Export Selected Data
-            </button>
+            <div style="display:flex; gap:10px;">
+                <button onclick="executeExportSelectedMyFoods()"
+                    style="flex:1; background:#10b981; color:white; padding:12px; border-radius:8px; border:none; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px -1px rgba(16, 185, 129, 0.4);">
+                    Export Selected Data
+                </button>
+                <button onclick="deleteSelectedMyFoods()"
+                    style="flex:1; background:#ef4444; color:white; padding:12px; border-radius:8px; border:none; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px -1px rgba(239, 68, 68, 0.4);">
+                    Delete Selected
+                </button>
+            </div>
         </div>
     </div>
 
@@ -5745,10 +5751,49 @@
         }
 
 
-        function showExportMyFoodsModal() {
+        function showExportMyFoodsModal(preselectBrand = null) {
             if (!appData.myFoods || appData.myFoods.length === 0) {
                 return alert("Your My Foods database is currently empty. Nothing to export.");
             }
+
+            // Populate filter select dynamically
+            const filterSelect = document.getElementById('exportMyFoodsFilterSelect');
+            if (filterSelect) {
+                let optionsHtml = `
+                    <option value="All">All Foods</option>
+                    <option value="Custom">Custom Foods Only</option>
+                    <option value="A-E">A-E (All Foods)</option>
+                    <option value="F-J">F-J (All Foods)</option>
+                    <option value="K-O">K-O (All Foods)</option>
+                    <option value="P-T">P-T (All Foods)</option>
+                    <option value="U-Z">U-Z (All Foods)</option>
+                `;
+                
+                // Find all unique restaurants
+                const restaurants = new Set();
+                appData.myFoods.forEach(food => {
+                    if (food.foodCategory === 'Restaurant' && food.brandOwner) {
+                        restaurants.add(food.brandOwner);
+                    }
+                });
+                
+                if (restaurants.size > 0) {
+                    optionsHtml += `<optgroup label="Restaurants">`;
+                    Array.from(restaurants).sort().forEach(brand => {
+                        optionsHtml += `<option value="REST:${brand}">${brand}</option>`;
+                    });
+                    optionsHtml += `</optgroup>`;
+                }
+                
+                filterSelect.innerHTML = optionsHtml;
+                
+                if (preselectBrand) {
+                    filterSelect.value = `REST:${preselectBrand}`;
+                } else {
+                    filterSelect.value = "All";
+                }
+            }
+
             document.getElementById('exportMyFoodsModal').style.display = 'flex';
             document.getElementById('exportMyFoodsSearchInput').value = '';
             document.getElementById('exportSelectAllCheck').checked = false;
@@ -5813,10 +5858,15 @@
                     return; // Skip if doesn't match
                 }
 
-                if (filterValue !== 'All' && filterRegex[filterValue]) {
-                    const descMatch = String(food.description || '').trim();
-                    if (!filterRegex[filterValue].test(descMatch)) {
-                        return; // Skip if doesn't match alphabetical filter
+                if (filterValue !== 'All') {
+                    if (filterValue === 'Custom') {
+                        if (food.foodCategory === 'Restaurant') return;
+                    } else if (filterValue.startsWith('REST:')) {
+                        const targetBrand = filterValue.substring(5);
+                        if (food.foodCategory !== 'Restaurant' || (food.brandOwner || 'Unknown') !== targetBrand) return;
+                    } else if (filterRegex[filterValue]) {
+                        const descMatch = String(food.description || '').trim();
+                        if (!filterRegex[filterValue].test(descMatch)) return;
                     }
                 }
                 matchedCount++;
@@ -5864,7 +5914,50 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            closeExportMyFoodsModal();
+            // Uncheck the selected items after export
+            window.exportMyFoodsSelection = {};
+            updateSelectAllCheckboxState();
+            renderExportMyFoodsList();
+        }
+
+        function deleteSelectedMyFoods() {
+            if (!window.exportMyFoodsSelection) return;
+
+            const selectedIndices = Object.keys(window.exportMyFoodsSelection)
+                .filter(k => window.exportMyFoodsSelection[k])
+                .map(k => parseInt(k))
+                .sort((a, b) => b - a); // sort descending so deletion doesn't mess up indices!
+
+            if (selectedIndices.length === 0) {
+                return alert("Please select at least one item to delete.");
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedIndices.length} selected items? This cannot be undone.`)) {
+                return;
+            }
+
+            // delete items from highest index to lowest
+            selectedIndices.forEach(index => {
+                appData.myFoods.splice(index, 1);
+            });
+
+            saveData();
+            
+            // Reset selection
+            window.exportMyFoodsSelection = {};
+            updateSelectAllCheckboxState();
+            
+            // Re-render everything
+            renderExportMyFoodsList();
+            renderMyFoodsList();
+            if (typeof renderRestaurantsList === 'function') {
+                renderRestaurantsList();
+            }
+
+            // Close the modal automatically if it's completely empty
+            if (appData.myFoods.length === 0) {
+                closeExportMyFoodsModal();
+            }
         }
 
         let pendingImportData = [];
@@ -6150,11 +6243,67 @@
                         <small style="color:var(--text-muted);">${count} items</small>
                     </div>
                     <div style="display:flex; gap:8px;">
+                        <button onclick="viewRestaurantItems('${brand.replace(/'/g, "\\'")}')" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">View Items</button>
                         <button onclick="deleteRestaurant('${brand.replace(/'/g, "\\'")}')" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete Menu</button>
                     </div>
                 </div>
                 `;
             });
+            container.innerHTML = html;
+        }
+
+        function viewRestaurantItems(brand) {
+            const container = document.getElementById('myFoodsRestaurantsContainer');
+            if (!container) return;
+
+            let html = `
+            <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <button onclick="renderRestaurantsList()" style="background:#6b7280; color:white; padding:8px 12px; border-radius:4px; border:none; font-weight:bold; cursor:pointer; font-size:0.9em;">
+                        &larr; Back to Restaurants
+                    </button>
+                    <h3 style="margin:15px 0 5px 0; color:#1e293b;">${brand} Menu</h3>
+                </div>
+                <div>
+                    <button onclick="showExportMyFoodsModal('${brand.replace(/'/g, "\\'")}')" style="background:#10b981; color:white; padding:8px 12px; border-radius:4px; border:none; font-weight:bold; cursor:pointer; font-size:0.9em;">
+                        Bulk Edit / Export Menu
+                    </button>
+                </div>
+            </div>
+            `;
+
+            let matchedCount = 0;
+            appData.myFoods.forEach((food, index) => {
+                if (food.foodCategory === 'Restaurant' && (food.brandOwner || 'Unknown') === brand) {
+                    matchedCount++;
+                    
+                    const findNut = (id) => {
+                        const n = (food.foodNutrients || []).find(x => x.nutrientId === id);
+                        return n ? n.value : 0;
+                    };
+                    const cals = findNut(1008);
+                    const sSize = food.servingSize || 100;
+                    const calsPerServing = (cals * (sSize / 100)).toFixed(0);
+
+                    html += `
+                    <div style="padding:15px; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; background:#f9fafb;">
+                        <div style="flex-grow:1; padding-right:10px;">
+                            <strong style="color:var(--text-main);">${food.description}</strong><br>
+                            <small style="color:var(--text-muted);">${food.householdServingFullText || sSize + 'g'} • ${calsPerServing} cal</small>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="copyMyFoodToDay(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy to Day</button>
+                            <button onclick="showCustomFoodModal(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
+                            <button onclick="deleteMyFoodItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Delete</button>
+                        </div>
+                    </div>
+                    `;
+                }
+            });
+
+            if (matchedCount === 0) {
+                html += '<p style="color:gray;text-align:center;">No items found.</p>';
+            }
             container.innerHTML = html;
         }
 
