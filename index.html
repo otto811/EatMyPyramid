@@ -907,7 +907,7 @@
                                         Foods</button>
                                     <button
                                         onclick="document.getElementById('importMyFoodsInput').click(); closeDropdown('myFoodsDropdown')">📥
-                                        Import My Foods</button>
+                                        Import into My Foods</button>
                                     <button onclick="deleteMyFoods(); closeDropdown('myFoodsDropdown')"
                                         style="color:#ef4444;">🗑️ Delete All My Foods</button>
                                 </div>
@@ -2083,7 +2083,7 @@
                             Export My Foods</button>
                         <button onclick="document.getElementById('importMyFoodsInputModal').click()"
                             style="flex:1; background:#10b981; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📥
-                            Import My Foods</button>
+                            Import into My Foods</button>
                         <input type="file" id="importMyFoodsInputModal" accept=".json" style="display:none;"
                             onchange="importMyFoodsData(event)">
                     </div>
@@ -6024,6 +6024,17 @@
                     if (assignToRestaurant) {
                         newFood.foodCategory = "Restaurant";
                         newFood.brandOwner = restaurantName;
+                        
+                        // Normalize the serving size if it's 1 or missing.
+                        // EatMyPyramid math scales based on (servingSize / 100).
+                        // If servingSize is 1, a 500 calorie burger becomes 5 calories. 
+                        // Forcing it to 100 neutralizes the math so 1 serving = exactly the nutrient values.
+                        if (!newFood.servingSize || newFood.servingSize === 1) {
+                            newFood.servingSize = 100;
+                            if (!newFood.householdServingFullText) {
+                                newFood.householdServingFullText = "1 serving";
+                            }
+                        }
                     }
 
                     // duplicate check:
@@ -6266,7 +6277,7 @@
                 </div>
                 <div>
                     <button onclick="showExportMyFoodsModal('${brand.replace(/'/g, "\\'")}')" style="background:#10b981; color:white; padding:8px 12px; border-radius:4px; border:none; font-weight:bold; cursor:pointer; font-size:0.9em;">
-                        Bulk Edit / Export Menu
+                        Export
                     </button>
                 </div>
             </div>
