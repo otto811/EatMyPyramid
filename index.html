@@ -912,7 +912,7 @@
                                         style="color:#ef4444;">🗑️ Delete All My Foods</button>
                                 </div>
                                 <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
-                                    onchange="importMyFoods(event)">
+                                    onchange="importMyFoodsData(event)">
                             </div>
                         </div>
 
@@ -2081,10 +2081,10 @@
                         <button onclick="showExportMyFoodsModal()"
                             style="flex:1; background:#3b82f6; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📤
                             Export My Foods</button>
-                        <button onclick="document.getElementById('importMyFoodsInput').click()"
+                        <button onclick="document.getElementById('importMyFoodsInputModal').click()"
                             style="flex:1; background:#10b981; color:white; padding:8px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; font-size: 0.9em;">📥
                             Import My Foods</button>
-                        <input type="file" id="importMyFoodsInput" accept=".json" style="display:none;"
+                        <input type="file" id="importMyFoodsInputModal" accept=".json" style="display:none;"
                             onchange="importMyFoodsData(event)">
                     </div>
                     <input type="text" id="myFoodsSearchInput" placeholder="Search my foods..."
