@@ -2108,6 +2108,37 @@
         </div>
     </div>
 
+    <!-- ==================== IMPORT OPTIONS MODAL ==================== -->
+    <div id="importOptionsModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:11000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div
+            style="background:white; padding:25px; border-radius:16px; width:90%; max-width:500px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1); margin: 20px auto; display:flex; flex-direction:column;">
+            
+            <h3 style="margin:0 0 15px 0; color:#1e293b;">Import Options</h3>
+            <p id="importOptionsCountText" style="margin:0 0 15px 0; font-size:1em; color:#475569;">Ready to import items.</p>
+            
+            <div style="margin-bottom: 20px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#334155; margin-bottom:10px;">
+                    <input type="checkbox" id="importAssignRestaurantCheck" onchange="toggleImportRestaurantName()" style="width:18px; height:18px; cursor:pointer;">
+                    Assign these items to a Restaurant Menu
+                </label>
+                
+                <div id="importRestaurantNameContainer" style="display:none; padding-left:26px;">
+                    <label style="font-size:0.85em; color:#64748b; margin-bottom:4px; display:block;">Restaurant Name (e.g., Wendy's)</label>
+                    <input type="text" id="importRestaurantNameInput" placeholder="Enter restaurant name..."
+                        style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db; font-size: 0.95em; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="cancelImportOptions()"
+                    style="flex:1; background:#6b7280; color:white; padding:12px; border-radius:8px; border:none; font-size:1em; font-weight:bold; cursor:pointer;">Cancel</button>
+                <button onclick="executeImportOptions()"
+                    style="flex:1; background:#10b981; color:white; padding:12px; border-radius:8px; border:none; font-size:1em; font-weight:bold; cursor:pointer;">Confirm Import</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== EXPORT MY FOODS MODAL ==================== -->
     <div id="exportMyFoodsModal"
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
@@ -5836,8 +5867,21 @@
             closeExportMyFoodsModal();
         }
 
-        function importMyFoods(event) {
-            const file = event.target.files[0];   // FIXED: Get the actual File, not the FileList
+        let pendingImportData = [];
+
+        function toggleImportRestaurantName() {
+            const isChecked = document.getElementById('importAssignRestaurantCheck').checked;
+            document.getElementById('importRestaurantNameContainer').style.display = isChecked ? 'block' : 'none';
+        }
+
+        function cancelImportOptions() {
+            document.getElementById('importOptionsModal').style.display = 'none';
+            pendingImportData = [];
+            document.getElementById('importMyFoodsInput').value = "";
+        }
+
+        function importMyFoodsData(event) {
+            const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
@@ -5846,44 +5890,79 @@
                     const importedFoods = JSON.parse(e.target.result);
                     if (!Array.isArray(importedFoods)) throw new Error("Invalid file format.");
 
-                    let importedCount = 0;
-                    let duplicateCount = 0;
-
-                    importedFoods.forEach(newFood => {
-                        if (newFood.description && newFood.foodNutrients) {
-                            // IMPROVED duplicate check:
-                            // - If UPC exists on both, require description + UPC match
-                            // - If UPC is empty (common for custom foods/recipes), also check brandOwner
-                            const exists = appData.myFoods.some(existing => {
-                                const sameDesc = existing.description.toLowerCase() === newFood.description.toLowerCase();
-                                const sameUpc = (existing.upc || '') === (newFood.upc || '');
-                                const sameBrand = (existing.brandOwner || '').toLowerCase() === (newFood.brandOwner || '').toLowerCase();
-
-                                if (sameUpc && newFood.upc) {
-                                    return sameDesc;           // strong match when UPC is present
-                                }
-                                return sameDesc && sameBrand;  // fallback for custom items without UPC
-                            });
-
-                            if (!exists) {
-                                appData.myFoods.push(newFood);
-                                importedCount++;
-                            } else {
-                                duplicateCount++;
-                            }
-                        }
-                    });
-
-                    saveData();
-                    alert(`Import complete!\n\nSuccessfully added: ${importedCount} items.\nSkipped duplicates: ${duplicateCount} items.`);
+                    pendingImportData = importedFoods;
+                    
+                    document.getElementById('importOptionsCountText').textContent = `Ready to import ${importedFoods.length} items.`;
+                    document.getElementById('importAssignRestaurantCheck').checked = false;
+                    document.getElementById('importRestaurantNameInput').value = '';
+                    toggleImportRestaurantName();
+                    
+                    document.getElementById('importOptionsModal').style.display = 'flex';
                 } catch (error) {
                     console.error("Import error:", error);
-                    alert("Failed to import file. Please ensure it is a valid My Foods JSON export.");
+                    alert("Failed to parse file. Please ensure it is a valid My Foods JSON export.");
                 } finally {
                     event.target.value = "";
                 }
             };
             reader.readAsText(file);
+        }
+
+        function executeImportOptions() {
+            if (!pendingImportData || pendingImportData.length === 0) {
+                cancelImportOptions();
+                return;
+            }
+
+            const assignToRestaurant = document.getElementById('importAssignRestaurantCheck').checked;
+            const restaurantName = document.getElementById('importRestaurantNameInput').value.trim();
+
+            if (assignToRestaurant && !restaurantName) {
+                alert("Please enter a restaurant name.");
+                return;
+            }
+
+            let importedCount = 0;
+            let duplicateCount = 0;
+
+            pendingImportData.forEach(newFood => {
+                if (newFood.description && newFood.foodNutrients) {
+                    // Apply overrides if requested
+                    if (assignToRestaurant) {
+                        newFood.foodCategory = "Restaurant";
+                        newFood.brandOwner = restaurantName;
+                    }
+
+                    // duplicate check:
+                    const exists = appData.myFoods.some(existing => {
+                        const sameDesc = existing.description.toLowerCase() === newFood.description.toLowerCase();
+                        const sameUpc = (existing.upc || '') === (newFood.upc || '');
+                        const sameBrand = (existing.brandOwner || '').toLowerCase() === (newFood.brandOwner || '').toLowerCase();
+
+                        if (sameUpc && newFood.upc) {
+                            return sameDesc;
+                        }
+                        return sameDesc && sameBrand;
+                    });
+
+                    if (!exists) {
+                        appData.myFoods.push(newFood);
+                        importedCount++;
+                    } else {
+                        duplicateCount++;
+                    }
+                }
+            });
+
+            saveData();
+            
+            renderMyFoodsList();
+            if (typeof renderRestaurantsList === 'function') {
+                renderRestaurantsList();
+            }
+
+            alert(`Import complete!\n\nSuccessfully added: ${importedCount} items.\nSkipped duplicates: ${duplicateCount} items.`);
+            cancelImportOptions();
         }
 
         function showManageMyFoodsModal() {
