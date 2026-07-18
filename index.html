@@ -4917,11 +4917,13 @@
                                     <strong>${item.name}</strong>${sourceDisplay}<br>
                                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • EMP: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                                 </div>
-                                <div style="display:flex; gap:5px; flex-wrap:nowrap; justify-content:flex-end; min-width:335px;">
-                                    <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Copy</button>
-                                    <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; width:140px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Save to My Foods</button>
-                                    <button onclick="editItem(${index})" style="background:#f59e0b; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Edit</button>
-                                    <button onclick="deleteItem(${index})" style="background:#ef4444; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">X</button>
+                                <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end; flex-shrink:0;">
+                                    <div style="display:flex; gap:5px;">
+                                        <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; width:60px; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Copy</button>
+                                        <button onclick="editItem(${index})" style="background:#f59e0b; width:60px; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Edit</button>
+                                        <button onclick="deleteItem(${index})" style="background:#ef4444; width:60px; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">X</button>
+                                    </div>
+                                    <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; width:100%; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Save to My Foods</button>
                                 </div>
                             `;
                             cont.appendChild(div);
