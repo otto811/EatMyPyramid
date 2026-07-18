@@ -1079,6 +1079,9 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <select id="daySelect" onchange="changeDay()" style="font-weight:bold; padding: 4px; border-radius:4px; border:1px solid #cbd5e1;"></select>
+                    </div>
                     <button id="shareLogItemsBtn" onclick="toggleLogSharingMode()"
                         style="background:#f59e0b; color:white; border:none; padding:4px 10px; border-radius:5px; font-size:0.85em; font-weight:bold; cursor:pointer;">Share
                         Items</button>
@@ -2820,8 +2823,11 @@
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const daySelect = document.getElementById('daySelect');
 
-            daySelect.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join('');
-            daySelect.value = days[new Date().getDay()];
+            const options = days.map(d => `<option value="${d}">${d}</option>`).join('');
+            daySelect.innerHTML = options;
+            
+            const currentDayStr = days[new Date().getDay()];
+            daySelect.value = currentDayStr;
 
             changeDay();
 
@@ -4911,11 +4917,11 @@
                                     <strong>${item.name}</strong>${sourceDisplay}<br>
                                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • EMP: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                                 </div>
-                                <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
-                                    <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Copy</button>
-                                    <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Save to My Foods</button>
-                                    <button onclick="editItem(${index})" style="background:#f59e0b; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Edit</button>
-                                    <button onclick="deleteItem(${index})" style="background:#ef4444; padding:8px 12px; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer;">Remove</button>
+                                <div style="display:flex; gap:5px; flex-wrap:nowrap; justify-content:flex-end; min-width:335px;">
+                                    <button onclick="showCopyToDayModal(${index})" style="background:#3b82f6; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Copy</button>
+                                    <button onclick="saveLogItemToMyFoods(${index}, this)" style="background:#8b5cf6; width:140px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Save to My Foods</button>
+                                    <button onclick="editItem(${index})" style="background:#f59e0b; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">Edit</button>
+                                    <button onclick="deleteItem(${index})" style="background:#ef4444; width:60px; flex-shrink:0; padding:8px 0; border-radius:4px; color:white; font-weight:bold; border:none; cursor:pointer; text-align:center;">X</button>
                                 </div>
                             `;
                             cont.appendChild(div);
