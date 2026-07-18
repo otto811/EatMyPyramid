@@ -4971,7 +4971,7 @@
 
                             // Format the UPC for display if it exists in the saved item data
                             const upcDisplay = item.upc ? ` • UPC: ${item.upc}` : '';
-                            const sourceDisplay = item.source === 'My Foods' ? ` <span style="font-size:0.8em; background:#fcd34d; color:white; padding:0 6px; height:1.2em; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; margin-left:6px; vertical-align:middle;" title="From My Foods">★</span>` : '';
+                            const sourceDisplay = item.source === 'My Foods' ? `<span style="font-size:0.8em; background:#fcd34d; color:white; padding:0 6px; height:1.2em; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; margin-left:4px; vertical-align:middle;" title="From My Foods">★</span>` : '';
 
                             const sharingCheckboxHtml = window.isLogSharingMode ? `
                                 <div style="margin-right:10px; display:flex; align-items:center;">
