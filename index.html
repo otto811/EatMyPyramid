@@ -3273,7 +3273,8 @@
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
                 opt.value = i;
-                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                const prefix = food.source === 'My Foods' ? '★ ' : `[${food.source}] `;
+                opt.textContent = `${prefix}${food.description}${brandStr}`;
                 sel.appendChild(opt);
             }
 
@@ -3497,7 +3498,7 @@
                         servingSize: parseFloat(p.serving_quantity) || 100,
                         householdServingFullText: p.serving_size || '100g',
                         upc: p.code,
-                        source: 'Open Food Facts (legacy)',
+                        source: 'OFF (legacy)',
                         foodNutrients: [
                             { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
                             { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
@@ -5286,13 +5287,13 @@
                 } else if (recipeBarcodeMode) {
                     currentRecipeSearchResults = [{ ...localMatch, source: 'My Foods' }];
                     const sel = document.getElementById('recipeFoodSelect');
-                    sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
+                    sel.innerHTML = `<option value="0" selected>★ ${localMatch.description}</option>`;
                     document.getElementById('recipeAmountInput').value = '';
                     recipeBarcodeMode = false;
                 } else {
                     currentSearchResults = [{ ...localMatch, source: 'My Foods' }];
                     const sel = document.getElementById('foodSelect');
-                    sel.innerHTML = `<option value="0" selected>[My Foods] ${localMatch.description}</option>`;
+                    sel.innerHTML = `<option value="0" selected>★ ${localMatch.description}</option>`;
                     document.getElementById('servingInput').value = 1;
                     document.getElementById('amountInput').value = '';
                     updatePreview();
@@ -5306,14 +5307,14 @@
 
                 if (data.status === 0 || !data.product) {
                     if (customFoodBarcodeMode) {
-                        alert("Product not found in Open Food Facts. You can enter details manually.");
+                        alert("Product not found in OFF. You can enter details manually.");
                         customFoodBarcodeMode = false;
                     } else if (recipeBarcodeMode) {
                         const sel = document.getElementById('recipeFoodSelect');
-                        sel.innerHTML = `<option value="" disabled selected>Product not found in Open Food Facts.</option>`;
+                        sel.innerHTML = `<option value="" disabled selected>Product not found in OFF.</option>`;
                         recipeBarcodeMode = false;
                     } else {
-                        preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in Open Food Facts.</strong></span><br>Barcode: ${barcode}`;
+                        preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in OFF.</strong></span><br>Barcode: ${barcode}`;
                     }
                     return;
                 }
@@ -5329,7 +5330,7 @@
                 };
 
                 const name = p.product_name || `Scanned Item (${barcode})`;
-                const brandText = String(p.brands || "Open Food Facts");
+                const brandText = String(p.brands || "OFF");
                 const catText = String(p.categories || "Other");
 
                 const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
@@ -5337,7 +5338,7 @@
 
                 if (customFoodBarcodeMode) {
                     document.getElementById('cf-name').value = name;
-                    document.getElementById('cf-brand').value = brandText === "Open Food Facts" ? "" : brandText;
+                    document.getElementById('cf-brand').value = brandText === "OFF" ? "" : brandText;
                     document.getElementById('cf-category').value = "Other"; // Try to leave generic if mapped
                     document.getElementById('cf-upc').value = barcode;
                     document.getElementById('cf-serving').value = sQuantity;
@@ -5361,7 +5362,7 @@
                     servingSize: sQuantity,
                     householdServingFullText: sSizeText,
                     upc: barcode,
-                    source: 'Open Food Facts',
+                    source: 'OFF',
                     foodNutrients: [
                         { nutrientId: 1008, value: nut.calories },
                         { nutrientId: 1003, value: nut.protein },
@@ -5374,13 +5375,13 @@
                 if (recipeBarcodeMode) {
                     currentRecipeSearchResults = [fakeFood];
                     const sel = document.getElementById('recipeFoodSelect');
-                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brandText})</option>`;
+                    sel.innerHTML = `<option value="0" selected>[OFF] ${name} (${brandText})</option>`;
                     document.getElementById('recipeAmountInput').value = '';
                     recipeBarcodeMode = false;
                 } else {
                     currentSearchResults = [fakeFood];
                     const sel = document.getElementById('foodSelect');
-                    sel.innerHTML = `<option value="0" selected>[Open Food Facts] ${name} (${brandText})</option>`;
+                    sel.innerHTML = `<option value="0" selected>[OFF] ${name} (${brandText})</option>`;
                     document.getElementById('servingInput').value = 1;
                     document.getElementById('amountInput').value = '';
                     updatePreview();
@@ -6547,7 +6548,8 @@
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
                 opt.value = index;
-                opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                const prefix = food.source === 'My Foods' ? '★ ' : `[${food.source}] `;
+                opt.textContent = `${prefix}${food.description}${brandStr}`;
                 sel.appendChild(opt);
             });
 
@@ -6607,7 +6609,7 @@
                         servingSize: parseFloat(p.serving_quantity) || 100,
                         householdServingFullText: p.serving_size || '100g',
                         upc: p.code,
-                        source: 'Open Food Facts',
+                        source: 'OFF',
                         foodNutrients: [
                             { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
                             { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
@@ -6659,7 +6661,8 @@
                     const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                     const opt = document.createElement('option');
                     opt.value = apiStart + i;
-                    opt.textContent = `[${food.source}] ${food.description}${brandStr}`;
+                    const prefix = food.source === 'My Foods' ? '★ ' : `[${food.source}] `;
+                    opt.textContent = `${prefix}${food.description}${brandStr}`;
                     sel.appendChild(opt);
                 });
             } catch (e) {
