@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v8.2</title>
+    <title>EatMyPyramid v8.3</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "8.2";
+        const APP_VERSION = "8.3";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -1561,54 +1561,75 @@
             </div>
 
             <p style="font-size:0.95em; color:#374151; line-height:1.5;">
-                Choose which databases to search when finding foods. Note: My Foods is always searched first.
+                Choose which databases to search when finding foods. Note: My Foods is always searched first. Use the arrows to set the priority for breaking ties.
             </p>
 
-            <div style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
-                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
-                    <input type="checkbox" checked disabled style="width:20px; height:20px;">
-                    My Foods (Local, Always Enabled)
-                </label>
+            <div style="display:flex; align-items:center; gap:10px; font-weight:bold; padding:10px; background:#f1f5f9; border-radius:8px; border:1px solid #cbd5e1; margin-top:15px; margin-bottom:10px;">
+                <div style="width:24px;"></div>
+                <input type="checkbox" checked disabled style="width:20px; height:20px;">
+                <span style="flex:1;">My Foods (Local, Always Enabled)</span>
+            </div>
 
-                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
+            <div id="dbPriorityList" style="display:flex; flex-direction:column; gap:10px;">
+                <div class="db-sortable-item" data-id="USDA Branded" style="display:flex; align-items:center; gap:10px; font-weight:bold; padding:10px; background:white; border-radius:8px; border:1px solid #e2e8f0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <button type="button" onclick="moveDbUp(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25B2;</button>
+                        <button type="button" onclick="moveDbDown(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25BC;</button>
+                    </div>
+                    <input type="checkbox" id="dbUsdaBrandedToggle" style="width:20px; height:20px;">
+                    <span style="flex:1;">USDA Branded</span>
+                </div>
+
+                <div class="db-sortable-item" data-id="USDA Generic" style="display:flex; align-items:center; gap:10px; font-weight:bold; padding:10px; background:white; border-radius:8px; border:1px solid #e2e8f0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <button type="button" onclick="moveDbUp(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25B2;</button>
+                        <button type="button" onclick="moveDbDown(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25BC;</button>
+                    </div>
                     <input type="checkbox" id="dbUsdaToggle" style="width:20px; height:20px;">
-                    USDA FoodData Central
-                </label>
+                    <span style="flex:1;">USDA Generic (FoodData Central)</span>
+                </div>
 
-                <label style="display:flex; align-items:center; gap:10px; font-weight:bold;">
+                <div class="db-sortable-item" data-id="Search-a-licious" style="display:flex; align-items:center; gap:10px; font-weight:bold; padding:10px; background:white; border-radius:8px; border:1px solid #e2e8f0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <button type="button" onclick="moveDbUp(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25B2;</button>
+                        <button type="button" onclick="moveDbDown(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25BC;</button>
+                    </div>
                     <input type="checkbox" id="dbOffToggle" style="width:20px; height:20px;">
-                    Open Food Facts (Free)
-                </label>
+                    <span style="flex:1;">Open Food Facts (Free)</span>
+                </div>
 
-                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:15px; background:#f8fafc;">
-                    <label style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#8b5cf6;">
-                        <input type="checkbox" id="dbApiNinjasToggle" style="width:20px; height:20px;">
-                        API Ninjas Nutrition (Natural Language Parsing)
-                    </label>
-                    <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API key from <a
-                            href="https://api-ninjas.com/api/nutrition" target="_blank"
-                            style="color:#3b82f6;">api-ninjas.com</a>.
-                    </p>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-                        <input type="text" id="apiNinjasKeyInput" placeholder="API Key"
-                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                <div class="db-sortable-item" data-id="API Ninjas" style="display:flex; align-items:flex-start; gap:10px; font-weight:bold; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-top:2px;">
+                        <button type="button" onclick="moveDbUp(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25B2;</button>
+                        <button type="button" onclick="moveDbDown(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25BC;</button>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:flex; align-items:center; gap:10px; color:#8b5cf6; cursor:pointer;">
+                            <input type="checkbox" id="dbApiNinjasToggle" style="width:20px; height:20px;">
+                            API Ninjas Nutrition (Natural Language Parsing)
+                        </label>
+                        <p style="font-size:0.85em; color:#64748b; margin:5px 0 0 30px; font-weight:normal;">Requires free API key from <a href="https://api-ninjas.com/api/nutrition" target="_blank" style="color:#3b82f6;">api-ninjas.com</a>.</p>
+                        <div style="margin:10px 0 0 30px;">
+                            <input type="text" id="apiNinjasKeyInput" placeholder="API Key" style="width:100%; padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace; box-sizing:border-box;">
+                        </div>
                     </div>
                 </div>
 
-                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:15px; background:#f8fafc;">
-                    <label style="display:flex; align-items:center; gap:10px; font-weight:bold; color:#10b981;">
-                        <input type="checkbox" id="dbNutritionixToggle" style="width:20px; height:20px;">
-                        Nutritionix (Restaurants & Branded)
-                    </label>
-                    <p style="font-size:0.85em; color:#64748b; margin-top:5px;">Requires free API keys from <a
-                            href="https://developer.nutritionix.com/" target="_blank"
-                            style="color:#3b82f6;">developer.nutritionix.com</a>.
-                    </p>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-                        <input type="text" id="nutritionixAppIdInput" placeholder="Nutritionix App ID"
-                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
-                        <input type="text" id="nutritionixKeyInput" placeholder="Nutritionix App Key"
-                            style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                <div class="db-sortable-item" data-id="Nutritionix" style="display:flex; align-items:flex-start; gap:10px; font-weight:bold; padding:10px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-top:2px;">
+                        <button type="button" onclick="moveDbUp(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25B2;</button>
+                        <button type="button" onclick="moveDbDown(this)" style="background:none; border:none; cursor:pointer; padding:0; font-size:1.2em; line-height:0.5; color:#64748b;">&#x25BC;</button>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:flex; align-items:center; gap:10px; color:#10b981; cursor:pointer;">
+                            <input type="checkbox" id="dbNutritionixToggle" style="width:20px; height:20px;">
+                            Nutritionix (Restaurants & Branded)
+                        </label>
+                        <p style="font-size:0.85em; color:#64748b; margin:5px 0 0 30px; font-weight:normal;">Requires free API keys from <a href="https://developer.nutritionix.com/" target="_blank" style="color:#3b82f6;">developer.nutritionix.com</a>.</p>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin:10px 0 0 30px;">
+                            <input type="text" id="nutritionixAppIdInput" placeholder="Nutritionix App ID" style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                            <input type="text" id="nutritionixKeyInput" placeholder="Nutritionix App Key" style="padding:10px; border-radius:5px; border:1px solid #cbd5e1; font-family:monospace;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3452,7 +3473,13 @@
 
                 let usdaFoods = [];
                 if (usdaData && usdaData.foods) {
-                    usdaFoods = usdaData.foods.map(f => ({ ...f, source: 'USDA' }));
+                    usdaData.foods.forEach(f => {
+                        if (f.dataType === 'Branded') {
+                            usdaFoods.push({ ...f, source: 'USDA Branded' });
+                        } else {
+                            usdaFoods.push({ ...f, source: 'USDA Generic' });
+                        }
+                    });
                 }
 
                 let searchALFoods = [];
@@ -3536,11 +3563,22 @@
 
                 const rawApiResults = [...nutritionixFoods, ...apiNinjasFoods, ...usdaFoods, ...searchALFoods, ...legacyOffFoods];
 
+                const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
+                const getPriority = (source) => {
+                    if (source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
+                    if (source === 'USDA') source = 'USDA Generic';
+                    const idx = priorities.indexOf(source);
+                    return idx === -1 ? 99 : idx;
+                };
+
                 // Sort API results by closeness of match
                 rawApiResults.sort((a, b) => {
                     const aScore = scoreMatch(a.description, query);
                     const bScore = scoreMatch(b.description, query);
                     if (aScore !== bScore) return aScore - bScore;
+                    const pA = getPriority(a.source);
+                    const pB = getPriority(b.source);
+                    if (pA !== pB) return pA - pB;
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
 
@@ -6600,7 +6638,16 @@
 
                 const [usdaData, offData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
 
-                let usdaFoods = usdaData && usdaData.foods ? usdaData.foods.map(f => ({ ...f, source: 'USDA' })) : [];
+                let usdaFoods = [];
+                if (usdaData && usdaData.foods) {
+                    usdaData.foods.forEach(f => {
+                        if (f.dataType === 'Branded') {
+                            usdaFoods.push({ ...f, source: 'USDA Branded' });
+                        } else {
+                            usdaFoods.push({ ...f, source: 'USDA Generic' });
+                        }
+                    });
+                }
                 let offFoods = [];
                 if (offData && offData.products) {
                     offFoods = offData.products.map(p => ({
@@ -6647,6 +6694,24 @@
 
                 const apiStart = currentRecipeSearchResults.length;
                 const rawApiResults = [...nutritionixFoods, ...apiNinjasFoods, ...usdaFoods, ...offFoods];
+
+                const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
+                const getPriority = (source) => {
+                    if (source === 'OFF' || source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
+                    if (source === 'USDA') source = 'USDA Generic';
+                    const idx = priorities.indexOf(source);
+                    return idx === -1 ? 99 : idx;
+                };
+
+                rawApiResults.sort((a, b) => {
+                    const aScore = scoreMatch(a.description, query);
+                    const bScore = scoreMatch(b.description, query);
+                    if (aScore !== bScore) return aScore - bScore;
+                    const pA = getPriority(a.source);
+                    const pB = getPriority(b.source);
+                    if (pA !== pB) return pA - pB;
+                    return String(a.description || '').localeCompare(String(b.description || ''));
+                });
 
                 // Include results from USDA and Open Food Facts even if names overlap with My Foods.
                 const apiResults = rawApiResults.filter(apiFood => {
@@ -7479,6 +7544,7 @@
 
             // Set toggles based on appData (defaults to true for USDA/OFF)
             document.getElementById('dbUsdaToggle').checked = appData.dbUsdaEnabled !== false;
+            document.getElementById('dbUsdaBrandedToggle').checked = appData.dbUsdaBrandedEnabled !== false;
             document.getElementById('dbOffToggle').checked = appData.dbOffEnabled !== false;
             document.getElementById('dbApiNinjasToggle').checked = appData.dbApiNinjasEnabled || false;
             document.getElementById('dbNutritionixToggle').checked = appData.dbNutritionixEnabled || false;
@@ -7487,14 +7553,40 @@
             document.getElementById('apiNinjasKeyInput').value = appData.apiNinjasApiKey || '';
             document.getElementById('nutritionixAppIdInput').value = appData.nutritionixAppId || '';
             document.getElementById('nutritionixKeyInput').value = appData.nutritionixApiKey || '';
+
+            // Restore order
+            if (appData.dbPriorities && appData.dbPriorities.length > 0) {
+                const container = document.getElementById('dbPriorityList');
+                appData.dbPriorities.forEach(id => {
+                    const item = container.querySelector(`.db-sortable-item[data-id="${id}"]`);
+                    if (item) container.appendChild(item);
+                });
+            }
         }
 
         function closeDatabaseConfigModal() {
             document.getElementById('databaseConfigModal').style.display = 'none';
         }
 
+        function moveDbUp(btn) {
+            const item = btn.closest('.db-sortable-item');
+            const prev = item.previousElementSibling;
+            if (prev && prev.classList.contains('db-sortable-item')) {
+                item.parentNode.insertBefore(item, prev);
+            }
+        }
+
+        function moveDbDown(btn) {
+            const item = btn.closest('.db-sortable-item');
+            const next = item.nextElementSibling;
+            if (next && next.classList.contains('db-sortable-item')) {
+                item.parentNode.insertBefore(next, item);
+            }
+        }
+
         function saveDatabaseConfig() {
             appData.dbUsdaEnabled = document.getElementById('dbUsdaToggle').checked;
+            appData.dbUsdaBrandedEnabled = document.getElementById('dbUsdaBrandedToggle').checked;
             appData.dbOffEnabled = document.getElementById('dbOffToggle').checked;
             appData.dbApiNinjasEnabled = document.getElementById('dbApiNinjasToggle').checked;
             appData.dbNutritionixEnabled = document.getElementById('dbNutritionixToggle').checked;
@@ -7502,6 +7594,12 @@
             appData.apiNinjasApiKey = document.getElementById('apiNinjasKeyInput').value.trim();
             appData.nutritionixAppId = document.getElementById('nutritionixAppIdInput').value.trim();
             appData.nutritionixApiKey = document.getElementById('nutritionixKeyInput').value.trim();
+
+            const order = [];
+            document.querySelectorAll('.db-sortable-item').forEach(item => {
+                order.push(item.getAttribute('data-id'));
+            });
+            appData.dbPriorities = order;
 
             saveData();
             closeDatabaseConfigModal();
@@ -7702,7 +7800,13 @@
 
 
             if (usdaData && usdaData.foods) {
-                apiFoods.push(...usdaData.foods.map(f => ({ ...f, source: 'USDA' })));
+                usdaData.foods.forEach(f => {
+                    if (f.dataType === 'Branded') {
+                        apiFoods.push({ ...f, source: 'USDA Branded' });
+                    } else {
+                        apiFoods.push({ ...f, source: 'USDA Generic' });
+                    }
+                });
             }
 
             if (searchALData && searchALData.hits) {
@@ -7730,16 +7834,17 @@
                 if (aScore !== bScore) return aScore - bScore;
 
                 // Priority ranking if scores tie
-                const sourcePriority = {
-                    'My Foods': 1,
-                    'Nutritionix': 2,
-                    'Search-a-licious': 3, // Open Food Facts
-                    'USDA': 4,
-                    'API Ninjas': 5
+                const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
+                const getPriority = (source) => {
+                    if (source === 'My Foods') return -1; // Always first
+                    if (source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
+                    if (source === 'USDA') source = 'USDA Generic';
+                    const idx = priorities.indexOf(source);
+                    return idx === -1 ? 99 : idx;
                 };
 
-                const aPrio = sourcePriority[a.source] || 99;
-                const bPrio = sourcePriority[b.source] || 99;
+                const aPrio = getPriority(a.source);
+                const bPrio = getPriority(b.source);
 
                 if (aPrio !== bPrio) return aPrio - bPrio;
 
