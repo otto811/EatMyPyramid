@@ -702,6 +702,14 @@
                                 style="padding: 6px 8px; height: 34px; font-size: 0.85em;">
                         </div>
                         <div>
+                            <label style="font-size: 0.7em; margin-bottom: 2px;">Preferred Unit</label>
+                            <select id="preferredUnitInput" onchange="savePreferredUnit()"
+                                style="width:110px; padding: 6px 8px; height: 34px;">
+                                <option value="oz">Ounces (oz)</option>
+                                <option value="g">Grams (g)</option>
+                            </select>
+                        </div>
+                        <div>
                             <label style="font-size: 0.7em; margin-bottom: 2px;">Daily Calorie Goal</label>
                             <input type="number" id="calorieGoalInput" value="0" onchange="recalculateMacroTargets()"
                                 style="width:80px; padding: 6px 8px; height: 34px;">
@@ -725,22 +733,7 @@
                                     style="background-color: var(--teal); padding: 6px 12px; font-size: 0.85em; white-space: nowrap; height: 34px; line-height: 1;">Calculate</button>
                             </div>
                         </div>
-                        <div>
-                            <label style="font-size: 0.7em; margin-bottom: 2px;">Daily Carbs Goal (grams)</label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="carbsGoalInput" value="0"
-                                    onchange="updateTarget('CarbsGrams', this.value)" min="0"
-                                    style="width:60px; padding: 6px 8px; height: 34px;">
-                            </div>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.7em; margin-bottom: 2px;">Preferred Unit</label>
-                            <select id="preferredUnitInput" onchange="savePreferredUnit()"
-                                style="width:110px; padding: 6px 8px; height: 34px;">
-                                <option value="oz">Ounces (oz)</option>
-                                <option value="g">Grams (g)</option>
-                            </select>
-                        </div>
+
                     </div>
                     <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
                         <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories.
@@ -3237,23 +3230,40 @@
             if (!state.targets.Fat) state.targets.Fat = 30;
             if (!state.targets.Carbs) state.targets.Carbs = 40;
 
-            state.targets.CarbsGrams = Math.round((state.targets.Calories * (state.targets.Carbs / 100)) / 4) || 0;
-            const carbsGoalInput = document.getElementById('carbsGoalInput');
-            if (carbsGoalInput) carbsGoalInput.value = state.targets.CarbsGrams;
-
-            saveData();
-            renderBarometers();
+            updateTarget('Calories', appData.calorieGoal);
         }
 
         function updateTarget(cat, val) {
             const v = parseFloat(val);
             if (v >= 0) {
                 state.targets[cat] = v;
-                if (cat === 'Carbs' || cat === 'Calories') {
-                    state.targets.CarbsGrams = Math.round((state.targets.Calories * (state.targets.Carbs / 100)) / 4) || 0;
-                    const carbsGoalInput = document.getElementById('carbsGoalInput');
-                    if (carbsGoalInput) carbsGoalInput.value = state.targets.CarbsGrams;
+
+                if (cat === 'ProteinGrams') {
+                    state.targets.Protein = state.targets.Calories > 0 ? (v * 4 / state.targets.Calories) * 100 : 0;
+                } else if (cat === 'Protein') {
+                    state.targets.ProteinGrams = Math.round((state.targets.Calories * (v / 100)) / 4) || 0;
+                    const proteinGoalInput = document.getElementById('proteinGoalInput');
+                    if (proteinGoalInput) proteinGoalInput.value = state.targets.ProteinGrams;
+                } else if (cat === 'Fat') {
+                    state.targets.FatGrams = Math.round((state.targets.Calories * (v / 100)) / 9) || 0;
+                } else if (cat === 'Carbs') {
+                    state.targets.CarbsGrams = Math.round((state.targets.Calories * (v / 100)) / 4) || 0;
+                } else if (cat === 'Calories') {
+                    state.targets.ProteinGrams = Math.round((v * (state.targets.Protein / 100)) / 4) || 0;
+                    const proteinGoalInput = document.getElementById('proteinGoalInput');
+                    if (proteinGoalInput) proteinGoalInput.value = state.targets.ProteinGrams;
+                    
+                    state.targets.FatGrams = Math.round((v * (state.targets.Fat / 100)) / 9) || 0;
+                    state.targets.CarbsGrams = Math.round((v * (state.targets.Carbs / 100)) / 4) || 0;
                 }
+                
+                if (['Protein', 'Fat', 'Carbs', 'ProteinGrams', 'Calories'].includes(cat)) {
+                     const total = Math.round((state.targets.Protein || 0) + (state.targets.Fat || 0) + (state.targets.Carbs || 0));
+                     if (total !== 100 && total > 0) {
+                         alert(`Warning: Your Macro targets currently add up to ${total}%. Please adjust Protein, Fat, and Carbs percentages in the Macros tab to equal exactly 100%.`);
+                     }
+                }
+
                 saveData();
                 renderBarometers();
             }
@@ -4836,7 +4846,7 @@
             'Calories': 'Calories provide the energy your body needs to function.',
             'Protein': '<strong>Protein Requirements by Age and Sex</strong><br>Because the guideline is based on body weight, heavier individuals (typically adult males) require more protein in pounds than lighter individuals (typically females or older adults).<br><br><strong>Adult Males:</strong> Average needs are 84–112 grams (approx. 0.19–0.25 lbs) of pure protein daily. In terms of food weight (meat, eggs, beans), this translates to roughly 9.5–13 ounces (0.6–0.8 lbs) of protein foods per day.<br><strong>Adult Females:</strong> Average needs are 69–92 grams (approx. 0.15–0.20 lbs) of pure protein daily. This equals roughly 7.5–10 ounces (0.47–0.63 lbs) of protein foods.<br><strong>Older Adults (75+):</strong> The guidelines emphasize the higher end of the range (1.6 g/kg) to prevent muscle loss, meaning an older adult may need similar protein weights to a younger, heavier male even if their total calorie needs are lower.<br><strong>Teens:</strong> Adolescent males have the highest relative needs for growth (78–104 grams), often exceeding adult female requirements.',
             'Fat': 'Dietary fats are essential to give your body energy and to support cell function.',
-            'Carbs': 'Carbohydrates are your body\'s main source of energy.',
+            'Carbs': 'There is no single, universally standardized definition for a "low-carb" diet, but it is generally accepted in the nutritional community that 10% to 25% of your daily calories should come from carbohydrates.<br><br>For comparison, standard dietary guidelines typically recommend that 45% to 65% of daily calories come from carbs.<br><br>Because "low-carb" encompasses several different dietary protocols, the exact percentage depends on the specific approach:<br><br><strong>Ketogenic (Very Low-Carb):</strong> 5% to 10% of total calories. This strictly limits carbs to roughly 20 to 50 grams per day, forcing the body to burn fat for fuel (ketosis).<br><br><strong>Strict Low-Carb:</strong> 10% to 15% of total calories. This generally ranges from 50 to 100 grams of carbs daily.<br><br><strong>Moderate Low-Carb:</strong> 15% to 25% of total calories. This provides roughly 100 to 130 grams of carbs per day. Anything above 130 grams is generally considered a moderate-carbohydrate diet rather than a low-carbohydrate one.',
             'ProteinGrams': "To calculate daily protein needs accurately, a calculator has been provided in the 'Your Profile & Setup' section. You can also edit the target number to your preference.",
             'CarbsGrams': 'There is no single, universally standardized definition for a "low-carb" diet, but it is generally accepted in the nutritional community that 10% to 25% of your daily calories should come from carbohydrates.<br><br>For comparison, standard dietary guidelines typically recommend that 45% to 65% of daily calories come from carbs.<br><br>Because "low-carb" encompasses several different dietary protocols, the exact percentage depends on the specific approach:<br><br><strong>Ketogenic (Very Low-Carb):</strong> 5% to 10% of total calories. This strictly limits carbs to roughly 20 to 50 grams per day, forcing the body to burn fat for fuel (ketosis).<br><br><strong>Strict Low-Carb:</strong> 10% to 15% of total calories. This generally ranges from 50 to 100 grams of carbs daily.<br><br><strong>Moderate Low-Carb:</strong> 15% to 25% of total calories. This provides roughly 100 to 130 grams of carbs per day. Anything above 130 grams is generally considered a moderate-carbohydrate diet rather than a low-carbohydrate one.'
         };
@@ -4870,8 +4880,11 @@
 
         // ==================== UI RENDERING ====================
         function renderBarometers() {
-            if (state.current) state.current.ProteinGrams = state.current.Protein || 0;
-            if (state.current) state.current.CarbsGrams = state.current.Carbs || 0;
+            if (state.current) {
+                state.current.ProteinGrams = state.current.Protein || 0;
+                state.current.CarbsGrams = state.current.Carbs || 0;
+                state.current.FatGrams = state.current.Fat || 0;
+            }
 
             const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
             const exer = state.current.exercisePoints || 0;
@@ -4967,14 +4980,21 @@
                 macroCont.appendChild(tempDiv);
                 renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
                 const labelStr = tempDiv.querySelector('strong');
-                if (labelStr) labelStr.innerText = 'Daily Protein in Grams';
+                if (labelStr) labelStr.innerText = 'Protein in Grams';
 
                 const carbsDiv = document.createElement('div');
                 carbsDiv.id = 'carbsGramsContainer';
                 macroCont.appendChild(carbsDiv);
                 renderGroup(['CarbsGrams'], 'carbsGramsContainer', { CarbsGrams: '#14b8a6' }, false);
                 const carbsLabelStr = carbsDiv.querySelector('strong');
-                if (carbsLabelStr) carbsLabelStr.innerText = 'Daily Carbs in Grams';
+                if (carbsLabelStr) carbsLabelStr.innerText = 'Carbs in Grams';
+
+                const fatDiv = document.createElement('div');
+                fatDiv.id = 'fatGramsContainer';
+                macroCont.appendChild(fatDiv);
+                renderGroup(['FatGrams'], 'fatGramsContainer', { FatGrams: '#f59e0b' }, false);
+                const fatLabelStr = fatDiv.querySelector('strong');
+                if (fatLabelStr) fatLabelStr.innerText = 'Fat in Grams';
             }
 
             renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
