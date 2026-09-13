@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v8.4</title>
+    <title>EatMyPyramid v8.5</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "8.4";
+        const APP_VERSION = "8.5";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -1068,6 +1068,8 @@
                                         </select>
                                         <button onclick="addExercisePoints()"
                                             style="padding:10px; font-size:0.9em;">Add</button>
+                                        <button onclick="openAdvancedExModal()"
+                                            style="padding:10px; font-size:0.9em; background-color: var(--teal); color: white;">Advanced Pts</button>
                                     </div>
                                 </div>
                                 <div style="display:flex; flex-direction:column; gap:12px;">
@@ -8059,6 +8061,97 @@
             Log
         </button>
     </nav>
+
+    <!-- Advanced Pts Modal -->
+    <div id="advancedExModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
+        <div class="exercise-points-container" style="background:white; padding:25px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-height: 90vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0;">Activity Points Calculator</h3>
+                <button onclick="document.getElementById('advancedExModal').style.display='none'" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+            </div>
+            
+            <div class="ep-inputs">
+                <!-- User Biometrics -->
+                <div class="ep-row dual-input">
+                <div class="ep-group">
+                    <label>Gender:</label>
+                    <select id="ep-gender" onchange="calculateAdvancedPts()">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="ep-group">
+                    <label>Age:</label>
+                    <input type="number" id="ep-age" value="35" min="15" max="100" oninput="calculateAdvancedPts()">
+                </div>
+                </div>
+
+                <div class="ep-row dual-input">
+                <div class="ep-group">
+                    <label>Weight (lbs):</label>
+                    <input type="number" id="ep-weight" value="180" min="80" max="500" oninput="calculateAdvancedPts()">
+                </div>
+                <div class="ep-group">
+                    <label>Duration (mins):</label>
+                    <input type="number" id="ep-duration" value="45" min="1" step="1" oninput="calculateAdvancedPts()">
+                </div>
+                </div>
+
+                <hr class="ep-divider">
+
+                <!-- Workout Data -->
+                <div class="ep-group">
+                <label>Exercise Type:</label>
+                <select id="ep-type" onchange="calculateAdvancedPts()">
+                    <option value="strength">Strength Training</option>
+                    <option value="elliptical">Elliptical</option>
+                    <option value="treadmill">Treadmill</option>
+                    <option value="run">Running</option>
+                    <option value="brisk_walk">Brisk Walking</option>
+                    <option value="speed_walk">Speed Walking</option>
+                </select>
+                </div>
+
+                <div class="ep-group">
+                    <label>HR Zone / Exertion:</label>
+                    <select id="ep-exertion" onchange="calculateAdvancedPts()">
+                    <option value="low">Low (Zone 1/2: ~110 BPM)</option>
+                    <option value="moderate" selected>Moderate (Zone 3: ~135 BPM)</option>
+                    <option value="high">High (Zone 4/5: ~160 BPM)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ep-results">
+                <div class="ep-result-box">
+                <h4>Est. Calories Burned</h4>
+                <span id="ep-cal-result">--</span>
+                </div>
+                <div class="ep-result-box ep-highlight">
+                <h4>Earned Points</h4>
+                <span id="ep-points-result">--</span>
+                </div>
+            </div>
+            
+            <button onclick="applyAdvancedPts()" style="width:100%; margin-top:20px; padding:12px; background-color:var(--teal); color:white; font-weight:bold; border-radius:8px; border:none; font-size:1em;">Apply Points</button>
+        </div>
+    </div>
+
+    <style>
+        .ep-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 12px; }
+        .ep-group { display: flex; flex-direction: column; flex: 1; margin-bottom: 12px; }
+        .dual-input .ep-group { margin-bottom: 0; }
+        .ep-group label { font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; color: #475569; }
+        .ep-group input, .ep-group select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; }
+        .ep-divider { border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0; }
+        .ep-results { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+        .ep-result-box { flex: 1; text-align: center; padding: 15px 10px; border-radius: 6px; background: #f1f5f9; }
+        .ep-result-box.ep-highlight { background: #e0f2fe; border: 1px solid #bae6fd; }
+        .ep-result-box h4 { margin: 0 0 8px 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+        .ep-highlight h4 { color: #0284c7; }
+        .ep-result-box span { font-size: 1.5rem; font-weight: bold; color: #0f172a; }
+        .ep-highlight span { color: #0284c7; }
+    </style>
 </body>
 
 </html>
