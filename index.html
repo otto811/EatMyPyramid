@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v8.3</title>
+    <title>EatMyPyramid v8.4</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "8.3";
+        const APP_VERSION = "8.4";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -649,7 +649,7 @@
                             </div>
                         </div>
                         <div id="appVersionDisplay"
-                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v8.2)
+                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v8.4)
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
@@ -950,7 +950,10 @@
                 <div class="card">
                     <div id="macrosDateAnchor" style="margin-bottom: 15px;"></div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h2 style="margin:0; color:#f97316;">Macros &amp; Energy</h2>
+                        <h2 style="margin:0; color:#f97316; display:flex; align-items:center; gap:8px;">
+                            Macros &amp; Energy 
+                            <span onclick="alert('To modify your Calories or Daily Protein Goal, please go to the Profile tab. Your Protein %, Carbs in Grams, and Fat in Grams are calculated automatically based on your targets.')" style="cursor:pointer; font-size: 0.8em;" title="Why are some fields locked?">🔒</span>
+                        </h2>
                         <button id="macros-toggle" onclick="toggleSection('macros')"
                             style="background:#f97316; color:white; border:none; width:26px; height:26px; border-radius:5px; font-size:1.3em; line-height:22px; cursor:pointer; padding:0; font-weight:bold;">−</button>
                     </div>
@@ -3236,10 +3239,11 @@
         function updateTarget(cat, val) {
             const v = parseFloat(val);
             if (v >= 0) {
-                state.targets[cat] = v;
+                state.targets[cat] = Math.round(v * 10) / 10;
 
                 if (cat === 'ProteinGrams') {
-                    state.targets.Protein = state.targets.Calories > 0 ? (v * 4 / state.targets.Calories) * 100 : 0;
+                    const rawPerc = state.targets.Calories > 0 ? (v * 4 / state.targets.Calories) * 100 : 0;
+                    state.targets.Protein = Math.round(rawPerc * 10) / 10;
                 } else if (cat === 'Protein') {
                     state.targets.ProteinGrams = Math.round((state.targets.Calories * (v / 100)) / 4) || 0;
                     const proteinGoalInput = document.getElementById('proteinGoalInput');
@@ -4923,7 +4927,7 @@
                     div.className = 'barometer-container';
 
                     let incBtns = '';
-                    if (!isMacroPercentage && cat !== 'ProteinGrams' && cat !== 'CarbsGrams') {
+                    if (!isMacroPercentage && !['ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat)) {
                         let delta = (cat === 'Water') ? 1 : 0.5;
                         let addTitle = (cat === 'Water') ? 'Add 1 cup' : 'Add 0.5 serving';
                         let subTitle = (cat === 'Water') ? 'Remove 1 cup' : 'Remove 0.5 serving';
@@ -4952,13 +4956,17 @@
                     if (cat === 'Calories') charCount = 4;
                     else if (cat === 'Protein' || cat === 'Fat' || cat === 'Carbs') charCount = 2;
 
+                    const isLocked = ['Calories', 'Protein', 'ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat);
+                    const inputStyle = isLocked ? `width:calc(${charCount}ch + 1.5em); padding:4px; margin-right:4px; color:#9ca3af; background-color:#f3f4f6; cursor:not-allowed; border: 1px solid #d1d5db; border-radius: 4px;` : `width:calc(${charCount}ch + 1.5em); padding:4px; margin-right:4px; border: 1px solid #d1d5db; border-radius: 4px;`;
+                    const inputAttr = isLocked ? `readonly onclick="alert('To modify your Calories or Daily Protein Goal, please go to the Profile tab. Your Protein %, Carbs in Grams, and Fat in Grams are calculated automatically based on your targets.')"` : `onchange="updateTarget('${cat}',this.value)"`;
+
                     div.innerHTML = `
                     <div class="barometer-header">
                         <div style="display:flex; align-items:center; gap:4px;">
                             ${incBtns}<strong>${cat}</strong>${infoBtn}
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <input type="number" value="${target}" style="width:calc(${charCount}ch + 1.5em); padding:4px; margin-right:4px;" onchange="updateTarget('${cat}',this.value)">
+                            <input type="number" value="${target}" style="${inputStyle}" ${inputAttr}>
                             <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
                         </div>
                     </div>
