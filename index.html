@@ -726,6 +726,14 @@
                             </div>
                         </div>
                         <div>
+                            <label style="font-size: 0.7em; margin-bottom: 2px;">Daily Carbs Goal (grams)</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="carbsGoalInput" value="0"
+                                    onchange="updateTarget('CarbsGrams', this.value)" min="0"
+                                    style="width:60px; padding: 6px 8px; height: 34px;">
+                            </div>
+                        </div>
+                        <div>
                             <label style="font-size: 0.7em; margin-bottom: 2px;">Preferred Unit</label>
                             <select id="preferredUnitInput" onchange="savePreferredUnit()"
                                 style="width:110px; padding: 6px 8px; height: 34px;">
@@ -2586,7 +2594,7 @@
             nutritionixApiKey: '',
             dbNutritionixEnabled: false,
             // Macro targets represent percentages (30%, 30%, 40%)
-            targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, ProteinGrams: 0, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
+            targets: { Calories: 0, Protein: 30, Fat: 30, Carbs: 40, ProteinGrams: 0, CarbsGrams: 0, Fruit: 2, Vegetable: 5, 'Proteins': 1, Dairy: 3, Grain: 2, Water: 8 },
             history: {},
             myFoods: [],
             myRecipes: [],
@@ -2602,7 +2610,7 @@
         function createEmptyDay() {
             return {
                 current: {
-                    Calories: 0, Protein: 0, Fat: 0, Carbs: 0, ProteinGrams: 0,
+                    Calories: 0, Protein: 0, Fat: 0, Carbs: 0, ProteinGrams: 0, CarbsGrams: 0,
                     Fruit: 0, Vegetable: 0, 'Proteins': 0, Dairy: 0, Grain: 0, Water: 0,
                     exercisePoints: 0,
                     flexPoints: 0,
@@ -2853,6 +2861,8 @@
             document.getElementById('wwGoalInput').value = appData.wwGoal;
             const protInput = document.getElementById('proteinGoalInput');
             if (protInput && appData.targets) protInput.value = appData.targets.ProteinGrams || 0;
+            const carbsInput = document.getElementById('carbsGoalInput');
+            if (carbsInput && appData.targets) carbsInput.value = appData.targets.CarbsGrams || 0;
         }
 
         // ==================== WEEK ARCHIVING / RECALL A WEEK HELPER ====================
@@ -4851,6 +4861,7 @@
         // ==================== UI RENDERING ====================
         function renderBarometers() {
             if (state.current) state.current.ProteinGrams = state.current.Protein || 0;
+            if (state.current) state.current.CarbsGrams = state.current.Carbs || 0;
 
             const foodPts = state.log.reduce((s, it) => s + (it.wwPoints || 0), 0);
             const exer = state.current.exercisePoints || 0;
@@ -4889,7 +4900,7 @@
                     div.className = 'barometer-container';
 
                     let incBtns = '';
-                    if (!isMacroPercentage && cat !== 'ProteinGrams') {
+                    if (!isMacroPercentage && cat !== 'ProteinGrams' && cat !== 'CarbsGrams') {
                         let delta = (cat === 'Water') ? 1 : 0.5;
                         let addTitle = (cat === 'Water') ? 'Add 1 cup' : 'Add 0.5 serving';
                         let subTitle = (cat === 'Water') ? 'Remove 1 cup' : 'Remove 0.5 serving';
@@ -4947,6 +4958,13 @@
                 renderGroup(['ProteinGrams'], 'proteinGramsContainer', { ProteinGrams: '#e11d48' }, false);
                 const labelStr = tempDiv.querySelector('strong');
                 if (labelStr) labelStr.innerText = 'Daily Protein in Grams';
+
+                const carbsDiv = document.createElement('div');
+                carbsDiv.id = 'carbsGramsContainer';
+                macroCont.appendChild(carbsDiv);
+                renderGroup(['CarbsGrams'], 'carbsGramsContainer', { CarbsGrams: '#14b8a6' }, false);
+                const carbsLabelStr = carbsDiv.querySelector('strong');
+                if (carbsLabelStr) carbsLabelStr.innerText = 'Daily Carbs in Grams';
             }
 
             renderGroup(['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'], 'groupBarometersContainer', {}, false);
