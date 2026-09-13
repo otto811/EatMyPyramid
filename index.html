@@ -3237,13 +3237,15 @@
         }
 
         function updateTarget(cat, val) {
-            const v = parseFloat(val);
+            let v = parseFloat(val);
+            const isMacroField = ['Calories', 'Protein', 'Fat', 'Carbs', 'ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat);
+            if (isMacroField) v = Math.round(v);
             if (v >= 0) {
-                state.targets[cat] = Math.round(v * 10) / 10;
+                state.targets[cat] = isMacroField ? v : (Math.round(v * 10) / 10);
 
                 if (cat === 'ProteinGrams') {
                     const rawPerc = state.targets.Calories > 0 ? (v * 4 / state.targets.Calories) * 100 : 0;
-                    state.targets.Protein = Math.round(rawPerc * 10) / 10;
+                    state.targets.Protein = Math.round(rawPerc);
                 } else if (cat === 'Protein') {
                     state.targets.ProteinGrams = Math.round((state.targets.Calories * (v / 100)) / 4) || 0;
                     const proteinGoalInput = document.getElementById('proteinGoalInput');
@@ -4956,9 +4958,20 @@
                     if (cat === 'Calories') charCount = 4;
                     else if (cat === 'Protein' || cat === 'Fat' || cat === 'Carbs') charCount = 2;
 
+                    const isMacroField = ['Calories', 'Protein', 'Fat', 'Carbs', 'ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat);
                     const isLocked = ['Calories', 'Protein', 'ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat);
                     const inputStyle = isLocked ? `width:calc(${charCount}ch + 1.5em); padding:4px; margin-right:4px; color:#9ca3af; background-color:#f3f4f6; cursor:not-allowed; border: 1px solid #d1d5db; border-radius: 4px;` : `width:calc(${charCount}ch + 1.5em); padding:4px; margin-right:4px; border: 1px solid #d1d5db; border-radius: 4px;`;
-                    const inputAttr = isLocked ? `readonly onclick="alert('To modify your Calories or Daily Protein Goal, please go to the Profile tab. Your Protein %, Carbs in Grams, and Fat in Grams are calculated automatically based on your targets.')"` : `onchange="updateTarget('${cat}',this.value)"`;
+                    let inputAttr = isLocked ? `readonly onclick="alert('To modify your Calories or Daily Protein Goal, please go to the Profile tab. Your Protein %, Carbs in Grams, and Fat in Grams are calculated automatically based on your targets.')"` : `onchange="updateTarget('${cat}',this.value)"`;
+
+                    if (!isLocked) {
+                        inputAttr += isMacroField ? ` step="1"` : ` step="0.5"`;
+                    }
+
+                    if (isMacroField) {
+                        displayCurr = Math.round(displayCurr);
+                    }
+
+                    const displayCurrStr = isMacroField ? Math.round(displayCurr) : displayCurr.toFixed(1);
 
                     div.innerHTML = `
                     <div class="barometer-header">
@@ -4966,13 +4979,13 @@
                             ${incBtns}<strong>${cat}</strong>${infoBtn}
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <input type="number" value="${target}" style="${inputStyle}" ${inputAttr}>
+                            <input type="number" value="${isMacroField ? Math.round(target) : target}" style="${inputStyle}" ${inputAttr}>
                             <span style="font-weight:bold; font-size:0.9em; color:#6b7280;">${suffix}</span>
                         </div>
                     </div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width:${perc}%;background-color:${colors[cat] || '#8b5cf6'}"></div>
-                        <div class="progress-text">${displayCurr.toFixed(1)}${suffix} / ${target}${suffix}</div>
+                        <div class="progress-text">${displayCurrStr}${suffix} / ${isMacroField ? Math.round(target) : target}${suffix}</div>
                     </div>
                 `;
                     cont.appendChild(div);
