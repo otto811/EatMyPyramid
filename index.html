@@ -4964,7 +4964,11 @@
                     let inputAttr = isLocked ? `readonly onclick="alert('To modify your Calories or Daily Protein Goal, please go to the Profile tab. Your Protein %, Carbs in Grams, and Fat in Grams are calculated automatically based on your targets.')"` : `onchange="updateTarget('${cat}',this.value)"`;
 
                     if (!isLocked) {
-                        inputAttr += isMacroField ? ` step="1"` : ` step="0.5"`;
+                        if (isMacroField) {
+                            inputAttr += ` step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57"`;
+                        } else {
+                            inputAttr += ` step="0.5"`;
+                        }
                     }
 
                     if (isMacroField) {
