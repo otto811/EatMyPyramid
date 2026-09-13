@@ -3237,14 +3237,23 @@
             if (!state.targets.Fat) state.targets.Fat = 30;
             if (!state.targets.Carbs) state.targets.Carbs = 40;
 
+            state.targets.CarbsGrams = Math.round((state.targets.Calories * (state.targets.Carbs / 100)) / 4) || 0;
+            const carbsGoalInput = document.getElementById('carbsGoalInput');
+            if (carbsGoalInput) carbsGoalInput.value = state.targets.CarbsGrams;
+
             saveData();
             renderBarometers();
         }
 
         function updateTarget(cat, val) {
             const v = parseFloat(val);
-            if (v > 0) {
+            if (v >= 0) {
                 state.targets[cat] = v;
+                if (cat === 'Carbs' || cat === 'Calories') {
+                    state.targets.CarbsGrams = Math.round((state.targets.Calories * (state.targets.Carbs / 100)) / 4) || 0;
+                    const carbsGoalInput = document.getElementById('carbsGoalInput');
+                    if (carbsGoalInput) carbsGoalInput.value = state.targets.CarbsGrams;
+                }
                 saveData();
                 renderBarometers();
             }
@@ -4828,7 +4837,8 @@
             'Protein': '<strong>Protein Requirements by Age and Sex</strong><br>Because the guideline is based on body weight, heavier individuals (typically adult males) require more protein in pounds than lighter individuals (typically females or older adults).<br><br><strong>Adult Males:</strong> Average needs are 84–112 grams (approx. 0.19–0.25 lbs) of pure protein daily. In terms of food weight (meat, eggs, beans), this translates to roughly 9.5–13 ounces (0.6–0.8 lbs) of protein foods per day.<br><strong>Adult Females:</strong> Average needs are 69–92 grams (approx. 0.15–0.20 lbs) of pure protein daily. This equals roughly 7.5–10 ounces (0.47–0.63 lbs) of protein foods.<br><strong>Older Adults (75+):</strong> The guidelines emphasize the higher end of the range (1.6 g/kg) to prevent muscle loss, meaning an older adult may need similar protein weights to a younger, heavier male even if their total calorie needs are lower.<br><strong>Teens:</strong> Adolescent males have the highest relative needs for growth (78–104 grams), often exceeding adult female requirements.',
             'Fat': 'Dietary fats are essential to give your body energy and to support cell function.',
             'Carbs': 'Carbohydrates are your body\'s main source of energy.',
-            'ProteinGrams': "To calculate daily protein needs accurately, a calculator has been provided in the 'Your Profile & Setup' section. You can also edit the target number to your preference."
+            'ProteinGrams': "To calculate daily protein needs accurately, a calculator has been provided in the 'Your Profile & Setup' section. You can also edit the target number to your preference.",
+            'CarbsGrams': 'There is no single, universally standardized definition for a "low-carb" diet, but it is generally accepted in the nutritional community that 10% to 25% of your daily calories should come from carbohydrates.<br><br>For comparison, standard dietary guidelines typically recommend that 45% to 65% of daily calories come from carbs.<br><br>Because "low-carb" encompasses several different dietary protocols, the exact percentage depends on the specific approach:<br><br><strong>Ketogenic (Very Low-Carb):</strong> 5% to 10% of total calories. This strictly limits carbs to roughly 20 to 50 grams per day, forcing the body to burn fat for fuel (ketosis).<br><br><strong>Strict Low-Carb:</strong> 10% to 15% of total calories. This generally ranges from 50 to 100 grams of carbs daily.<br><br><strong>Moderate Low-Carb:</strong> 15% to 25% of total calories. This provides roughly 100 to 130 grams of carbs per day. Anything above 130 grams is generally considered a moderate-carbohydrate diet rather than a low-carbohydrate one.'
         };
 
         function showFoodGroupInfo(btnEl, cat) {
