@@ -1069,7 +1069,7 @@
                                         <button onclick="addExercisePoints()"
                                             style="padding:10px; font-size:0.9em;">Add</button>
                                         <button onclick="openAdvancedExModal()"
-                                            style="padding:10px; font-size:0.9em; background-color: var(--teal); color: white;">Advanced Pts</button>
+                                            style="padding:10px; font-size:0.9em; background-color: var(--teal); color: white;">Pro Pts</button>
                                     </div>
                                 </div>
                                 <div style="display:flex; flex-direction:column; gap:12px;">
@@ -8061,6 +8061,96 @@
             Log
         </button>
     </nav>
+
+    
+    <script>
+        // ==================== ADVANCED PTS CALCULATOR ====================
+        function openAdvancedExModal() {
+            if (typeof recalledWeekData !== 'undefined' && recalledWeekData) {
+                alert("Cannot add exercise points while viewing an archived week. Return to live tracking first.");
+                return;
+            }
+            document.getElementById('advancedExModal').style.display = 'flex';
+            
+            // Pre-fill weight
+            const w = parseFloat(document.getElementById('weightInput').value) || (state.current && state.current.bodyWeight) || appData.weight || 0;
+            if (w > 0) document.getElementById('ep-weight').value = w;
+            
+            // Pre-fill gender & age if saved
+            if (appData.gender) document.getElementById('ep-gender').value = appData.gender;
+            if (appData.age) document.getElementById('ep-age').value = appData.age;
+            
+            calculateAdvancedPts();
+        }
+
+        function calculateAdvancedPts() {
+            const gender = document.getElementById('ep-gender').value;
+            const age = parseFloat(document.getElementById('ep-age').value) || 0;
+            const weightLbs = parseFloat(document.getElementById('ep-weight').value) || 0;
+            const duration = parseFloat(document.getElementById('ep-duration').value) || 0;
+            const exertion = document.getElementById('ep-exertion').value;
+            const type = document.getElementById('ep-type').value;
+
+            const calResultEl = document.getElementById('ep-cal-result');
+            const pointsResultEl = document.getElementById('ep-points-result');
+
+            if (age === 0 || weightLbs === 0 || duration === 0) {
+                calResultEl.textContent = "--";
+                pointsResultEl.textContent = "--";
+                return;
+            }
+
+            const weightKg = weightLbs / 2.20462;
+            const exertionToHR = { 'low': 110, 'moderate': 135, 'high': 160 };
+            const avgHR = exertionToHR[exertion];
+            
+            const typeModifiers = {
+                'strength': 0.75,
+                'elliptical': 1.0,
+                'treadmill': 1.0,
+                'run': 1.1,
+                'brisk_walk': 0.95,
+                'speed_walk': 1.0
+            };
+            const typeMod = typeModifiers[type];
+            
+            let calories = 0;
+            let points = 0;
+
+            // Keytel (2005) Energy Expenditure Formula
+            if (gender === 'male') {
+                calories = ((age * 0.2017) + (weightKg * 0.09036) + (avgHR * 0.6309) - 55.0969) * duration / 4.184;
+            } else {
+                calories = ((age * 0.074) - (weightKg * 0.05741) + (avgHR * 0.4472) - 20.4022) * duration / 4.184;
+            }
+
+            calories = calories * typeMod;
+            calories = Math.max(0, calories);
+
+            // Convert to Points
+            points = calories / 75;
+            
+            calResultEl.textContent = Math.round(calories) + " kcal";
+            pointsResultEl.textContent = points.toFixed(1);
+            return points;
+        }
+
+        function applyAdvancedPts() {
+            const points = calculateAdvancedPts();
+            if (points === undefined || isNaN(points)) return;
+            
+            // Save gender and age for future use
+            appData.gender = document.getElementById('ep-gender').value;
+            appData.age = parseFloat(document.getElementById('ep-age').value) || 0;
+            
+            let currentPoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
+            let newTotal = currentPoints + points;
+            document.getElementById('exerciseInput').value = newTotal.toFixed(1);
+            
+            updateExercisePoints();
+            document.getElementById('advancedExModal').style.display = 'none';
+        }
+    </script>
 
     <!-- Advanced Pts Modal -->
     <div id="advancedExModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
