@@ -4542,7 +4542,7 @@
 
             try {
                 // Try modern fast model first
-                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
                 let textContext = text ? `from this meal description/image context: "${text}".` : `from the attached image of the meal.`;
                 const prompt = `Extract the food items and their quantities ${textContext} 
