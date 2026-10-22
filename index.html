@@ -554,6 +554,40 @@
             opacity: 1;
         }
 
+        /* Log tab -> Search tab shortcut button (flat, matches 38px Date field) */
+        .log-search-btn {
+            height: 38px;
+            padding: 0 18px;
+            margin: 0;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: none;
+            transition: background-color 0.15s ease;
+        }
+
+        .log-search-btn:hover {
+            background: #059669;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .log-search-btn:focus-visible {
+            outline: 2px solid #047857;
+            outline-offset: 2px;
+        }
+
         #foodSelect:invalid,
         #recipeFoodSelect:invalid {
             color: #6b7280;
@@ -1109,7 +1143,11 @@
         </div> <!-- end desktop-columns -->
 
         <div class="card full-width">
-            <div id="dailyLogDateAnchor" style="margin-bottom: 15px;"></div>
+            <div id="dailyLogDateRow" style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom: 15px;">
+                <div id="dailyLogDateAnchor"></div>
+                <button type="button" id="logGoToSearchBtn" class="log-search-btn" onclick="goToSearchTab()"
+                    title="Go to the Search tab" aria-label="Go to the Search tab">Search</button>
+            </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                     <h2 style="margin:0; color:#f43f5e;">Daily Log</h2>
@@ -2556,6 +2594,15 @@
 
         function toggleSection(section) { }
 
+        // Log tab shortcut: jump to the Search tab, highlight its bottom-nav button, focus the search field
+        function goToSearchTab() {
+            const navBtn = Array.from(document.querySelectorAll('.bottom-nav .nav-item'))
+                .find(b => (b.getAttribute('onclick') || '').includes("switchTab('search'"));
+            switchTab('search', navBtn || null);
+            const input = document.getElementById('searchInput');
+            if (input) input.focus({ preventScroll: true });
+        }
+
         function applyVisibility() {
             const profileTab = document.querySelector('.nav-item');
             if (profileTab) profileTab.click();
@@ -3311,6 +3358,41 @@
             return 5;
         }
 
+        // ==================== MY FOODS TOKEN MATCHING ====================
+        // Lowercase, turn punctuation into spaces, collapse whitespace
+        function normalizeSearchText(text) {
+            return String(text || '').toLowerCase().replace(/[^a-z0-9%]+/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        // Significant query words (>2 chars); fall back to all words if none qualify
+        function getSearchTokens(query) {
+            const allTokens = normalizeSearchText(query).split(' ').filter(Boolean);
+            const significant = allTokens.filter(t => t.length > 2);
+            return significant.length > 0 ? significant : allTokens;
+        }
+
+        // True when EVERY query word appears (any order) in the food's description + brand
+        function myFoodMatchesAllTokens(food, query) {
+            const tokens = getSearchTokens(query);
+            if (tokens.length === 0) return false;
+            const words = normalizeSearchText(`${food.description || ''} ${food.brandOwner || ''}`).split(' ').filter(Boolean);
+            return tokens.every(token => {
+                const singular = (token.length > 3 && token.endsWith('s')) ? token.slice(0, -1) : token;
+                return words.some(w => w.startsWith(token) || w.startsWith(singular));
+            });
+        }
+
+        // Sort My Foods hits: best scoreMatch first, then shortest (closest) description, then A-Z
+        function compareMyFoodMatches(a, b, query) {
+            const aScore = scoreMatch(a.description, query);
+            const bScore = scoreMatch(b.description, query);
+            if (aScore !== bScore) return aScore - bScore;
+            const aLen = normalizeSearchText(a.description).length;
+            const bLen = normalizeSearchText(b.description).length;
+            if (aLen !== bLen) return aLen - bLen;
+            return String(a.description || '').localeCompare(String(b.description || ''));
+        }
+
         // Rebuild the visible search results dropdown based on searchVisibleCount
         function renderSearchDropdown() {
             const sel = document.getElementById('foodSelect');
@@ -3417,16 +3499,11 @@
                     const desc = String(f.description || '').toLowerCase();
                     const brand = String(f.brandOwner || '').toLowerCase();
                     const upcMatch = f.upc && String(f.upc) === query;
-                    return desc.includes(query) || brand.includes(query) || upcMatch;
+                    return desc.includes(query) || brand.includes(query) || upcMatch || myFoodMatchesAllTokens(f, query);
                 }).map(f => ({ ...f, source: 'My Foods' }));
 
-                // Prioritize exact matches and starts-with matches (safe for any legacy bad items)
-                localMatches.sort((a, b) => {
-                    const aScore = scoreMatch(a.description, query);
-                    const bScore = scoreMatch(b.description, query);
-                    if (aScore !== bScore) return aScore - bScore;
-                    return String(a.description || '').localeCompare(String(b.description || ''));
-                });
+                // Closest match first (exact, starts-with, all words in any order), shortest description wins ties
+                localMatches.sort((a, b) => compareMyFoodMatches(a, b, query));
 
                 // Filter out zero-calorie items (except water)
                 localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
@@ -6630,25 +6707,12 @@
                 localMatches = appData.myFoods.filter(f =>
                     (f.description && f.description.toLowerCase().includes(query)) ||
                     (f.brandOwner && f.brandOwner.toLowerCase().includes(query)) ||
-                    (f.upc && f.upc === query)
+                    (f.upc && f.upc === query) ||
+                    myFoodMatchesAllTokens(f, query)
                 ).map(f => ({ ...f, source: 'My Foods' }));
 
-                // Prioritize exact matches and starts-with matches
-                localMatches.sort((a, b) => {
-                    const aDesc = a.description.toLowerCase();
-                    const bDesc = b.description.toLowerCase();
-                    const aExact = aDesc === query;
-                    const bExact = bDesc === query;
-                    if (aExact && !bExact) return -1;
-                    if (!aExact && bExact) return 1;
-
-                    const aStarts = aDesc.startsWith(query);
-                    const bStarts = bDesc.startsWith(query);
-                    if (aStarts && !bStarts) return -1;
-                    if (!aStarts && bStarts) return 1;
-
-                    return aDesc.localeCompare(bDesc);
-                });
+                // Closest match first (exact, starts-with, all words in any order), shortest description wins ties
+                localMatches.sort((a, b) => compareMyFoodMatches(a, b, query));
 
                 // Filter out zero-calorie items (except water)
                 localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
@@ -7900,8 +7964,16 @@
                 }));
             }
 
-            // Combine and sort by relevance
-            let combined = [...localMatches, ...apiFoods];
+            // My Foods items that contain the full phrase or EVERY query word are pinned to the top
+            const pinQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim() || query;
+            const pinnedLocal = localMatches.filter(f =>
+                String(f.description || '').toLowerCase().includes(pinQuery) || myFoodMatchesAllTokens(f, pinQuery)
+            );
+            pinnedLocal.sort((a, b) => compareMyFoodMatches(a, b, query));
+            const pinnedSet = new Set(pinnedLocal);
+
+            // Everything else (partial My Foods hits + API results) is sorted by relevance as before
+            let combined = [...localMatches.filter(f => !pinnedSet.has(f)), ...apiFoods];
 
             combined.sort((a, b) => {
                 const aScore = scoreMatch(a.description, query);
@@ -7926,7 +7998,7 @@
                 return String(a.description || '').localeCompare(String(b.description || ''));
             });
 
-            return combined.slice(0, 50);
+            return [...pinnedLocal, ...combined].slice(0, 50);
         }
 
         async function searchBestFoodMatch(query) {
