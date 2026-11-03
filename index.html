@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v8.5</title>
+    <title>EatMyPyramid v8.6</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "8.5";
+        const APP_VERSION = "8.6";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -601,6 +601,76 @@
         button, .btn, [role="button"], input[type="button"], input[type="submit"] {
             box-shadow: none !important;
         }
+
+        /* Daily Vitamins and Medicines — Profile Section & Daily Log Checkboxes */
+        .vm-profile-section-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 11px 15px;
+            background: #ffffff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 8px;
+            color: #312e81;
+            font-weight: 700;
+            font-size: 0.92em;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .vm-profile-section-btn:hover {
+            background: #eef2ff;
+            border-color: #818cf8;
+        }
+
+        .vm-count-badge {
+            background: #4f46e5;
+            color: #ffffff;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .vm-red-checkbox {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2.5px solid #ef4444;
+            background-color: #fef2f2;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .vm-red-checkbox:hover {
+            background-color: #fee2e2;
+            border-color: #dc2626;
+        }
+
+        .vm-green-checkmark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            color: #16a34a;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
 </style>
     <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
 </head>
@@ -683,7 +753,7 @@
                             </div>
                         </div>
                         <div id="appVersionDisplay"
-                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v8.4)
+                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v8.6)
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
@@ -772,6 +842,21 @@
                     <div style="flex-basis: 100%; font-size:0.85em; color:#4338ca; margin-top: -5px;">
                         <em>Macro targets (Protein, Fat, Carbs) are tracked as a percentage of your daily calories.
                             <strong>Data saves automatically.</strong></em>
+                    </div>
+
+                    <!-- Daily Vitamins and Medicines Section -->
+                    <div style="flex-basis: 100%; margin-top: 8px;">
+                        <button type="button" class="vm-profile-section-btn"
+                            onclick="event.preventDefault(); showVitaminsMedicinesModal()">
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.15em;">💊</span>
+                                <span>Daily Vitamins and Medicines</span>
+                            </span>
+                            <span style="display:flex; align-items:center; gap:8px;">
+                                <span id="vmProfileCountBadge" class="vm-count-badge">0 items</span>
+                                <span style="font-size:1.25em; color:#4f46e5; line-height:1;">›</span>
+                            </span>
+                        </button>
                     </div>
 
                     <!-- Data & API Keys -->
@@ -2003,6 +2088,175 @@
         </div>
     </div>
 
+    <!-- ==================== EXPORT SHARED LOG FILENAME MODAL ==================== -->
+    <div id="exportSharedLogModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10010; align-items:center; justify-content:center; padding:16px;">
+        <div
+            style="background:white; padding:25px; border-radius:16px; width:100%; max-width:430px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:#10b981;">Export Shared Log</h3>
+                <button type="button" onclick="closeExportSharedLogModal()"
+                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.93em; margin:0 0 12px 0;">Name the file before saving your selected Daily Log items:</p>
+            <div class="form-group" style="margin-bottom:18px;">
+                <label for="exportSharedLogFilenameInput" style="font-size:0.88em; font-weight:600; margin-bottom:5px;">File Name</label>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="text" id="exportSharedLogFilenameInput"
+                        placeholder="e.g. Monday_Daily_Log"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); confirmExportSelectedLogItems(); }"
+                        style="flex:1; padding:11px 12px; font-size:0.98em; border:1px solid #cbd5e1; border-radius:8px;">
+                    <span style="padding:11px 10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; color:#64748b; font-weight:600; font-size:0.92em;">.json</span>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="closeExportSharedLogModal()"
+                    style="background:var(--text-muted); flex:1; padding:12px; color:white; border:none; border-radius:6px; font-size:1em; font-weight:600; cursor:pointer;">Cancel</button>
+                <button type="button" onclick="confirmExportSelectedLogItems()"
+                    style="background:#10b981; flex:1; padding:12px; color:white; font-weight:bold; border:none; border-radius:6px; font-size:1em; cursor:pointer;">Save File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DAILY GOAL THRESHOLD ACKNOWLEDGMENT MODAL ==================== -->
+    <div id="thresholdAlertModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(5px); z-index:10025; align-items:center; justify-content:center; padding:20px;">
+        <div
+            style="background:white; padding:25px; border-radius:16px; width:100%; max-width:460px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.12), 0 10px 10px -5px rgba(0,0,0,0.05);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #fef3c7; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:#d97706; display:flex; align-items:center; gap:8px;">
+                    <span
+                        style="background:#f59e0b; color:white; border-radius:50%; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; flex-shrink:0;">!</span>
+                    Daily Goal Notice
+                </h3>
+            </div>
+            <p id="thresholdAlertMessage"
+                style="font-size:1.02em; color:#1e293b; line-height:1.55; margin:6px 0 22px 0; font-weight:500; white-space:pre-wrap;"></p>
+            <div style="text-align:right;">
+                <button type="button" onclick="acknowledgeThresholdAlert()"
+                    style="background:var(--primary); color:white; border:none; padding:11px 24px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:1em; width:100%;">I Acknowledge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DAILY VITAMINS AND MEDICINES MODAL ==================== -->
+    <div id="vitaminsMedicinesModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10010; align-items:center; justify-content:center; padding:14px; overflow-y:auto;">
+        <div
+            style="background:white; padding:22px; border-radius:16px; width:100%; max-width:580px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-height:92vh; display:flex; flex-direction:column;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:14px; gap:10px; flex-shrink:0;">
+                <h3 style="margin:0; color:#4f46e5; display:flex; align-items:center; gap:8px; font-size:1.15em;">
+                    <span>💊</span>
+                    <span>Daily Vitamins and Medicines</span>
+                </h3>
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <button type="button" id="vmOpenAddBtn" onclick="openVmEntryForm(-1)"
+                        style="background:#10b981; color:white; border:none; padding:7px 14px; border-radius:6px; font-weight:700; font-size:0.92em; cursor:pointer; white-space:nowrap;">+Add</button>
+                    <button type="button" onclick="closeVitaminsMedicinesModal()"
+                        style="background:none; border:none; font-size:1.6em; line-height:1; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+                </div>
+            </div>
+
+            <div style="overflow-y:auto; flex:1; padding-right:4px;">
+                <!-- Collapsible Add / Edit Form -->
+                <div id="vmEntryFormContainer"
+                    style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:15px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h4 id="vmFormHeading" style="margin:0; color:#1e293b; font-size:1em;">Add Vitamin or Medicine</h4>
+                        <button type="button" onclick="closeVmEntryForm()"
+                            style="background:none; border:none; color:#64748b; font-size:1.3em; cursor:pointer; padding:0; line-height:1;">&times;</button>
+                    </div>
+
+                    <!-- Online Lookup (NIH DSLD & RxNorm) -->
+                    <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:12px; margin-bottom:14px;">
+                        <label style="font-size:0.84em; color:#3730a3; margin-bottom:6px;">Online Lookup (Optional — NIH RxNorm &amp; Supplement Database)</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                            <select id="vmLookupCategorySelect" onchange="onVmLookupTypeChange()"
+                                style="flex:1; min-width:190px; padding:9px 10px; font-size:0.9em; border:1px solid #c7d2fe; border-radius:6px; background:white; font-weight:600; color:#312e81;">
+                                <option value="supplement">Vitamin / Supplement (NIH DSLD)</option>
+                                <option value="medicine">Medicine (NIH RxNorm)</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="vmLookupQueryInput"
+                                placeholder="e.g. Vitamin D3, B12, Lisinopril, Advil..."
+                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchVmOnline(); }"
+                                style="flex:1; padding:9px 10px; font-size:0.92em; background:white; border:1px solid #cbd5e1; border-radius:6px;">
+                            <button type="button" id="vmLookupSearchBtn" onclick="searchVmOnline()"
+                                style="background:#4f46e5; color:white; border:none; padding:9px 14px; border-radius:6px; font-weight:600; font-size:0.9em; cursor:pointer; white-space:nowrap;">Lookup</button>
+                        </div>
+                        <div id="vmLookupStatusText" style="display:none; font-size:0.8em; color:#475569; margin-top:6px;"></div>
+
+                        <div id="vmLookupResultsContainer" style="display:none; margin-top:8px;">
+                            <label for="vmLookupResultsSelect" style="font-size:0.8em; color:#334155; margin-bottom:3px;">Select Match to Auto-Fill:</label>
+                            <select id="vmLookupResultsSelect" onchange="onVmLookupMatchSelected()"
+                                style="width:100%; padding:9px; font-size:0.88em; background:white; border:1px solid #cbd5e1; border-radius:6px;"></select>
+                        </div>
+
+                        <div id="vmSupplementIngredientsContainer" style="display:none; margin-top:8px;">
+                            <label for="vmSupplementIngredientsSelect" style="font-size:0.8em; color:#334155; margin-bottom:3px;">Supplement Facts Ingredient / Strength:</label>
+                            <select id="vmSupplementIngredientsSelect" onchange="onVmSupplementIngredientSelected()"
+                                style="width:100%; padding:9px; font-size:0.88em; background:white; border:1px solid #cbd5e1; border-radius:6px;"></select>
+                        </div>
+                    </div>
+
+                    <!-- Manual / Editable Entry Fields -->
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="vmNameInput" style="font-size:0.86em;">Name (Manual or Auto-Filled)</label>
+                        <input type="text" id="vmNameInput" placeholder="e.g. Vitamin D3 or Lisinopril"
+                            style="padding:10px; font-size:0.95em; background:white;">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1.2fr 1fr 0.9fr; gap:8px; margin-bottom:14px;">
+                        <div>
+                            <label for="vmFrequencySelect" style="font-size:0.84em;">Frequency</label>
+                            <select id="vmFrequencySelect" style="padding:10px 8px; font-size:0.92em; background:white;">
+                                <option value="Once daily">Once daily</option>
+                                <option value="Twice daily">Twice daily</option>
+                                <option value="3x daily">3x daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="As needed">As needed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="vmAmountInput" style="font-size:0.84em;">Amount</label>
+                            <input type="number" id="vmAmountInput" placeholder="e.g. 500" min="0" step="any"
+                                style="padding:10px 8px; font-size:0.92em; background:white;">
+                        </div>
+                        <div>
+                            <label for="vmUnitSelect" style="font-size:0.84em;">Unit</label>
+                            <select id="vmUnitSelect" style="padding:10px 8px; font-size:0.92em; background:white;">
+                                <option value="mg">mg</option>
+                                <option value="mcg">mcg</option>
+                                <option value="g">g</option>
+                                <option value="IU">IU</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" onclick="closeVmEntryForm()"
+                            style="flex:1; background:#94a3b8; color:white; border:none; padding:10px; border-radius:6px; font-weight:600; cursor:pointer;">Cancel</button>
+                        <button type="button" onclick="saveVmEntry()"
+                            style="flex:1.4; background:#4f46e5; color:white; border:none; padding:10px; border-radius:6px; font-weight:700; cursor:pointer;">Save to List</button>
+                    </div>
+                </div>
+
+                <!-- Saved Vitamins and Medicines List -->
+                <div id="vmSavedListContainer" style="min-height:80px;"></div>
+            </div>
+
+            <div style="border-top:1px solid #e2e8f0; padding-top:12px; margin-top:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-shrink:0;">
+                <small style="color:#64748b; font-size:0.8em;">Stored in your local <strong>Vitamins and Medicines</strong> database &amp; shown in Daily Log.</small>
+                <button type="button" onclick="closeVitaminsMedicinesModal()"
+                    style="background:#4f46e5; color:white; border:none; padding:9px 20px; border-radius:6px; font-weight:600; cursor:pointer;">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== RECIPE BUILDER MODAL ==================== -->
     <div id="recipeModal"
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
@@ -2659,7 +2913,10 @@
                     Fruit: 0, Vegetable: 0, 'Proteins': 0, Dairy: 0, Grain: 0, Water: 0,
                     exercisePoints: 0,
                     flexPoints: 0,
-                    bodyWeight: undefined
+                    bodyWeight: undefined,
+                    snacksEmpAlertAck: false,
+                    carbs80AlertAck: false,
+                    vitaminsTaken: {}
                 },
                 log: []
             };
@@ -2908,6 +3165,28 @@
             if (protInput && appData.targets) protInput.value = appData.targets.ProteinGrams || 0;
             const carbsInput = document.getElementById('carbsGoalInput');
             if (carbsInput && appData.targets) carbsInput.value = appData.targets.CarbsGrams || 0;
+
+            // Migration 11 (v8.6): Ensure CarbsGrams & FatGrams targets are synced for existing profiles,
+            // and initialize daily alert/vitamin tracking flags on existing history days
+            const effCalories = parseFloat(appData.calorieGoal) || (appData.targets && parseFloat(appData.targets.Calories)) || 0;
+            if (effCalories > 0 && appData.targets) {
+                if (!appData.targets.CarbsGrams && appData.targets.Carbs > 0) {
+                    appData.targets.CarbsGrams = Math.round((effCalories * (appData.targets.Carbs / 100)) / 4) || 0;
+                }
+                if (!appData.targets.FatGrams && appData.targets.Fat > 0) {
+                    appData.targets.FatGrams = Math.round((effCalories * (appData.targets.Fat / 100)) / 9) || 0;
+                }
+            }
+            if (appData.history && typeof appData.history === 'object') {
+                for (let dKey in appData.history) {
+                    const cDay = appData.history[dKey] && appData.history[dKey].current;
+                    if (cDay) {
+                        if (cDay.snacksEmpAlertAck === undefined) cDay.snacksEmpAlertAck = false;
+                        if (cDay.carbs80AlertAck === undefined) cDay.carbs80AlertAck = false;
+                        if (!cDay.vitaminsTaken || typeof cDay.vitaminsTaken !== 'object') cDay.vitaminsTaken = {};
+                    }
+                }
+            }
         }
 
         // ==================== WEEK ARCHIVING / RECALL A WEEK HELPER ====================
@@ -2981,8 +3260,9 @@
             document.getElementById('searchInput').addEventListener('keypress', e => e.key === 'Enter' && searchDatabases());
             document.getElementById('manualBarcode').addEventListener('keypress', e => e.key === 'Enter' && manualBarcodeSubmit());
 
-            // Show USDA API key status in profile bar
+            // Show USDA API key status in profile bar & Vitamins count badge
             updateApiKeyStatus();
+            updateVmProfileBadge();
 
             // Apply saved hide/reveal state for the four main sections
             applyVisibility();
@@ -3144,6 +3424,7 @@
             appData.wwGoal = parseFloat(document.getElementById('wwGoalInput').value) || 0;
             saveData();
             renderBarometers();
+            checkDailyThresholdAlerts();
         }
 
         function updateExercisePoints() {
@@ -3321,6 +3602,7 @@
 
                 saveData();
                 renderBarometers();
+                checkDailyThresholdAlerts();
             }
         }
 
@@ -3641,11 +3923,11 @@
                         upc: p.code,
                         source: 'OFF (legacy)',
                         foodNutrients: [
-                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
-                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
-                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
-                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
-                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
+                            { nutrientId: 1008, value: parseFloat((p.nutriments && p.nutriments['energy-kcal_100g']) || 0) },
+                            { nutrientId: 1003, value: parseFloat((p.nutriments && p.nutriments.proteins_100g) || 0) },
+                            { nutrientId: 1004, value: parseFloat((p.nutriments && p.nutriments.fat_100g) || 0) },
+                            { nutrientId: 1005, value: parseFloat((p.nutriments && p.nutriments.carbohydrates_100g) || 0) },
+                            { nutrientId: 1079, value: parseFloat((p.nutriments && p.nutriments.fiber_100g) || 0) }
                         ]
                     }));
                 }
@@ -4003,6 +4285,8 @@
                 toast.style.opacity = "0";
                 setTimeout(() => toast.remove(), 300);
             }, 1000);
+
+            checkDailyThresholdAlerts();
         }
 
         let currentEditIndex = -1;
@@ -4189,6 +4473,7 @@
             }
 
             closeEditModal();
+            checkDailyThresholdAlerts();
         }
 
         function deleteItem(index) {
@@ -4662,7 +4947,7 @@
                     let errMsg = "API Error " + response.status;
                     try {
                         const errData = await response.json();
-                        errMsg = errData.error?.message || errMsg;
+                        errMsg = (errData.error && errData.error.message) || errMsg;
                     } catch (err) { }
                     throw new Error(errMsg);
                 }
@@ -4798,6 +5083,7 @@
                 renderBarometers();
                 closeEnterMealModal();
                 alert(`Successfully logged ${loggedCount} items to ${mealName}!`);
+                checkDailyThresholdAlerts();
             }
         }
 
@@ -5105,13 +5391,28 @@
         }
         function renderLog() {
             const cont = document.getElementById('logContainer');
+            const vmList = loadVitaminsAndMedicinesDB();
 
-            if (state.log.length === 0) {
+            if (state.log.length === 0 && vmList.length === 0) {
                 cont.innerHTML = '<p style="color:gray;font-size:0.9em;">No foods logged yet today.</p>';
                 return;
             }
 
             cont.innerHTML = '';
+
+            // Render 'Vitamins and Medicine' category when user has saved items
+            if (vmList.length > 0) {
+                renderVitaminsAndMedicineLogSection(cont, vmList);
+            }
+
+            if (state.log.length === 0) {
+                const emptyFoodMsg = document.createElement('p');
+                emptyFoodMsg.style.cssText = 'color:gray; font-size:0.9em; margin-top:15px;';
+                emptyFoodMsg.textContent = 'No foods logged yet today.';
+                cont.appendChild(emptyFoodMsg);
+                return;
+            }
+
             const meals = ['Breakfast', 'Lunch', 'Dinner', 'Discretionary', 'Other'];
 
             meals.forEach(meal => {
@@ -5362,7 +5663,11 @@
                 toggleLogSharingMode(); // exit sharing mode
             }
 
+            const activeSelectedDay = document.getElementById('daySelect').value;
             closeCopyToDayModal();
+            if (activeSelectedDay === targetDay) {
+                checkDailyThresholdAlerts(targetDay);
+            }
         }
 
         // ==================== SMART BARCODE SCANNER (HTML5-QRCODE) ====================
@@ -5512,11 +5817,11 @@
                 const p = data.product;
 
                 const nut = {
-                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0),
-                    protein: parseFloat(p.nutriments?.proteins_100g || 0),
-                    fat: parseFloat(p.nutriments?.fat_100g || 0),
-                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || 0),
-                    fiber: parseFloat(p.nutriments?.fiber_100g || 0)
+                    calories: parseFloat((p.nutriments && p.nutriments['energy-kcal_100g']) || 0),
+                    protein: parseFloat((p.nutriments && p.nutriments.proteins_100g) || 0),
+                    fat: parseFloat((p.nutriments && p.nutriments.fat_100g) || 0),
+                    carbs: parseFloat((p.nutriments && p.nutriments.carbohydrates_100g) || 0),
+                    fiber: parseFloat((p.nutriments && p.nutriments.fiber_100g) || 0)
                 };
 
                 const name = p.product_name || `Scanned Item (${barcode})`;
@@ -5903,7 +6208,10 @@
             if (!appData) {
                 return alert("No data to export.");
             }
-            const dataStr = JSON.stringify(appData, null, 2);
+            const exportPayload = Object.assign({}, appData, {
+                vitaminsAndMedicines: loadVitaminsAndMedicinesDB()
+            });
+            const dataStr = JSON.stringify(exportPayload, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -5930,6 +6238,10 @@
                     const importedData = JSON.parse(e.target.result);
                     if (typeof importedData !== 'object' || (!importedData.hasOwnProperty('history') && !importedData.hasOwnProperty('archivedWeeks'))) {
                         throw new Error("Invalid file format.");
+                    }
+                    if (Array.isArray(importedData.vitaminsAndMedicines)) {
+                        localStorage.setItem(VITAMINS_DB_KEY, JSON.stringify(importedData.vitaminsAndMedicines));
+                        delete importedData.vitaminsAndMedicines;
                     }
                     appData = importedData;
                     saveData();
@@ -5990,11 +6302,58 @@
                 return alert("Please select at least one item to share.");
             }
 
+            const dateDisplayEl = document.getElementById('dayDateDisplay');
+            let dateSuffix = '';
+            if (dateDisplayEl && dateDisplayEl.value && dateDisplayEl.value !== '--/--/--') {
+                dateSuffix = '_' + dateDisplayEl.value.replace(/\//g, '-');
+            } else {
+                const now = new Date();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const yy = String(now.getFullYear()).slice(-2);
+                dateSuffix = '_' + mm + '-' + dd + '-' + yy;
+            }
+
+            const nameInput = document.getElementById('exportSharedLogFilenameInput');
+            if (nameInput) {
+                nameInput.value = 'EatMyPyramid_Shared_DailyLog' + dateSuffix;
+            }
+            const modal = document.getElementById('exportSharedLogModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                if (nameInput) {
+                    setTimeout(() => {
+                        nameInput.focus();
+                        nameInput.select();
+                    }, 50);
+                }
+            }
+        }
+
+        function closeExportSharedLogModal() {
+            const modal = document.getElementById('exportSharedLogModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function confirmExportSelectedLogItems() {
+            if (window.selectedLogItemsToShare.size === 0) {
+                closeExportSharedLogModal();
+                return alert("Please select at least one item to share.");
+            }
+
+            const nameInput = document.getElementById('exportSharedLogFilenameInput');
+            let rawName = nameInput ? nameInput.value.trim() : '';
+            // Strip any trailing .json typed by user and sanitize illegal filename chars
+            rawName = rawName.replace(/\.json$/i, '').replace(/[<>:"/\\|?*\x00-\x1F]+/g, '_').trim();
+            if (!rawName) {
+                rawName = 'EatMyPyramid_Shared_DailyLog_' + new Date().getTime();
+            }
+            const finalFileName = rawName + '.json';
+
             const itemsToExport = [];
             window.selectedLogItemsToShare.forEach(index => {
                 const item = state.log[index];
                 if (!item) return;
-                // Deep copy the item
                 itemsToExport.push(JSON.parse(JSON.stringify(item)));
             });
 
@@ -6008,13 +6367,866 @@
 
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", url);
-            downloadAnchorNode.setAttribute("download", `EatMyPyramid_Shared_DailyLog_${new Date().getTime()}.json`);
+            downloadAnchorNode.setAttribute("download", finalFileName);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             document.body.removeChild(downloadAnchorNode);
             URL.revokeObjectURL(url);
 
+            closeExportSharedLogModal();
             toggleLogSharingMode(); // exit sharing mode
+        }
+
+        // ==================== DAILY THRESHOLD ACKNOWLEDGMENT ALERTS (v8.6) ====================
+        let pendingThresholdAlerts = [];
+
+        function enqueueThresholdAlert(message) {
+            if (!message) return;
+            if (pendingThresholdAlerts.indexOf(message) === -1) {
+                pendingThresholdAlerts.push(message);
+            }
+            showNextThresholdAlert();
+        }
+
+        function showNextThresholdAlert() {
+            const modal = document.getElementById('thresholdAlertModal');
+            const msgEl = document.getElementById('thresholdAlertMessage');
+            if (!modal || !msgEl) return;
+            if (modal.style.display === 'flex' || pendingThresholdAlerts.length === 0) return;
+
+            msgEl.textContent = pendingThresholdAlerts[0];
+            modal.style.display = 'flex';
+        }
+
+        function acknowledgeThresholdAlert() {
+            if (pendingThresholdAlerts.length > 0) {
+                pendingThresholdAlerts.shift();
+            }
+            const modal = document.getElementById('thresholdAlertModal');
+            if (modal) modal.style.display = 'none';
+
+            if (pendingThresholdAlerts.length > 0) {
+                setTimeout(showNextThresholdAlert, 60);
+            }
+        }
+
+        function checkDailyThresholdAlerts(dayKey) {
+            if (isArchiveMode || recalledWeekData) return;
+
+            const daySelectEl = document.getElementById('daySelect');
+            const activeDay = dayKey || (daySelectEl ? daySelectEl.value : '');
+            if (!activeDay || !appData.history || !appData.history[activeDay]) return;
+
+            const dayObj = appData.history[activeDay];
+            const dayCurrent = dayObj.current;
+            const dayLog = dayObj.log || [];
+            if (!dayCurrent) return;
+
+            let updatedFlags = false;
+
+            // 1. Snacks/Discretionary EMP points >= 20% of Daily EMP Points Goal (once per day)
+            const wwGoal = parseFloat(appData.wwGoal) || 0;
+            if (wwGoal > 0 && !dayCurrent.snacksEmpAlertAck) {
+                const discretionaryPts = dayLog.reduce((sum, it) => {
+                    if (it && it.meal === 'Discretionary') {
+                        return sum + (parseFloat(it.wwPoints) || 0);
+                    }
+                    return sum;
+                }, 0);
+
+                if (discretionaryPts + 1e-9 >= 0.20 * wwGoal) {
+                    dayCurrent.snacksEmpAlertAck = true;
+                    updatedFlags = true;
+                    enqueueThresholdAlert('Your Snacks/Discretionary EMP points are 20% or more of your Daily EMP Points Goal today');
+                }
+            }
+
+            // 2. Carbs in Grams in the Macros tab > 80% of daily goal (once per day)
+            const calGoal = parseFloat(appData.calorieGoal) || (state.targets && parseFloat(state.targets.Calories)) || 0;
+            const carbPct = (state.targets && state.targets.Carbs !== undefined) ? parseFloat(state.targets.Carbs) : 40;
+            const carbsGoalGrams = (state.targets && state.targets.CarbsGrams > 0)
+                ? parseFloat(state.targets.CarbsGrams)
+                : (calGoal > 0 ? Math.round((calGoal * (carbPct / 100)) / 4) : 0);
+
+            if (carbsGoalGrams > 0 && !dayCurrent.carbs80AlertAck) {
+                const carbsConsumed = parseFloat(dayCurrent.Carbs) || 0;
+                if (carbsConsumed > 0.80 * carbsGoalGrams) {
+                    dayCurrent.carbs80AlertAck = true;
+                    updatedFlags = true;
+                    enqueueThresholdAlert('Your daily carbs consumed exceeded 80% of your daily goal.  Limit the carb intake for the rest of your meals today.');
+                }
+            }
+
+            if (updatedFlags) {
+                saveData();
+            }
+        }
+
+        // ==================== DAILY VITAMINS AND MEDICINES DATABASE & NIH LOOKUP (v8.6) ====================
+        const VITAMINS_DB_KEY = 'Vitamins and Medicines';
+        let archiveVitaminsAndMedicines = null;
+        let vmCurrentEditIndex = -1;
+        let vmCurrentLookupResults = [];
+        let vmCurrentSupplementIngredients = [];
+        let vmCurrentSourceLabel = 'Manual';
+
+        function escapeVmHtml(str) {
+            return String(str === undefined || str === null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getDosesCountForFrequency(freq) {
+            if (freq === 'Twice daily') return 2;
+            if (freq === '3x daily') return 3;
+            return 1;
+        }
+
+        function loadVitaminsAndMedicinesDB() {
+            if (isArchiveMode && Array.isArray(archiveVitaminsAndMedicines)) {
+                return archiveVitaminsAndMedicines;
+            }
+            try {
+                const raw = localStorage.getItem(VITAMINS_DB_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                console.error("Failed to load Vitamins and Medicines database:", e);
+                return [];
+            }
+        }
+
+        function saveVitaminsAndMedicinesDB(list) {
+            if (isArchiveMode) return;
+            try {
+                localStorage.setItem(VITAMINS_DB_KEY, JSON.stringify(list));
+            } catch (e) {
+                console.error("Failed to save Vitamins and Medicines database:", e);
+                alert("Could not save Vitamins and Medicines list — browser storage may be full.");
+            }
+            updateVmProfileBadge();
+        }
+
+        function updateVmProfileBadge() {
+            const badge = document.getElementById('vmProfileCountBadge');
+            if (!badge) return;
+            const count = loadVitaminsAndMedicinesDB().length;
+            badge.textContent = count === 1 ? '1 item' : (count + ' items');
+        }
+
+        // 1. Lookup a Medicine via NIH RxNorm (includes generic SCD, brand SBD, and approximateTerm fallback)
+        async function searchMedicine(query) {
+            const raw = String(query || '').trim();
+            if (!raw) return [];
+            const baseName = raw.replace(/\b\d+(?:\.\d+)?\s*(?:mg|mcg|g|iu|ml)?\b/gi, '').replace(/\s+/g, ' ').trim() || raw;
+
+            const controller = new AbortController();
+            const timerId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const url = `https://rxnav.nlm.nih.gov/REST/drugs.json?name=${encodeURIComponent(baseName)}`;
+                const res = await fetch(url, { signal: controller.signal });
+                const data = await res.json();
+
+                const drugGroup = (data && data.drugGroup && Array.isArray(data.drugGroup.conceptGroup))
+                    ? data.drugGroup.conceptGroup
+                    : [];
+
+                let concepts = [];
+                drugGroup.forEach(g => {
+                    if ((g.tty === 'SCD' || g.tty === 'SBD') && Array.isArray(g.conceptProperties)) {
+                        concepts = concepts.concat(g.conceptProperties);
+                    }
+                });
+
+                // Rank single-ingredient matches starting with the searched drug name (and matching strength if typed) first
+                const numMatch = raw.match(/\b(\d+(?:\.\d+)?)\b/);
+                const numRegex = numMatch ? new RegExp('\\b' + numMatch[1].replace('.', '\\.') + '\\b') : null;
+                const baseLower = baseName.toLowerCase();
+                if (concepts.length > 1) {
+                    concepts.sort((a, b) => {
+                        const aName = String(a.name || '');
+                        const bName = String(b.name || '');
+                        if (numRegex) {
+                            const aNum = numRegex.test(aName) ? 0 : 1;
+                            const bNum = numRegex.test(bName) ? 0 : 1;
+                            if (aNum !== bNum) return aNum - bNum;
+                        }
+                        const aStarts = aName.toLowerCase().indexOf(baseLower) === 0 ? 0 : 1;
+                        const bStarts = bName.toLowerCase().indexOf(baseLower) === 0 ? 0 : 1;
+                        if (aStarts !== bStarts) return aStarts - bStarts;
+                        const aCombo = aName.indexOf(' / ') === -1 ? 0 : 1;
+                        const bCombo = bName.indexOf(' / ') === -1 ? 0 : 1;
+                        if (aCombo !== bCombo) return aCombo - bCombo;
+                        return aName.localeCompare(bName);
+                    });
+                }
+
+                // Fallback to approximateTerm if exact drug lookup returned 0 hits
+                if (concepts.length === 0) {
+                    const approxUrl = `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(raw)}&maxEntries=25`;
+                    const approxRes = await fetch(approxUrl, { signal: controller.signal });
+                    const approxData = await approxRes.json();
+                    const cands = (approxData && approxData.approximateGroup && Array.isArray(approxData.approximateGroup.candidate))
+                        ? approxData.approximateGroup.candidate
+                        : [];
+                    const seenCui = new Set();
+                    cands.forEach(c => {
+                        if (c && c.name && !seenCui.has(c.rxcui)) {
+                            seenCui.add(c.rxcui);
+                            concepts.push({ rxcui: c.rxcui, name: c.name, tty: 'APPROX' });
+                        }
+                    });
+                }
+
+                clearTimeout(timerId);
+                return concepts;
+            } catch (err) {
+                clearTimeout(timerId);
+                throw err;
+            }
+        }
+
+        // 2. Lookup a Vitamin / Supplement via NIH DSLD v9 (relevance-ranked search-filter)
+        async function searchSupplement(query) {
+            const raw = String(query || '').trim();
+            if (!raw) return [];
+            const controller = new AbortController();
+            const timerId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const url = `https://api.ods.od.nih.gov/dsld/v9/search-filter?q=${encodeURIComponent(raw)}&size=25`;
+                const res = await fetch(url, { signal: controller.signal });
+                const data = await res.json();
+                clearTimeout(timerId);
+                const hits = (data && Array.isArray(data.hits)) ? data.hits : [];
+                return hits.map(h => {
+                    const src = h._source || {};
+                    return {
+                        dsldId: h._id || h.id || '',
+                        fullName: src.fullName || 'Unnamed Supplement',
+                        brandName: src.brandName || ''
+                    };
+                }).filter(item => item.dsldId);
+            } catch (err) {
+                clearTimeout(timerId);
+                throw err;
+            }
+        }
+
+        // 3. Fetch exact Supplement Facts / Strengths via NIH DSLD v9 Label endpoint
+        async function getSupplementDetails(dsldId) {
+            const controller = new AbortController();
+            const timerId = setTimeout(() => controller.abort(), 8000);
+            try {
+                const url = `https://api.ods.od.nih.gov/dsld/v9/label/${encodeURIComponent(dsldId)}`;
+                const res = await fetch(url, { signal: controller.signal });
+                const data = await res.json();
+                clearTimeout(timerId);
+
+                const normalizeVmUnit = (u) => {
+                    const s = String(u || '').trim().toLowerCase();
+                    if (s === 'mcg' || s.indexOf('microgram') !== -1 || s === 'ug' || s === 'µg') return 'mcg';
+                    if (s === 'mg' || s.indexOf('milligram') !== -1) return 'mg';
+                    if (s === 'g' || s.indexOf('gram') === 0) return 'g';
+                    if (s === 'iu' || s.indexOf('international unit') !== -1) return 'IU';
+                    return null;
+                };
+
+                const rows = [];
+                const ingRows = (data && Array.isArray(data.ingredientRows)) ? data.ingredientRows : [];
+                const skipMacroNames = ['calories', 'total fat', 'saturated fat', 'trans fat', 'cholesterol', 'total carbohydrate', 'dietary fiber', 'total sugars', 'added sugars', 'protein'];
+
+                ingRows.forEach(row => {
+                    if (!row || !row.name) return;
+                    if (skipMacroNames.indexOf(String(row.name).trim().toLowerCase()) !== -1) return;
+                    const qList = Array.isArray(row.quantity) ? row.quantity : [];
+                    const qObj = qList.length > 0 ? qList[0] : null;
+                    const normUnit = qObj ? normalizeVmUnit(qObj.unit) : null;
+                    if (normUnit) {
+                        rows.push({
+                            name: row.name,
+                            amount: parseFloat(qObj.quantity) || 0,
+                            unit: normUnit
+                        });
+                    }
+                });
+                return rows;
+            } catch (err) {
+                clearTimeout(timerId);
+                throw err;
+            }
+        }
+
+        function parseRxNormConcept(conceptName) {
+            const raw = String(conceptName || '').trim();
+            let amount = '';
+            let unit = 'mg';
+
+            const strengthMatch = raw.match(/(\d+(?:\.\d+)?)\s*(MG|MCG|UG|G|IU|UNT)\b/i);
+            if (strengthMatch) {
+                let numVal = parseFloat(strengthMatch[1]);
+                const rawUnit = strengthMatch[2].toUpperCase();
+                if (rawUnit === 'MCG' || rawUnit === 'UG') {
+                    unit = 'mcg';
+                    amount = numVal;
+                } else if (rawUnit === 'G') {
+                    unit = 'g';
+                    amount = numVal;
+                } else if (rawUnit === 'IU' || rawUnit === 'UNT') {
+                    unit = 'IU';
+                    amount = numVal;
+                } else {
+                    // Convert sub-0.1 mg strengths (e.g., 0.05 MG levothyroxine -> 50 mcg)
+                    if (numVal > 0 && numVal < 0.1) {
+                        unit = 'mcg';
+                        amount = Math.round(numVal * 10000) / 10;
+                    } else {
+                        unit = 'mg';
+                        amount = numVal;
+                    }
+                }
+            }
+
+            // Clean readable name while preserving brand [Brand] if present
+            let cleanName = raw
+                .replace(/\b\d+(?:\.\d+)?\s*(?:MG|MCG|UG|G|IU|UNT)(?:\s*\/\s*\d*(?:\.\d+)?\s*(?:ML|MG|HR|ACTUAT))?\b/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            return {
+                name: cleanName || raw,
+                amount: amount,
+                unit: unit
+            };
+        }
+
+        function showVitaminsMedicinesModal() {
+            const modal = document.getElementById('vitaminsMedicinesModal');
+            if (!modal) return;
+            closeVmEntryForm();
+            renderVmSavedList();
+            modal.style.display = 'flex';
+        }
+
+        function closeVitaminsMedicinesModal() {
+            const modal = document.getElementById('vitaminsMedicinesModal');
+            if (modal) modal.style.display = 'none';
+            closeVmEntryForm();
+        }
+
+        function openVmEntryForm(editIdx) {
+            if (isArchiveMode) {
+                alert("Cannot modify Vitamins and Medicines while viewing a read-only archive.");
+                return;
+            }
+            vmCurrentEditIndex = (typeof editIdx === 'number' && editIdx >= 0) ? editIdx : -1;
+            vmCurrentLookupResults = [];
+            vmCurrentSupplementIngredients = [];
+
+            const formCont = document.getElementById('vmEntryFormContainer');
+            const heading = document.getElementById('vmFormHeading');
+            const lookupQuery = document.getElementById('vmLookupQueryInput');
+            const statusText = document.getElementById('vmLookupStatusText');
+            const resultsCont = document.getElementById('vmLookupResultsContainer');
+            const ingCont = document.getElementById('vmSupplementIngredientsContainer');
+            const nameInput = document.getElementById('vmNameInput');
+            const freqSelect = document.getElementById('vmFrequencySelect');
+            const amtInput = document.getElementById('vmAmountInput');
+            const unitSelect = document.getElementById('vmUnitSelect');
+            const typeSelect = document.getElementById('vmLookupCategorySelect');
+
+            if (lookupQuery) lookupQuery.value = '';
+            if (statusText) { statusText.style.display = 'none'; statusText.textContent = ''; }
+            if (resultsCont) resultsCont.style.display = 'none';
+            if (ingCont) ingCont.style.display = 'none';
+
+            if (vmCurrentEditIndex >= 0) {
+                const list = loadVitaminsAndMedicinesDB();
+                const existing = list[vmCurrentEditIndex];
+                if (!existing) return;
+                if (heading) heading.textContent = 'Edit Vitamin or Medicine';
+                if (nameInput) nameInput.value = existing.name || '';
+                if (freqSelect) freqSelect.value = existing.frequency || 'Once daily';
+                if (amtInput) amtInput.value = (existing.amount !== null && existing.amount !== undefined && existing.amount !== '') ? existing.amount : '';
+                if (unitSelect) unitSelect.value = existing.unit || 'mg';
+                if (typeSelect) typeSelect.value = existing.categoryType === 'Medicine' ? 'medicine' : 'supplement';
+                vmCurrentSourceLabel = existing.source || 'Manual';
+            } else {
+                if (heading) heading.textContent = 'Add Vitamin or Medicine';
+                if (nameInput) nameInput.value = '';
+                if (freqSelect) freqSelect.value = 'Once daily';
+                if (amtInput) amtInput.value = '';
+                if (unitSelect) unitSelect.value = 'mg';
+                if (typeSelect) typeSelect.value = 'supplement';
+                vmCurrentSourceLabel = 'Manual';
+            }
+
+            if (formCont) {
+                formCont.style.display = 'block';
+                if (nameInput && vmCurrentEditIndex >= 0) {
+                    nameInput.focus();
+                } else if (lookupQuery) {
+                    lookupQuery.focus();
+                }
+            }
+        }
+
+        function closeVmEntryForm() {
+            const formCont = document.getElementById('vmEntryFormContainer');
+            if (formCont) formCont.style.display = 'none';
+            vmCurrentEditIndex = -1;
+        }
+
+        function onVmLookupTypeChange() {
+            const resultsCont = document.getElementById('vmLookupResultsContainer');
+            const ingCont = document.getElementById('vmSupplementIngredientsContainer');
+            const statusText = document.getElementById('vmLookupStatusText');
+            if (resultsCont) resultsCont.style.display = 'none';
+            if (ingCont) ingCont.style.display = 'none';
+            if (statusText) statusText.style.display = 'none';
+        }
+
+        async function searchVmOnline() {
+            const queryInput = document.getElementById('vmLookupQueryInput');
+            const typeSelect = document.getElementById('vmLookupCategorySelect');
+            const btn = document.getElementById('vmLookupSearchBtn');
+            const statusText = document.getElementById('vmLookupStatusText');
+            const resultsCont = document.getElementById('vmLookupResultsContainer');
+            const resultsSelect = document.getElementById('vmLookupResultsSelect');
+            const ingCont = document.getElementById('vmSupplementIngredientsContainer');
+
+            const query = queryInput ? queryInput.value.trim() : '';
+            if (!query) {
+                return alert("Please enter a vitamin, supplement, or medicine name to search online.");
+            }
+
+            const mode = typeSelect ? typeSelect.value : 'supplement';
+            if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+            if (statusText) {
+                statusText.style.display = 'block';
+                statusText.style.color = '#475569';
+                statusText.textContent = mode === 'medicine'
+                    ? 'Searching NIH RxNorm medication database...'
+                    : 'Searching NIH Dietary Supplement Label Database...';
+            }
+            if (resultsCont) resultsCont.style.display = 'none';
+            if (ingCont) ingCont.style.display = 'none';
+
+            try {
+                if (mode === 'medicine') {
+                    const medResults = await searchMedicine(query);
+                    vmCurrentLookupResults = medResults;
+                    if (!medResults || medResults.length === 0) {
+                        if (statusText) {
+                            statusText.style.color = '#b45309';
+                            statusText.textContent = 'No RxNorm medicine matches found. Try switching to Vitamin / Supplement above, or enter details manually below.';
+                        }
+                        return;
+                    }
+                    let opts = '<option value="">-- Choose a medication & strength (' + medResults.length + ' found) --</option>';
+                    medResults.slice(0, 60).forEach((m, idx) => {
+                        opts += '<option value="' + idx + '">' + escapeVmHtml(m.name) + '</option>';
+                    });
+                    if (resultsSelect) resultsSelect.innerHTML = opts;
+                    if (resultsCont) resultsCont.style.display = 'block';
+                    if (statusText) {
+                        statusText.style.color = '#059669';
+                        statusText.textContent = 'Found ' + medResults.length + ' medication options. Select one below to auto-fill.';
+                    }
+                } else {
+                    const suppResults = await searchSupplement(query);
+                    vmCurrentLookupResults = suppResults;
+                    if (!suppResults || suppResults.length === 0) {
+                        if (statusText) {
+                            statusText.style.color = '#b45309';
+                            statusText.textContent = 'No supplement matches found. Try switching to Medicine (NIH RxNorm) above, or enter details manually below.';
+                        }
+                        return;
+                    }
+                    let opts = '<option value="">-- Choose a supplement product (' + suppResults.length + ' found) --</option>';
+                    suppResults.forEach((s, idx) => {
+                        const brandPrefix = s.brandName ? (s.brandName + ' — ') : '';
+                        opts += '<option value="' + idx + '">' + escapeVmHtml(brandPrefix + s.fullName) + '</option>';
+                    });
+                    if (resultsSelect) resultsSelect.innerHTML = opts;
+                    if (resultsCont) resultsCont.style.display = 'block';
+                    if (statusText) {
+                        statusText.style.color = '#059669';
+                        statusText.textContent = 'Found ' + suppResults.length + ' supplements. Select a product to load strengths.';
+                    }
+                }
+            } catch (err) {
+                console.error("Online lookup error:", err);
+                if (statusText) {
+                    statusText.style.color = '#ef4444';
+                    statusText.textContent = 'Online lookup unavailable right now. You can still enter the details manually below.';
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Lookup'; }
+            }
+        }
+
+        async function onVmLookupMatchSelected() {
+            const resultsSelect = document.getElementById('vmLookupResultsSelect');
+            const typeSelect = document.getElementById('vmLookupCategorySelect');
+            const statusText = document.getElementById('vmLookupStatusText');
+            const ingCont = document.getElementById('vmSupplementIngredientsContainer');
+            const ingSelect = document.getElementById('vmSupplementIngredientsSelect');
+            const nameInput = document.getElementById('vmNameInput');
+            const amtInput = document.getElementById('vmAmountInput');
+            const unitSelect = document.getElementById('vmUnitSelect');
+
+            if (!resultsSelect || resultsSelect.value === '') return;
+            const idx = parseInt(resultsSelect.value, 10);
+            const selected = vmCurrentLookupResults[idx];
+            if (!selected) return;
+
+            const mode = typeSelect ? typeSelect.value : 'supplement';
+            if (mode === 'medicine') {
+                const parsed = parseRxNormConcept(selected.name);
+                if (nameInput) nameInput.value = parsed.name;
+                if (amtInput && parsed.amount !== '') amtInput.value = parsed.amount;
+                if (unitSelect && parsed.unit) unitSelect.value = parsed.unit;
+                vmCurrentSourceLabel = 'RxNorm';
+                if (statusText) {
+                    statusText.style.display = 'block';
+                    statusText.style.color = '#059669';
+                    statusText.textContent = 'Auto-filled from NIH RxNorm. Review frequency & amount below, then click Save to List.';
+                }
+            } else {
+                const productDisplay = selected.brandName
+                    ? (selected.fullName + ' (' + selected.brandName + ')')
+                    : selected.fullName;
+                if (nameInput) nameInput.value = productDisplay;
+                vmCurrentSourceLabel = 'NIH DSLD';
+
+                if (statusText) {
+                    statusText.style.display = 'block';
+                    statusText.style.color = '#475569';
+                    statusText.textContent = 'Loading Supplement Facts strengths...';
+                }
+                if (ingCont) ingCont.style.display = 'none';
+
+                try {
+                    const details = await getSupplementDetails(selected.dsldId);
+                    vmCurrentSupplementIngredients = details || [];
+
+                    if (vmCurrentSupplementIngredients.length === 0) {
+                        if (statusText) {
+                            statusText.style.color = '#b45309';
+                            statusText.textContent = 'Product name filled (no mg/mcg/g/IU breakdown listed on label — enter amount manually below).';
+                        }
+                        return;
+                    }
+
+                    if (vmCurrentSupplementIngredients.length === 1) {
+                        const onlyIng = vmCurrentSupplementIngredients[0];
+                        if (amtInput && onlyIng.amount > 0) amtInput.value = onlyIng.amount;
+                        if (unitSelect && onlyIng.unit) unitSelect.value = onlyIng.unit;
+                        if (statusText) {
+                            statusText.style.color = '#059669';
+                            statusText.textContent = 'Auto-filled ' + onlyIng.name + ' (' + onlyIng.amount + ' ' + onlyIng.unit + '). Adjust if needed and click Save to List.';
+                        }
+                    } else {
+                        const qLower = (document.getElementById('vmLookupQueryInput').value || '').trim().toLowerCase();
+                        let matchedIdx = 0;
+                        for (let i = 0; i < vmCurrentSupplementIngredients.length; i++) {
+                            if (qLower && String(vmCurrentSupplementIngredients[i].name || '').toLowerCase().indexOf(qLower) !== -1) {
+                                matchedIdx = i;
+                                break;
+                            }
+                        }
+
+                        let ingOpts = '<option value="PRODUCT">Keep Product Name: ' + escapeVmHtml(productDisplay) + '</option>';
+                        vmCurrentSupplementIngredients.forEach((ing, i) => {
+                            ingOpts += '<option value="' + i + '"' + (i === matchedIdx ? ' selected' : '') + '>' +
+                                escapeVmHtml(ing.name + ' — ' + ing.amount + ' ' + ing.unit) + '</option>';
+                        });
+                        if (ingSelect) ingSelect.innerHTML = ingOpts;
+                        if (ingCont) ingCont.style.display = 'block';
+
+                        const chosen = vmCurrentSupplementIngredients[matchedIdx];
+                        if (chosen) {
+                            if (amtInput && chosen.amount > 0) amtInput.value = chosen.amount;
+                            if (unitSelect && chosen.unit) unitSelect.value = chosen.unit;
+                        }
+                        if (statusText) {
+                            statusText.style.color = '#059669';
+                            statusText.textContent = 'Loaded ' + vmCurrentSupplementIngredients.length + ' ingredients from Supplement Facts. Pick an ingredient above or customize below.';
+                        }
+                    }
+                } catch (err) {
+                    console.error("Supplement label fetch error:", err);
+                    if (statusText) {
+                        statusText.style.color = '#b45309';
+                        statusText.textContent = 'Product name filled. Could not fetch ingredient label details — enter amount manually below.';
+                    }
+                }
+            }
+        }
+
+        function onVmSupplementIngredientSelected() {
+            const ingSelect = document.getElementById('vmSupplementIngredientsSelect');
+            const resultsSelect = document.getElementById('vmLookupResultsSelect');
+            const nameInput = document.getElementById('vmNameInput');
+            const amtInput = document.getElementById('vmAmountInput');
+            const unitSelect = document.getElementById('vmUnitSelect');
+
+            if (!ingSelect) return;
+            if (ingSelect.value === 'PRODUCT') {
+                const prodIdx = resultsSelect ? parseInt(resultsSelect.value, 10) : -1;
+                const prod = prodIdx >= 0 ? vmCurrentLookupResults[prodIdx] : null;
+                if (prod && nameInput) {
+                    nameInput.value = prod.brandName ? (prod.fullName + ' (' + prod.brandName + ')') : prod.fullName;
+                }
+                return;
+            }
+            const idx = parseInt(ingSelect.value, 10);
+            const ing = vmCurrentSupplementIngredients[idx];
+            if (!ing) return;
+
+            const prodIdx = resultsSelect ? parseInt(resultsSelect.value, 10) : -1;
+            const prod = prodIdx >= 0 ? vmCurrentLookupResults[prodIdx] : null;
+            const brandSuffix = (prod && prod.brandName) ? (' (' + prod.brandName + ')') : '';
+            if (nameInput) nameInput.value = ing.name + brandSuffix;
+            if (amtInput && ing.amount > 0) amtInput.value = ing.amount;
+            if (unitSelect && ing.unit) unitSelect.value = ing.unit;
+        }
+
+        function saveVmEntry() {
+            if (isArchiveMode) return;
+            const nameInput = document.getElementById('vmNameInput');
+            const freqSelect = document.getElementById('vmFrequencySelect');
+            const amtInput = document.getElementById('vmAmountInput');
+            const unitSelect = document.getElementById('vmUnitSelect');
+            const typeSelect = document.getElementById('vmLookupCategorySelect');
+
+            const name = nameInput ? nameInput.value.trim() : '';
+            if (!name) {
+                return alert("Please enter a name for the vitamin or medicine.");
+            }
+
+            const rawAmt = amtInput ? amtInput.value.trim() : '';
+            let parsedAmt = null;
+            if (rawAmt !== '') {
+                parsedAmt = parseFloat(rawAmt);
+                if (isNaN(parsedAmt) || parsedAmt < 0) {
+                    return alert("Please enter a valid non-negative amount.");
+                }
+            }
+
+            const frequency = freqSelect ? freqSelect.value : 'Once daily';
+            const unit = unitSelect ? unitSelect.value : 'mg';
+            const categoryType = (typeSelect && typeSelect.value === 'medicine') ? 'Medicine' : 'Supplement';
+            const dosesPerDay = getDosesCountForFrequency(frequency);
+
+            const list = loadVitaminsAndMedicinesDB();
+            if (vmCurrentEditIndex >= 0 && list[vmCurrentEditIndex]) {
+                const prev = list[vmCurrentEditIndex];
+                list[vmCurrentEditIndex] = {
+                    id: prev.id,
+                    name: name,
+                    categoryType: categoryType,
+                    amount: parsedAmt,
+                    unit: unit,
+                    frequency: frequency,
+                    dosesPerDay: dosesPerDay,
+                    source: vmCurrentSourceLabel || prev.source || 'Manual'
+                };
+            } else {
+                const newId = 'vm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                list.push({
+                    id: newId,
+                    name: name,
+                    categoryType: categoryType,
+                    amount: parsedAmt,
+                    unit: unit,
+                    frequency: frequency,
+                    dosesPerDay: dosesPerDay,
+                    source: vmCurrentSourceLabel || 'Manual'
+                });
+            }
+
+            saveVitaminsAndMedicinesDB(list);
+            closeVmEntryForm();
+            renderVmSavedList();
+            renderLog();
+        }
+
+        function deleteVmEntry(idx) {
+            if (isArchiveMode) {
+                return alert("Cannot delete items while viewing a read-only archive.");
+            }
+            const list = loadVitaminsAndMedicinesDB();
+            const target = list[idx];
+            if (!target) return;
+            if (!confirm('Remove "' + target.name + '" from your Daily Vitamins and Medicines list?')) return;
+
+            list.splice(idx, 1);
+            saveVitaminsAndMedicinesDB(list);
+            renderVmSavedList();
+            renderLog();
+        }
+
+        function renderVmSavedList() {
+            const cont = document.getElementById('vmSavedListContainer');
+            if (!cont) return;
+            const list = loadVitaminsAndMedicinesDB();
+
+            if (list.length === 0) {
+                cont.innerHTML = '<div style="text-align:center; padding:26px 12px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; font-size:0.92em;">No vitamins or medicines added yet.<br>Click <strong>+Add</strong> above to search online or add manually.</div>';
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, idx) => {
+                const amtText = (item.amount !== null && item.amount !== undefined && item.amount !== '')
+                    ? (escapeVmHtml(item.amount) + ' ' + escapeVmHtml(item.unit || 'mg') + ' • ')
+                    : '';
+                const typeBadgeColor = item.categoryType === 'Medicine' ? '#dbeafe' : '#dcfce7';
+                const typeTextColor = item.categoryType === 'Medicine' ? '#1e40af' : '#166534';
+                const typeLabel = item.categoryType === 'Medicine' ? 'Medicine' : 'Vitamin/Supp';
+
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:11px 12px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px; background:white; gap:10px;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <strong style="color:#1e293b; font-size:0.96em; word-break:break-word;">${escapeVmHtml(item.name)}</strong>
+                                <span style="background:${typeBadgeColor}; color:${typeTextColor}; font-size:0.72em; font-weight:700; padding:1px 7px; border-radius:999px;">${typeLabel}</span>
+                            </div>
+                            <small style="color:#64748b; font-size:0.84em;">${amtText}${escapeVmHtml(item.frequency || 'Once daily')}</small>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                            <button type="button" onclick="openVmEntryForm(${idx})" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center;" title="Edit">${ICON_EDIT}</button>
+                            <button type="button" onclick="deleteVmEntry(${idx})" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center;" title="Delete">${ICON_DELETE}</button>
+                        </div>
+                    </div>
+                `;
+            });
+            cont.innerHTML = html;
+        }
+
+        function toggleVitaminDoseTaken(itemId, doseIdx, markTaken) {
+            if (isArchiveMode || recalledWeekData) {
+                alert("Cannot modify vitamin/medicine checkmarks while viewing an archived week.");
+                renderLog();
+                return;
+            }
+            if (!state.current) return;
+            if (!state.current.vitaminsTaken || typeof state.current.vitaminsTaken !== 'object') {
+                state.current.vitaminsTaken = {};
+            }
+
+            if (!markTaken) {
+                if (!confirm("Unmark this dose so the red checkbox reappears?")) {
+                    return;
+                }
+            }
+
+            const existingArr = Array.isArray(state.current.vitaminsTaken[itemId])
+                ? state.current.vitaminsTaken[itemId].slice()
+                : [];
+            while (existingArr.length <= doseIdx) {
+                existingArr.push(false);
+            }
+            existingArr[doseIdx] = Boolean(markTaken);
+            state.current.vitaminsTaken[itemId] = existingArr;
+
+            saveData();
+            renderLog();
+        }
+
+        function renderVitaminsAndMedicineLogSection(cont, vmList) {
+            const categoryKey = 'Vitamins and Medicine';
+            const headerContainer = document.createElement('div');
+            headerContainer.style.display = 'flex';
+            headerContainer.style.justifyContent = 'space-between';
+            headerContainer.style.alignItems = 'center';
+            headerContainer.style.marginTop = '10px';
+            headerContainer.style.marginBottom = '6px';
+            headerContainer.style.borderBottom = '1px solid #e5e7eb';
+            headerContainer.style.paddingBottom = '5px';
+
+            const headerTitle = document.createElement('h3');
+            headerTitle.style.margin = '0';
+            headerTitle.style.color = 'var(--text-muted)';
+            headerTitle.innerText = categoryKey;
+
+            const isCollapsed = window.logMealCollapseState && window.logMealCollapseState[categoryKey];
+            const toggleBtn = document.createElement('button');
+            toggleBtn.innerText = isCollapsed ? '+' : '−';
+            toggleBtn.style.background = '#6b7280';
+            toggleBtn.style.color = 'white';
+            toggleBtn.style.border = 'none';
+            toggleBtn.style.width = '24px';
+            toggleBtn.style.height = '24px';
+            toggleBtn.style.borderRadius = '4px';
+            toggleBtn.style.fontSize = '1.2em';
+            toggleBtn.style.lineHeight = '20px';
+            toggleBtn.style.cursor = 'pointer';
+            toggleBtn.style.padding = '0';
+            toggleBtn.style.fontWeight = 'bold';
+            toggleBtn.onclick = () => {
+                window.logMealCollapseState = window.logMealCollapseState || {};
+                window.logMealCollapseState[categoryKey] = !isCollapsed;
+                renderLog();
+            };
+
+            headerContainer.appendChild(headerTitle);
+            headerContainer.appendChild(toggleBtn);
+            cont.appendChild(headerContainer);
+
+            if (isCollapsed) return;
+
+            const takenMap = (state.current && state.current.vitaminsTaken) ? state.current.vitaminsTaken : {};
+
+            vmList.forEach(item => {
+                const doses = item.dosesPerDay || getDosesCountForFrequency(item.frequency);
+                const itemTakenArr = Array.isArray(takenMap[item.id]) ? takenMap[item.id] : [];
+
+                const row = document.createElement('div');
+                row.className = 'log-item';
+
+                let controlsHtml = '<div style="display:flex; align-items:center; gap:8px; margin-right:12px; flex-shrink:0;">';
+                let allTaken = true;
+                for (let d = 0; d < doses; d++) {
+                    const isDoseTaken = Boolean(itemTakenArr[d]);
+                    if (!isDoseTaken) allTaken = false;
+                    const doseTitle = doses > 1 ? ('Dose ' + (d + 1) + ' of ' + doses) : 'Confirm taken';
+                    const safeId = escapeVmHtml(item.id);
+                    controlsHtml += `
+                        <input type="checkbox" class="vm-red-checkbox"
+                            style="${isDoseTaken ? 'display:none;' : ''}"
+                            title="${doseTitle}"
+                            aria-label="${escapeVmHtml(item.name)} ${doseTitle}"
+                            onchange="toggleVitaminDoseTaken('${safeId}', ${d}, true)">
+                        <span class="vm-green-checkmark"
+                            style="${isDoseTaken ? 'display:inline-flex;' : 'display:none;'}"
+                            title="${doseTitle} confirmed (click to undo)"
+                            onclick="toggleVitaminDoseTaken('${safeId}', ${d}, false)">&#10003;</span>
+                    `;
+                }
+                controlsHtml += '</div>';
+
+                const amtDetail = (item.amount !== null && item.amount !== undefined && item.amount !== '')
+                    ? (escapeVmHtml(item.amount) + ' ' + escapeVmHtml(item.unit || 'mg') + ' • ')
+                    : '';
+                const statusNote = allTaken
+                    ? ' <span style="color:#16a34a; font-weight:600;">• Taken</span>'
+                    : '';
+
+                row.innerHTML = `
+                    ${controlsHtml}
+                    <div style="flex-grow:1; padding-right:8px;">
+                        <strong>${escapeVmHtml(item.name)}</strong><br>
+                        <small>${amtDetail}${escapeVmHtml(item.frequency || 'Once daily')}${statusNote}</small>
+                    </div>
+                `;
+                cont.appendChild(row);
+            });
         }
 
         function importSharedLogData(event) {
@@ -6054,6 +7266,7 @@
                     renderLog();
                     renderBarometers();
                     alert(`Successfully imported ${importedCount} items directly into your Daily Log!`);
+                    checkDailyThresholdAlerts();
 
                 } catch (err) {
                     console.error(err);
@@ -6750,7 +7963,7 @@
                         const data = await res.json();
                         clearTimeout(id);
                         return data;
-                    } catch { return null; }
+                    } catch (e) { return null; }
                 };
 
                 const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=10`;
@@ -6797,11 +8010,11 @@
                         upc: p.code,
                         source: 'OFF',
                         foodNutrients: [
-                            { nutrientId: 1008, value: parseFloat(p.nutriments?.['energy-kcal_100g'] || 0) },
-                            { nutrientId: 1003, value: parseFloat(p.nutriments?.proteins_100g || 0) },
-                            { nutrientId: 1004, value: parseFloat(p.nutriments?.fat_100g || 0) },
-                            { nutrientId: 1005, value: parseFloat(p.nutriments?.carbohydrates_100g || 0) },
-                            { nutrientId: 1079, value: parseFloat(p.nutriments?.fiber_100g || 0) }
+                            { nutrientId: 1008, value: parseFloat((p.nutriments && p.nutriments['energy-kcal_100g']) || 0) },
+                            { nutrientId: 1003, value: parseFloat((p.nutriments && p.nutriments.proteins_100g) || 0) },
+                            { nutrientId: 1004, value: parseFloat((p.nutriments && p.nutriments.fat_100g) || 0) },
+                            { nutrientId: 1005, value: parseFloat((p.nutriments && p.nutriments.carbohydrates_100g) || 0) },
+                            { nutrientId: 1079, value: parseFloat((p.nutriments && p.nutriments.fiber_100g) || 0) }
                         ]
                     }));
                 }
@@ -8063,8 +9276,10 @@
                     }
 
                     // Enter Archive Mode
+                    archiveVitaminsAndMedicines = Array.isArray(importedData.vitaminsAndMedicines) ? importedData.vitaminsAndMedicines : [];
                     appData = importedData;
                     isArchiveMode = true;
+                    updateVmProfileBadge();
 
                     document.getElementById('archiveModeBanner').style.display = 'block';
                     document.body.style.paddingTop = '50px'; // Give room for banner
