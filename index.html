@@ -1431,7 +1431,7 @@
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0;   ">Scan or Enter Barcode</h3>
-                <button onclick="document.getElementById('scannerModal').style.display='none'"
+                <button onclick="stopBarcodeScan()"
                     style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
             </div>
 
@@ -2170,19 +2170,21 @@
                             style="background:none; border:none; color:#64748b; font-size:1.3em; cursor:pointer; padding:0; line-height:1;">&times;</button>
                     </div>
 
-                    <!-- Online Lookup (NIH DSLD & RxNorm) -->
+                    <!-- Online Lookup (NIH DSLD, RxNorm & UPC Barcode) -->
                     <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:12px; margin-bottom:14px;">
-                        <label style="font-size:0.84em; color:#3730a3; margin-bottom:6px;">Online Lookup (Optional — NIH RxNorm &amp; Supplement Database)</label>
+                        <label style="font-size:0.84em; color:#3730a3; margin-bottom:6px;">Online Lookup (Optional — Search Name or Scan Barcode)</label>
                         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
                             <select id="vmLookupCategorySelect" onchange="onVmLookupTypeChange()"
                                 style="flex:1; min-width:190px; padding:9px 10px; font-size:0.9em; border:1px solid #c7d2fe; border-radius:6px; background:white; font-weight:600; color:#312e81;">
                                 <option value="supplement">Vitamin / Supplement (NIH DSLD)</option>
                                 <option value="medicine">Medicine (NIH RxNorm)</option>
                             </select>
+                            <button type="button" id="vmBarcodeScanBtn" onclick="startVmBarcodeScan()"
+                                style="background:#10b981; color:white; border:none; padding:9px 14px; border-radius:6px; font-weight:600; font-size:0.9em; cursor:pointer; white-space:nowrap;">📷 Barcode</button>
                         </div>
                         <div style="display:flex; gap:8px;">
                             <input type="text" id="vmLookupQueryInput"
-                                placeholder="e.g. Vitamin D3, B12, Lisinopril, Advil..."
+                                placeholder="e.g. Vitamin D3, Lisinopril, or UPC barcode..."
                                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); searchVmOnline(); }"
                                 style="flex:1; padding:9px 10px; font-size:0.92em; background:white; border:1px solid #cbd5e1; border-radius:6px;">
                             <button type="button" id="vmLookupSearchBtn" onclick="searchVmOnline()"
@@ -5690,6 +5692,7 @@
                 html5QrcodeScanner = new Html5Qrcode("reader");
             }
 
+            try {
             html5QrcodeScanner.start(
                 { facingMode: "environment" },
                 {
@@ -5697,8 +5700,13 @@
                     qrbox: { width: 250, height: 150 }
                 },
                 (decodedText) => {
+                    const isVmScan = vmBarcodeMode;
                     stopBarcodeScan();
-                    fetchOpenFoodFacts(decodedText);
+                    if (isVmScan) {
+                        lookupVmByBarcode(decodedText);
+                    } else {
+                        fetchOpenFoodFacts(decodedText);
+                    }
                 }
             ).then(() => {
                 statusText.innerHTML = "Point camera at barcode...";
@@ -5725,25 +5733,44 @@
                 console.error("Camera error:", err);
                 statusText.innerHTML = "Camera access denied. Ensure page is HTTPS and permissions are allowed.";
             });
+            } catch (syncErr) {
+                console.warn("Scanner transition busy:", syncErr);
+                statusText.innerHTML = "Initializing camera (or enter barcode manually below)...";
+            }
         }
 
         function stopBarcodeScan() {
             const wasRecipeMode = recipeBarcodeMode;
+            const wasVmMode = vmBarcodeMode;
+            vmBarcodeMode = false;
             document.getElementById('scannerModal').style.display = 'none';
             if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
                 html5QrcodeScanner.stop().catch(err => console.error("Error stopping scanner", err));
             }
-            // Restore the recipe modal if the scanner was opened from within it
+            // Restore the recipe or vitamins/medicines modal if the scanner was opened from within it
             if (wasRecipeMode) {
                 document.getElementById('recipeModal').style.display = 'flex';
+            }
+            if (wasVmMode) {
+                const vmModal = document.getElementById('vitaminsMedicinesModal');
+                if (vmModal) vmModal.style.display = 'flex';
+                const formCont = document.getElementById('vmEntryFormContainer');
+                if (formCont && formCont.style.display === 'none') {
+                    openVmEntryForm(-1);
+                }
             }
         }
 
         function manualBarcodeSubmit() {
             const barcode = document.getElementById('manualBarcode').value.trim();
             if (barcode) {
+                const isVmScan = vmBarcodeMode;
                 stopBarcodeScan();
-                fetchOpenFoodFacts(barcode);
+                if (isVmScan) {
+                    lookupVmByBarcode(barcode);
+                } else {
+                    fetchOpenFoodFacts(barcode);
+                }
             }
         }
 
@@ -6469,6 +6496,7 @@
         let vmCurrentLookupResults = [];
         let vmCurrentSupplementIngredients = [];
         let vmCurrentSourceLabel = 'Manual';
+        let vmBarcodeMode = false;
 
         function escapeVmHtml(str) {
             return String(str === undefined || str === null ? '' : str)
@@ -6616,6 +6644,43 @@
             }
         }
 
+        function extractSupplementRowsFromLabelData(data) {
+            const normalizeVmUnit = (u) => {
+                const s = String(u || '').trim().toLowerCase();
+                if (s === 'mcg' || s.indexOf('microgram') !== -1 || s === 'ug' || s === 'µg') return 'mcg';
+                if (s === 'mg' || s.indexOf('milligram') !== -1) return 'mg';
+                if (s === 'g' || s.indexOf('gram') === 0) return 'g';
+                if (s === 'iu' || s.indexOf('international unit') !== -1) return 'IU';
+                return null;
+            };
+
+            const rows = [];
+            const ingRows = (data && Array.isArray(data.ingredientRows)) ? data.ingredientRows : [];
+            const skipMacroNames = [
+                'calories', 'calories from fat', 'fat', 'total fat', 'saturated fat', 'trans fat',
+                'polyunsaturated fat', 'monounsaturated fat', 'cholesterol', 'carbohydrate', 'carbohydrates',
+                'total carbohydrate', 'total carbohydrates', 'dietary fiber', 'fiber', 'soluble fiber',
+                'insoluble fiber', 'sugar', 'sugars', 'total sugar', 'total sugars', 'added sugar',
+                'added sugars', 'sugar alcohol', 'sugar alcohols', 'protein'
+            ];
+
+            ingRows.forEach(row => {
+                if (!row || !row.name) return;
+                if (skipMacroNames.indexOf(String(row.name).trim().toLowerCase()) !== -1) return;
+                const qList = Array.isArray(row.quantity) ? row.quantity : [];
+                const qObj = qList.length > 0 ? qList[0] : null;
+                const normUnit = qObj ? normalizeVmUnit(qObj.unit) : null;
+                if (normUnit) {
+                    rows.push({
+                        name: row.name,
+                        amount: parseFloat(qObj.quantity) || 0,
+                        unit: normUnit
+                    });
+                }
+            });
+            return rows;
+        }
+
         // 3. Fetch exact Supplement Facts / Strengths via NIH DSLD v9 Label endpoint
         async function getSupplementDetails(dsldId) {
             const controller = new AbortController();
@@ -6625,38 +6690,436 @@
                 const res = await fetch(url, { signal: controller.signal });
                 const data = await res.json();
                 clearTimeout(timerId);
-
-                const normalizeVmUnit = (u) => {
-                    const s = String(u || '').trim().toLowerCase();
-                    if (s === 'mcg' || s.indexOf('microgram') !== -1 || s === 'ug' || s === 'µg') return 'mcg';
-                    if (s === 'mg' || s.indexOf('milligram') !== -1) return 'mg';
-                    if (s === 'g' || s.indexOf('gram') === 0) return 'g';
-                    if (s === 'iu' || s.indexOf('international unit') !== -1) return 'IU';
-                    return null;
-                };
-
-                const rows = [];
-                const ingRows = (data && Array.isArray(data.ingredientRows)) ? data.ingredientRows : [];
-                const skipMacroNames = ['calories', 'total fat', 'saturated fat', 'trans fat', 'cholesterol', 'total carbohydrate', 'dietary fiber', 'total sugars', 'added sugars', 'protein'];
-
-                ingRows.forEach(row => {
-                    if (!row || !row.name) return;
-                    if (skipMacroNames.indexOf(String(row.name).trim().toLowerCase()) !== -1) return;
-                    const qList = Array.isArray(row.quantity) ? row.quantity : [];
-                    const qObj = qList.length > 0 ? qList[0] : null;
-                    const normUnit = qObj ? normalizeVmUnit(qObj.unit) : null;
-                    if (normUnit) {
-                        rows.push({
-                            name: row.name,
-                            amount: parseFloat(qObj.quantity) || 0,
-                            unit: normUnit
-                        });
-                    }
-                });
-                return rows;
+                return extractSupplementRowsFromLabelData(data);
             } catch (err) {
                 clearTimeout(timerId);
                 throw err;
+            }
+        }
+
+        function parseStrengthStringToVmUnit(str) {
+            const raw = String(str || '').trim();
+            const m = raw.match(/(\d+(?:\.\d+)?)\s*(MCG|UG|MICROGRAMS?|MG|MILLIGRAMS?|G|GRAMS?|IU|INTERNATIONAL\s+UNITS?|UNT)\b/i);
+            if (!m) return null;
+            let numVal = parseFloat(m[1]);
+            if (isNaN(numVal)) return null;
+            const u = m[2].toUpperCase();
+            if (u === 'MCG' || u === 'UG' || u.indexOf('MICROGRAM') === 0) {
+                return { amount: numVal, unit: 'mcg' };
+            }
+            if (u === 'G' || u.indexOf('GRAM') === 0) {
+                return { amount: numVal, unit: 'g' };
+            }
+            if (u === 'IU' || u === 'UNT' || u.indexOf('INTERNATIONAL') === 0) {
+                return { amount: numVal, unit: 'IU' };
+            }
+            // MG — convert sub-0.1 mg strengths (e.g. 0.05 mg -> 50 mcg)
+            if (numVal > 0 && numVal < 0.1) {
+                return { amount: Math.round(numVal * 10000) / 10, unit: 'mcg' };
+            }
+            return { amount: numVal, unit: 'mg' };
+        }
+
+        // 4. Barcode / UPC Lookup Helpers for Supplements (NIH DSLD) & Medicines (OpenFDA / RxNorm / OFF)
+        async function searchSupplementByBarcode(digits, upc12) {
+            const queries = [];
+            if (upc12 && upc12.length === 12) {
+                queries.push('"' + upc12.charAt(0) + ' ' + upc12.substring(1, 6) + ' ' + upc12.substring(6, 11) + ' ' + upc12.charAt(11) + '"');
+                queries.push('"0 ' + upc12.substring(0, 6) + ' ' + upc12.substring(6, 12) + '"');
+                queries.push('"' + upc12 + '"');
+            }
+            const rawQuoted = '"' + digits + '"';
+            if (queries.indexOf(rawQuoted) === -1) {
+                queries.push(rawQuoted);
+            }
+
+            for (let qIdx = 0; qIdx < queries.length; qIdx++) {
+                const controller = new AbortController();
+                const timerId = setTimeout(() => controller.abort(), 8000);
+                try {
+                    const url = 'https://api.ods.od.nih.gov/dsld/v9/search-filter?q=' + encodeURIComponent(queries[qIdx]) + '&size=6';
+                    const res = await fetch(url, { signal: controller.signal });
+                    clearTimeout(timerId);
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const hits = (data && Array.isArray(data.hits)) ? data.hits : [];
+                    if (hits.length === 0) continue;
+
+                    // Verify label upcSku digits against scanned UPC and extract Supplement Facts in one pass
+                    let fallbackCandidate = null;
+                    const maxCheck = Math.min(hits.length, 4);
+                    for (let i = 0; i < maxCheck; i++) {
+                        const hitId = hits[i]._id || hits[i].id;
+                        if (!hitId) continue;
+                        const lblCtrl = new AbortController();
+                        const lblTimer = setTimeout(() => lblCtrl.abort(), 8000);
+                        try {
+                            const lblRes = await fetch('https://api.ods.od.nih.gov/dsld/v9/label/' + encodeURIComponent(hitId), { signal: lblCtrl.signal });
+                            clearTimeout(lblTimer);
+                            if (!lblRes.ok) continue;
+                            const lblData = await lblRes.json();
+                            const lblDigits = String(lblData.upcSku || '').replace(/\D/g, '');
+                            const candidate = {
+                                dsldId: String(hitId),
+                                fullName: lblData.fullName || (hits[i]._source && hits[i]._source.fullName) || 'Supplement',
+                                brandName: lblData.brandName || (hits[i]._source && hits[i]._source.brandName) || '',
+                                ingredients: extractSupplementRowsFromLabelData(lblData)
+                            };
+                            if (!fallbackCandidate) fallbackCandidate = candidate;
+                            if (lblDigits && (
+                                lblDigits === digits ||
+                                (upc12 && lblDigits === upc12) ||
+                                (upc12 && lblDigits === ('0' + upc12))
+                            )) {
+                                return candidate;
+                            }
+                        } catch (lblErr) {
+                            clearTimeout(lblTimer);
+                        }
+                    }
+                    if (fallbackCandidate && hits.length <= 2) {
+                        return fallbackCandidate;
+                    }
+                } catch (err) {
+                    clearTimeout(timerId);
+                }
+            }
+            return null;
+        }
+
+        async function searchMedicineByBarcode(digits, upc12, gtin13) {
+            const cands = [];
+            [gtin13, upc12, digits, gtin13 ? ('0' + gtin13) : ''].forEach(c => {
+                if (c && cands.indexOf(c) === -1) cands.push(c);
+            });
+            const searchExpr = cands.map(c => 'openfda.upc:"' + c + '"').join('+');
+
+            // Step A: OpenFDA Drug NDC directory (includes active_ingredients strengths)
+            if (cands.length > 0) {
+                const ctrl1 = new AbortController();
+                const t1 = setTimeout(() => ctrl1.abort(), 8000);
+                try {
+                    const ndcUrl = 'https://api.fda.gov/drug/ndc.json?search=' + searchExpr + '&limit=5';
+                    const res = await fetch(ndcUrl, { signal: ctrl1.signal });
+                    clearTimeout(t1);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const results = (data && Array.isArray(data.results)) ? data.results : [];
+                        if (results.length > 0) {
+                            const r = results[0];
+                            const brand = String(r.brand_name || '').trim();
+                            const generic = String(r.generic_name || '').trim();
+                            let displayName = brand || generic || ('Scanned Medication (' + digits + ')');
+                            if (brand && generic && brand.toLowerCase() !== generic.toLowerCase()) {
+                                displayName = brand + ' (' + generic + ')';
+                            }
+                            const ingList = [];
+                            if (Array.isArray(r.active_ingredients)) {
+                                r.active_ingredients.forEach(ing => {
+                                    if (!ing) return;
+                                    const parsed = parseStrengthStringToVmUnit(ing.strength);
+                                    if (parsed) {
+                                        ingList.push({
+                                            name: ing.name || displayName,
+                                            amount: parsed.amount,
+                                            unit: parsed.unit
+                                        });
+                                    }
+                                });
+                            }
+                            return {
+                                displayName: displayName,
+                                brandName: brand,
+                                ingredients: ingList,
+                                source: 'OpenFDA (UPC)'
+                            };
+                        }
+                    }
+                } catch (e1) {
+                    clearTimeout(t1);
+                }
+
+                // Step B: OpenFDA Drug SPL Label endpoint fallback
+                const ctrl2 = new AbortController();
+                const t2 = setTimeout(() => ctrl2.abort(), 8000);
+                try {
+                    const lblUrl = 'https://api.fda.gov/drug/label.json?search=' + searchExpr + '&limit=3';
+                    const res2 = await fetch(lblUrl, { signal: ctrl2.signal });
+                    clearTimeout(t2);
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        const results2 = (data2 && Array.isArray(data2.results)) ? data2.results : [];
+                        if (results2.length > 0) {
+                            const ofda = results2[0].openfda || {};
+                            const brand = (Array.isArray(ofda.brand_name) && ofda.brand_name[0]) ? String(ofda.brand_name[0]).trim() : '';
+                            const generic = (Array.isArray(ofda.generic_name) && ofda.generic_name[0]) ? String(ofda.generic_name[0]).trim() : '';
+                            let displayName = brand || generic || ('Scanned Medication (' + digits + ')');
+                            if (brand && generic && brand.toLowerCase() !== generic.toLowerCase()) {
+                                displayName = brand + ' (' + generic + ')';
+                            }
+                            return {
+                                displayName: displayName,
+                                brandName: brand,
+                                ingredients: [],
+                                source: 'OpenFDA (UPC)'
+                            };
+                        }
+                    }
+                } catch (e2) {
+                    clearTimeout(t2);
+                }
+            }
+
+            // Step C: US Drug UPC-A starting with '3' embeds 10-digit NDC in digits 2..11 — check NIH RxNorm NDC status
+            if (upc12 && upc12.length === 12 && upc12.charAt(0) === '3') {
+                const ndcCandidates = [upc12.substring(1, 11), '0' + upc12.substring(1, 11)];
+                for (let nIdx = 0; nIdx < ndcCandidates.length; nIdx++) {
+                    const ctrl3 = new AbortController();
+                    const t3 = setTimeout(() => ctrl3.abort(), 6000);
+                    try {
+                        const rxUrl = 'https://rxnav.nlm.nih.gov/REST/ndcstatus.json?ndc=' + encodeURIComponent(ndcCandidates[nIdx]);
+                        const rxRes = await fetch(rxUrl, { signal: ctrl3.signal });
+                        clearTimeout(t3);
+                        if (rxRes.ok) {
+                            const rxData = await rxRes.json();
+                            const conceptName = rxData && rxData.ndcStatus && rxData.ndcStatus.conceptName;
+                            if (conceptName) {
+                                const parsedRx = parseRxNormConcept(conceptName);
+                                const ingList = parsedRx.amount !== ''
+                                    ? [{ name: parsedRx.name, amount: parsedRx.amount, unit: parsedRx.unit }]
+                                    : [];
+                                return {
+                                    displayName: parsedRx.name,
+                                    brandName: '',
+                                    ingredients: ingList,
+                                    source: 'RxNorm (NDC)'
+                                };
+                            }
+                        }
+                    } catch (e3) {
+                        clearTimeout(t3);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        async function searchOpenFoodFactsForVmBarcode(digits) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 8000);
+            try {
+                const res = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(digits), { signal: ctrl.signal });
+                clearTimeout(t);
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (!data || data.status === 0 || !data.product || !data.product.product_name) return null;
+                const p = data.product;
+                const prodName = String(p.product_name).trim();
+                const brand = String(p.brands || '').trim();
+                let displayName = prodName;
+                if (brand && prodName.toLowerCase().indexOf(brand.toLowerCase()) === -1) {
+                    displayName = prodName + ' (' + brand + ')';
+                }
+                const parsedStrength = parseStrengthStringToVmUnit(prodName) || parseStrengthStringToVmUnit(p.serving_size || '');
+                return {
+                    displayName: displayName,
+                    parsedStrength: parsedStrength,
+                    source: 'Open Food Facts (UPC)'
+                };
+            } catch (e) {
+                clearTimeout(t);
+                return null;
+            }
+        }
+
+        function startVmBarcodeScan() {
+            if (isArchiveMode) {
+                alert("Cannot scan barcodes while viewing a read-only archive.");
+                return;
+            }
+            vmBarcodeMode = true;
+            customFoodBarcodeMode = false;
+            const vmModal = document.getElementById('vitaminsMedicinesModal');
+            if (vmModal) vmModal.style.display = 'none';
+            startBarcodeScan(false);
+        }
+
+        async function lookupVmByBarcode(rawBarcode) {
+            const digits = String(rawBarcode || '').replace(/\D/g, '');
+            if (digits.length < 6) {
+                return alert("Invalid UPC / barcode. Please scan or enter at least 6 digits.");
+            }
+
+            const vmModal = document.getElementById('vitaminsMedicinesModal');
+            if (vmModal) vmModal.style.display = 'flex';
+            const formCont = document.getElementById('vmEntryFormContainer');
+            if (formCont && formCont.style.display === 'none') {
+                openVmEntryForm(-1);
+            }
+
+            const queryInput = document.getElementById('vmLookupQueryInput');
+            const typeSelect = document.getElementById('vmLookupCategorySelect');
+            const btn = document.getElementById('vmLookupSearchBtn');
+            const scanBtn = document.getElementById('vmBarcodeScanBtn');
+            const statusText = document.getElementById('vmLookupStatusText');
+            const resultsCont = document.getElementById('vmLookupResultsContainer');
+            const resultsSelect = document.getElementById('vmLookupResultsSelect');
+            const ingCont = document.getElementById('vmSupplementIngredientsContainer');
+            const ingSelect = document.getElementById('vmSupplementIngredientsSelect');
+            const nameInput = document.getElementById('vmNameInput');
+            const amtInput = document.getElementById('vmAmountInput');
+            const unitSelect = document.getElementById('vmUnitSelect');
+
+            if (queryInput) queryInput.value = digits;
+            if (resultsCont) resultsCont.style.display = 'none';
+            if (ingCont) ingCont.style.display = 'none';
+            if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+            if (scanBtn) scanBtn.disabled = true;
+            if (statusText) {
+                statusText.style.display = 'block';
+                statusText.style.color = '#475569';
+                statusText.textContent = 'Looking up barcode ' + digits + ' across NIH Supplement & FDA Medication databases...';
+            }
+
+            let upc12 = '';
+            if (digits.length === 12) upc12 = digits;
+            else if (digits.length === 13 && digits.charAt(0) === '0') upc12 = digits.substring(1);
+            else if (digits.length === 14 && digits.substring(0, 2) === '00') upc12 = digits.substring(2);
+            else if (digits.length === 11) upc12 = '0' + digits;
+            const gtin13 = upc12 ? ('0' + upc12) : (digits.length === 13 ? digits : '');
+
+            const preferredMode = typeSelect ? typeSelect.value : 'supplement';
+
+            const applySupplementMatch = (suppMatch) => {
+                if (typeSelect) typeSelect.value = 'supplement';
+                const productDisplay = suppMatch.brandName
+                    ? (suppMatch.fullName + ' (' + suppMatch.brandName + ')')
+                    : suppMatch.fullName;
+                if (nameInput) nameInput.value = productDisplay;
+                vmCurrentSourceLabel = 'NIH DSLD (UPC)';
+                vmCurrentLookupResults = [suppMatch];
+                vmCurrentSupplementIngredients = suppMatch.ingredients || [];
+
+                if (resultsSelect) {
+                    const brandPrefix = suppMatch.brandName ? (suppMatch.brandName + ' — ') : '';
+                    resultsSelect.innerHTML = '<option value="0" selected>' + escapeVmHtml(brandPrefix + suppMatch.fullName) + '</option>';
+                }
+                if (resultsCont) resultsCont.style.display = 'block';
+
+                if (vmCurrentSupplementIngredients.length === 1) {
+                    const onlyIng = vmCurrentSupplementIngredients[0];
+                    if (amtInput && onlyIng.amount > 0) amtInput.value = onlyIng.amount;
+                    if (unitSelect && onlyIng.unit) unitSelect.value = onlyIng.unit;
+                } else if (vmCurrentSupplementIngredients.length > 1) {
+                    let ingOpts = '<option value="PRODUCT" selected>Keep Product Name: ' + escapeVmHtml(productDisplay) + '</option>';
+                    vmCurrentSupplementIngredients.forEach((ing, i) => {
+                        ingOpts += '<option value="' + i + '">' + escapeVmHtml(ing.name + ' — ' + ing.amount + ' ' + ing.unit) + '</option>';
+                    });
+                    if (ingSelect) ingSelect.innerHTML = ingOpts;
+                    if (ingCont) ingCont.style.display = 'block';
+                    const firstIng = vmCurrentSupplementIngredients[0];
+                    if (firstIng) {
+                        if (amtInput && firstIng.amount > 0) amtInput.value = firstIng.amount;
+                        if (unitSelect && firstIng.unit) unitSelect.value = firstIng.unit;
+                    }
+                }
+
+                if (statusText) {
+                    statusText.style.color = '#059669';
+                    statusText.textContent = 'Matched UPC ' + digits + ' in NIH Supplement Database! Review details below and click Save to List.';
+                }
+            };
+
+            const applyMedicineMatch = (medMatch) => {
+                if (typeSelect) typeSelect.value = 'medicine';
+                if (nameInput) nameInput.value = medMatch.displayName;
+                vmCurrentSourceLabel = medMatch.source || 'OpenFDA (UPC)';
+                vmCurrentLookupResults = [{ fullName: medMatch.displayName, brandName: '' }];
+                vmCurrentSupplementIngredients = medMatch.ingredients || [];
+
+                if (vmCurrentSupplementIngredients.length === 1) {
+                    const onlyIng = vmCurrentSupplementIngredients[0];
+                    if (amtInput && onlyIng.amount > 0) amtInput.value = onlyIng.amount;
+                    if (unitSelect && onlyIng.unit) unitSelect.value = onlyIng.unit;
+                } else if (vmCurrentSupplementIngredients.length > 1) {
+                    let ingOpts = '<option value="PRODUCT" selected>Keep Medication Name: ' + escapeVmHtml(medMatch.displayName) + '</option>';
+                    vmCurrentSupplementIngredients.forEach((ing, i) => {
+                        ingOpts += '<option value="' + i + '">' + escapeVmHtml(ing.name + ' — ' + ing.amount + ' ' + ing.unit) + '</option>';
+                    });
+                    if (ingSelect) ingSelect.innerHTML = ingOpts;
+                    if (ingCont) ingCont.style.display = 'block';
+                    const firstIng = vmCurrentSupplementIngredients[0];
+                    if (firstIng) {
+                        if (amtInput && firstIng.amount > 0) amtInput.value = firstIng.amount;
+                        if (unitSelect && firstIng.unit) unitSelect.value = firstIng.unit;
+                    }
+                }
+
+                if (statusText) {
+                    statusText.style.color = '#059669';
+                    statusText.textContent = 'Matched UPC ' + digits + ' (' + medMatch.displayName + '). Review frequency & amount below, then click Save to List.';
+                }
+            };
+
+            try {
+                const pair = await Promise.all([
+                    searchSupplementByBarcode(digits, upc12),
+                    searchMedicineByBarcode(digits, upc12, gtin13)
+                ]);
+                const suppMatch = pair[0];
+                const medMatch = pair[1];
+
+                if (preferredMode === 'medicine') {
+                    if (medMatch) {
+                        applyMedicineMatch(medMatch);
+                        return;
+                    }
+                    if (suppMatch) {
+                        applySupplementMatch(suppMatch);
+                        return;
+                    }
+                } else {
+                    if (suppMatch) {
+                        applySupplementMatch(suppMatch);
+                        return;
+                    }
+                    if (medMatch) {
+                        applyMedicineMatch(medMatch);
+                        return;
+                    }
+                }
+
+                // Fallback: Check Open Food Facts for store-brand or international supplements/items
+                const offMatch = await searchOpenFoodFactsForVmBarcode(digits);
+                if (offMatch) {
+                    if (nameInput) nameInput.value = offMatch.displayName;
+                    vmCurrentSourceLabel = offMatch.source;
+                    if (offMatch.parsedStrength) {
+                        if (amtInput) amtInput.value = offMatch.parsedStrength.amount;
+                        if (unitSelect) unitSelect.value = offMatch.parsedStrength.unit;
+                    }
+                    if (statusText) {
+                        statusText.style.color = '#059669';
+                        statusText.textContent = 'Matched UPC ' + digits + ' via Open Food Facts. Verify amount & unit below, then click Save to List.';
+                    }
+                    return;
+                }
+
+                if (statusText) {
+                    statusText.style.color = '#b45309';
+                    statusText.textContent = 'No online match found for UPC ' + digits + '. Please search by name above or enter details manually below.';
+                }
+                if (nameInput) nameInput.focus();
+            } catch (err) {
+                console.error("Barcode lookup error:", err);
+                if (statusText) {
+                    statusText.style.color = '#ef4444';
+                    statusText.textContent = 'Barcode lookup unavailable right now. Please enter details manually below.';
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Lookup'; }
+                if (scanBtn) scanBtn.disabled = false;
             }
         }
 
@@ -6800,7 +7263,10 @@
 
             const query = queryInput ? queryInput.value.trim() : '';
             if (!query) {
-                return alert("Please enter a vitamin, supplement, or medicine name to search online.");
+                return alert("Please enter a vitamin, supplement, medicine name, or UPC barcode to search online.");
+            }
+            if (/^\d[\d\s\-]{5,17}\d$/.test(query)) {
+                return lookupVmByBarcode(query);
             }
 
             const mode = typeSelect ? typeSelect.value : 'supplement';
