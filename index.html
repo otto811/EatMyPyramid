@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v8.6</title>
+    <title>EatMyPyramid v9.0</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "8.6";
+        const APP_VERSION = "9.0";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -589,13 +589,52 @@
         }
 
         #foodSelect:invalid,
+        .waterfall-food-select:invalid,
         #recipeFoodSelect:invalid {
             color: #6b7280;
         }
 
         #foodSelect option,
+        .waterfall-food-select option,
         #recipeFoodSelect option {
             color: #000;
+        }
+
+        .waterfall-item-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .waterfall-expand-btn {
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            min-width: 32px;
+            height: 44px;
+            font-size: 0.9em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-weight: bold;
+            box-shadow: none !important;
+        }
+
+        .waterfall-expand-btn:hover {
+            background: #cbd5e1;
+            box-shadow: none !important;
+        }
+
+        .waterfall-details-drawer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e1;
         }
     
         button, .btn, [role="button"], input[type="button"], input[type="submit"] {
@@ -753,7 +792,7 @@
                             </div>
                         </div>
                         <div id="appVersionDisplay"
-                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v8.6)
+                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v9.0)
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
@@ -950,82 +989,29 @@
                             </div>
 
                             <div style="display:flex; gap:8px;">
-                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli, Green Beans"
+                                <input type="text" id="searchInput" placeholder="e.g., Big Mac, Broccoli; Green Beans"
                                     style="flex: 1 1 0;">
                                 <button id="searchBtn" onclick="searchDatabases()"
-                                    style="padding: 6px 2px; font-size: 0.85em; white-space:nowrap;">Search</button>
+                                    style="padding: 6px 2px; font-size: 0.85em; white-space:nowrap; box-shadow:none !important;">Search</button>
                             </div>
+                            <small style="color:#64748b; display:block; margin-top:4px; font-size:0.78em;">Tip: Enter multiple items separated by a comma (<strong>,</strong>) or semicolon (<strong>;</strong>).</small>
                         </div>
 
-                        <div class="form-group">
-                            <div style="display: flex; gap: 8px; align-items: flex-end; width: 100%;">
-                                <div style="flex: 1 1 0; min-width: 0;">
-                                    <select id="foodSelect" required onchange="onFoodSelectChange()"
-                                        style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;">
-                                        <option value="" disabled selected>search results</option>
-                                    </select>
-                                </div>
-                                <div style="flex: none;">
-                                    <input type="number" id="servingInput" value="" placeholder="servings" min="0.1"
-                                        step="0.1" onchange="updatePreview()"
-                                        style="width: 50px; padding: 8px 4px; font-size: 0.85em; box-sizing: border-box; line-height: 1.2; height: 44px;">
-                                </div>
-                                <div style="flex: none; display: flex; align-items: center; gap: 4px;">
-                                    <button onclick="showLogFoodModal()"
-                                        style="padding: 6px 2px; font-size: 0.85em; color: white; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2; height: 44px;">Log
-                                        Food</button>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Waterfall Search Results Container -->
+                        <div id="searchWaterfallContainer"></div>
 
-
-                        <div class="form-group">
-                            <label>Consumed Amount (overrides servings)</label>
-                            <div class="amount-row">
-                                <input type="number" id="amountInput" placeholder="e.g. 250 or 8"
-                                    onchange="updatePreview()">
-                                <select id="unitSelect" onchange="updatePreview()">
-                                    <option value="oz" selected>ounces (oz)</option>
-                                    <option value="g">grams (g)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group preview-box" id="nutritionPreview">
-                            <em>Nutritional information for the selected item in Search Results field.</em>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label>Food Group Assignment (override for this item)</label>
-                            <select id="foodGroupSelect" style="width:100%; padding:10px; font-size:1em;"
-                                onchange="updatePreview()">
-                                <option value="">-- Auto-detect from description --</option>
-                                <option value="Fruit">Fruit</option>
-                                <option value="Vegetable">Vegetable</option>
-                                <option value="Proteins">Proteins</option>
-                                <option value="Dairy">Dairy</option>
-                                <option value="Grain">Grain</option>
-                                <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
-                                <option value="none">Do not count in any Food Group servings</option>
-                            </select>
-                            <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items
-                                like
-                                snacks, drinks, or condiments that shouldn't increment group totals. Water target is 8
-                                cups/day
-                                by
-                                default.</small>
+                        <!-- Log All to Meal Button (shown when 2+ unlogged waterfall items are active) -->
+                        <div id="searchLogAllContainer" style="display:none; margin-bottom: 12px;">
+                            <button type="button" id="searchLogAllBtn" onclick="showLogFoodModal('ALL')"
+                                style="width:100%; background:#10b981; color:white; padding:10px 14px; font-size:0.92em; font-weight:700; border:none; border-radius:6px; cursor:pointer; box-shadow:none !important;">
+                                Log All Items to Meal
+                            </button>
                         </div>
 
                         <div class="form-group">
                             <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
-                                <button onclick="showCustomFoodModal(-1, 'Modify Search Item')"
-                                    style="flex: 1.2; background: #8b5cf6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Modify
-                                    Search Item</button>
-                                <button onclick="saveCurrentToMyFoods()"
-                                    style="flex: 1 1 0; background: var(--purple); padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">Save
-                                    to My Foods</button>
                                 <button onclick="showNewFoodEntryModal()"
-                                    style="flex: 1 1 0; background: #3b82f6; padding: 4px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 44px;">New
+                                    style="flex: 1 1 0; background: #3b82f6; padding: 8px; font-size: 0.9em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 42px; box-shadow:none !important;">New
                                     Food Entry</button>
                             </div>
                         </div>
@@ -2019,8 +2005,8 @@
             <div
                 style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:var(--primary);">Select Meal</h3>
-                <button onclick="closeMealSelectModal()"
-                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280;">&times;</button>
+                <button onclick="closeLogFoodModal()"
+                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; box-shadow:none !important;">&times;</button>
             </div>
             <p style="color:var(--text-muted); font-size:0.95em; margin-bottom:20px;">Which meal is this food for?
             </p>
@@ -2869,12 +2855,24 @@
         // ==================== GLOBAL VARIABLES & INITIALIZATION ====================
         let API_KEY = 'fWgRdnx6ddvUpeb5yRLc2LvrIz0fYE2zvyJaKtu7';  // Can be overridden by user's personal USDA API key
         let currentSearchResults = [];
+        let searchWaterfallSlots = [];    // Array of { slotIdx, query, results, visibleCount, expanded, logged }
+        let activeLogSlotIdx = 0;         // Slot index (number) or 'ALL' when logging from Search waterfall
         let html5QrcodeScanner = null;
 
         // Search result pagination state
         const SEARCH_INITIAL_COUNT = 10;  // number of closest matches shown initially
         const SEARCH_MORE_STEP = 10;      // how many more to reveal per "Show More" click
         let searchVisibleCount = SEARCH_INITIAL_COUNT;
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         // Recipe builder state
         let currentRecipeSearchResults = [];
@@ -3269,8 +3267,9 @@
             // Apply saved hide/reveal state for the four main sections
             applyVisibility();
 
-            // Set default unit selectors
-            const mainUnit = document.getElementById('unitSelect');
+            // Initialize default single-slot search waterfall & set default unit selectors
+            resetSearchWaterfallToDefault();
+            const mainUnit = document.getElementById('unitSelect_0');
             if (mainUnit) mainUnit.value = appData.preferredUnit || 'oz';
             const recUnit = document.getElementById('recipeUnitSelect');
             if (recUnit) recUnit.value = appData.preferredUnit || 'oz';
@@ -3402,14 +3401,17 @@
         function savePreferredUnit() {
             appData.preferredUnit = document.getElementById('preferredUnitInput').value || 'oz';
             saveData();
-            // Automatically update unit dropdowns dynamically so user sees effect
-            const mainUnit = document.getElementById('unitSelect');
-            if (mainUnit && (mainUnit.value === 'oz' || mainUnit.value === 'g')) mainUnit.value = appData.preferredUnit;
+            // Automatically update unit dropdowns across all active waterfall slots
+            searchWaterfallSlots.forEach((slot, idx) => {
+                if (slot && !slot.logged) {
+                    const uEl = getWaterfallSlotEl('unitSelect', idx);
+                    if (uEl && (uEl.value === 'oz' || uEl.value === 'g')) uEl.value = appData.preferredUnit;
+                    updatePreview(idx);
+                }
+            });
 
             const recUnit = document.getElementById('recipeUnitSelect');
             if (recUnit && (recUnit.value === 'oz' || recUnit.value === 'g')) recUnit.value = appData.preferredUnit;
-
-            updatePreview();
         }
 
         function saveGoalWeight() {
@@ -3678,22 +3680,191 @@
         }
 
         // Rebuild the visible search results dropdown based on searchVisibleCount
-        function renderSearchDropdown() {
-            const sel = document.getElementById('foodSelect');
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        // Helper to resolve DOM elements for a waterfall slot (also aliases slot 0 to legacy IDs for compatibility)
+        function getWaterfallSlotEl(baseId, slotIdx) {
+            const idx = (typeof slotIdx === 'number' && slotIdx >= 0) ? slotIdx : 0;
+            return document.getElementById(baseId + '_' + idx) || (idx === 0 ? document.getElementById(baseId) : null);
+        }
 
-            // Remove existing options except the placeholder
+        function createWaterfallSlotState(slotIdx, queryText) {
+            return {
+                slotIdx: slotIdx,
+                query: String(queryText || '').trim(),
+                results: [],
+                visibleCount: SEARCH_INITIAL_COUNT,
+                expanded: false, // Always start collapsed (▶) by default
+                logged: false
+            };
+        }
+
+        function resetSearchWaterfallToDefault() {
+            searchWaterfallSlots = [createWaterfallSlotState(0, '')];
+            currentSearchResults = searchWaterfallSlots[0].results;
+            renderSearchWaterfall();
+        }
+
+        function renderSearchWaterfall() {
+            const container = document.getElementById('searchWaterfallContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const prefUnit = (appData && appData.preferredUnit) ? appData.preferredUnit : 'oz';
+            const activeSlots = searchWaterfallSlots.filter(s => s && !s.logged);
+            const isMulti = searchWaterfallSlots.length > 1;
+
+            activeSlots.forEach(slot => {
+                const idx = slot.slotIdx;
+                const card = document.createElement('div');
+                card.className = 'waterfall-item-card';
+                card.id = 'waterfallCard_' + idx;
+
+                const queryBadgeHtml = slot.query
+                    ? `<span style="font-weight:700; color:#312e81; font-size:0.84em;">${isMulti ? ('#' + (idx + 1) + ': ') : ''}${escapeVmHtml(slot.query)}</span>`
+                    : `<span style="color:#64748b; font-size:0.82em;">Search Result</span>`;
+
+                card.innerHTML = `
+                    <div id="waterfallHeader_${idx}" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; min-height:18px; gap:6px; flex-wrap:wrap;">
+                        <div>${queryBadgeHtml}</div>
+                        <div id="searchShowMoreRow_${idx}" style="display:flex; align-items:center; gap:8px; font-size:0.8em; color:#6b7280;"></div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: flex-end; width: 100%;">
+                        <button type="button" id="waterfallExpandBtn_${idx}" class="waterfall-expand-btn"
+                            onclick="toggleWaterfallSlotDetails(${idx})"
+                            title="Expand / collapse Consumed Amount, Nutrition Preview, and Food Group options"
+                            aria-expanded="${slot.expanded ? 'true' : 'false'}">${slot.expanded ? '▼' : '▶'}</button>
+                        <div id="waterfallSelectWrap_${idx}" style="flex: 1 1 0; min-width: 0;">
+                            <select id="foodSelect_${idx}" class="waterfall-food-select" required onchange="onFoodSelectChange(${idx})"
+                                style="width: 100%; padding: 8px 4px; box-sizing: border-box; font-size: 0.85em; line-height: 1.2; height: 44px;">
+                                <option value="" disabled selected>search results</option>
+                            </select>
+                        </div>
+                        <div style="flex: none;">
+                            <input type="number" id="servingInput_${idx}" value="" placeholder="servings" min="0.1"
+                                step="0.1" onchange="updatePreview(${idx})"
+                                style="width: 54px; padding: 8px 4px; font-size: 0.85em; box-sizing: border-box; line-height: 1.2; height: 44px;">
+                        </div>
+                        <div style="flex: none; display: flex; align-items: center; gap: 4px;">
+                            <button type="button" onclick="showLogFoodModal(${idx})"
+                                style="padding: 6px 8px; font-size: 0.85em; color: white; margin: 0; border:none; border-radius:4px; cursor:pointer; white-space:nowrap; line-height: 1.2; height: 44px; box-shadow:none !important;">Log
+                                Food</button>
+                        </div>
+                    </div>
+                    <div id="searchLoadingIndicator_${idx}" style="display:none; font-size:0.78em; color:#64748b; margin-top:4px; font-style:italic;"></div>
+
+                    <!-- Collapsible Waterfall Details Drawer -->
+                    <div id="waterfallDetails_${idx}" class="waterfall-details-drawer" style="display:${slot.expanded ? 'block' : 'none'};">
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label>Consumed Amount (overrides servings)</label>
+                            <div class="amount-row">
+                                <input type="number" id="amountInput_${idx}" placeholder="e.g. 250 or 8"
+                                    onchange="updatePreview(${idx})">
+                                <select id="unitSelect_${idx}" onchange="updatePreview(${idx})">
+                                    <option value="oz" ${prefUnit === 'oz' ? 'selected' : ''}>ounces (oz)</option>
+                                    <option value="g" ${prefUnit === 'g' ? 'selected' : ''}>grams (g)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group preview-box" id="nutritionPreview_${idx}" style="margin-bottom:10px;">
+                            <em>Nutritional information for the selected item in Search Results field.</em>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label>Food Group Assignment (override for this item)</label>
+                            <select id="foodGroupSelect_${idx}" style="width:100%; padding:10px; font-size:0.95em;"
+                                onchange="updatePreview(${idx})">
+                                <option value="">-- Auto-detect from description --</option>
+                                <option value="Fruit">Fruit</option>
+                                <option value="Vegetable">Vegetable</option>
+                                <option value="Proteins">Proteins</option>
+                                <option value="Dairy">Dairy</option>
+                                <option value="Grain">Grain</option>
+                                <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                                <option value="none">Do not count in any Food Group servings</option>
+                            </select>
+                            <small style="color:#6b7280; display:block; margin-top:4px;">Choose "Do not count" for items
+                                like snacks, drinks, or condiments that shouldn't increment group totals.</small>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; align-items: stretch; width: 100%;">
+                            <button type="button" onclick="showCustomFoodModal(-1, 'Modify Search Item', ${idx})"
+                                style="flex: 1; background: #8b5cf6; padding: 6px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 40px; box-shadow:none !important;">Modify
+                                Search Item</button>
+                            <button type="button" onclick="saveCurrentToMyFoods(${idx})"
+                                style="flex: 1; background: var(--purple); padding: 6px; font-size: 0.85em; color: white; margin: 0; white-space: normal; line-height: 1.2; border:none; border-radius:4px; cursor:pointer; height: 40px; box-shadow:none !important;">Save
+                                to My Foods</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                if (slot.results && slot.results.length > 0) {
+                    renderSearchDropdown(idx);
+                }
+            });
+
+            updateLogAllButtonVisibility();
+        }
+
+        function toggleWaterfallSlotDetails(slotIdx) {
+            const slot = searchWaterfallSlots[slotIdx];
+            if (!slot) return;
+            slot.expanded = !slot.expanded;
+            const drawer = document.getElementById('waterfallDetails_' + slotIdx);
+            const btn = document.getElementById('waterfallExpandBtn_' + slotIdx);
+            if (drawer) drawer.style.display = slot.expanded ? 'block' : 'none';
+            if (btn) {
+                btn.textContent = slot.expanded ? '▼' : '▶';
+                btn.setAttribute('aria-expanded', slot.expanded ? 'true' : 'false');
+            }
+        }
+
+        function updateLogAllButtonVisibility() {
+            const logAllCont = document.getElementById('searchLogAllContainer');
+            const logAllBtn = document.getElementById('searchLogAllBtn');
+            if (!logAllCont || !logAllBtn) return;
+
+            const readySlots = searchWaterfallSlots.filter(slot => {
+                if (!slot || slot.logged) return false;
+                const sel = getWaterfallSlotEl('foodSelect', slot.slotIdx);
+                return Boolean(sel && sel.value !== '' && slot.results && slot.results[sel.value]);
+            });
+
+            if (readySlots.length >= 2) {
+                logAllCont.style.display = 'block';
+                logAllBtn.textContent = 'Log All ' + readySlots.length + ' Items to Meal';
+            } else {
+                logAllCont.style.display = 'none';
+            }
+        }
+
+        // Rebuild the visible search results dropdown for a given waterfall slot
+        function renderSearchDropdown(slotIdx) {
+            const idx = (typeof slotIdx === 'number' && slotIdx >= 0) ? slotIdx : 0;
+            if (!searchWaterfallSlots[idx]) {
+                searchWaterfallSlots[idx] = createWaterfallSlotState(idx, '');
+            }
+            const slot = searchWaterfallSlots[idx];
+            if (idx === 0 && currentSearchResults.length > 0 && slot.results !== currentSearchResults) {
+                slot.results = currentSearchResults;
+            }
+            const results = slot.results || [];
+            const sel = getWaterfallSlotEl('foodSelect', idx);
+            if (!sel) return;
+
             while (sel.options.length > 1) sel.remove(1);
 
-            // Remove old Show More / count footer if present
-            const old = document.getElementById('searchShowMoreRow');
-            if (old) old.remove();
+            const footer = document.getElementById('searchShowMoreRow_' + idx);
+            if (footer) footer.innerHTML = '';
 
-            if (currentSearchResults.length === 0) return;
+            if (results.length === 0) {
+                updateLogAllButtonVisibility();
+                return;
+            }
 
-            const visible = Math.min(searchVisibleCount, currentSearchResults.length);
+            const visible = Math.min(slot.visibleCount || SEARCH_INITIAL_COUNT, results.length);
             for (let i = 0; i < visible; i++) {
-                const food = currentSearchResults[i];
+                const food = results[i];
                 const brandStr = food.brandOwner ? ` (${food.brandOwner})` : '';
                 const opt = document.createElement('option');
                 opt.value = i;
@@ -3702,40 +3873,30 @@
                 sel.appendChild(opt);
             }
 
-            // Inject a Show More / result count row ABOVE the select so it stays visible
-            const remaining = currentSearchResults.length - visible;
-            const wrap = sel.parentElement;
+            const remaining = results.length - visible;
+            if (footer) {
+                const countSpan = document.createElement('span');
+                countSpan.textContent = `Showing ${visible} of ${results.length}`;
+                footer.appendChild(countSpan);
 
-            // Remove any old header first
-            const existingFooter = document.getElementById('searchShowMoreRow');
-            if (existingFooter) existingFooter.remove();
-
-            const footer = document.createElement('div');
-            footer.id = 'searchShowMoreRow';
-            footer.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; font-size:0.82em; color:#6b7280;';
-
-            const countSpan = document.createElement('span');
-            countSpan.textContent = `Showing ${visible} of ${currentSearchResults.length}`;
-            footer.appendChild(countSpan);
-
-            if (remaining > 0) {
-                const moreBtn = document.createElement('button');
-                moreBtn.textContent = `${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
-                moreBtn.style.cssText = 'background:none; color:#3b82f6; border:none; padding:2px 6px; font-size:0.9em; cursor:pointer; font-weight:600; text-decoration:underline;';
-                moreBtn.onclick = () => {
-                    searchVisibleCount += SEARCH_MORE_STEP;
-                    renderSearchDropdown();
-                };
-                footer.appendChild(moreBtn);
+                if (remaining > 0) {
+                    const moreBtn = document.createElement('button');
+                    moreBtn.type = 'button';
+                    moreBtn.textContent = `${Math.min(SEARCH_MORE_STEP, remaining)} more ▼`;
+                    moreBtn.style.cssText = 'background:none; color:#3b82f6; border:none; padding:0 4px; font-size:0.95em; cursor:pointer; font-weight:600; text-decoration:underline; box-shadow:none !important;';
+                    moreBtn.onclick = () => {
+                        slot.visibleCount = (slot.visibleCount || SEARCH_INITIAL_COUNT) + SEARCH_MORE_STEP;
+                        renderSearchDropdown(idx);
+                    };
+                    footer.appendChild(moreBtn);
+                }
             }
-
-            // Insert BEFORE the select so it appears above the dropdown
-            wrap.insertBefore(footer, sel);
 
             if (sel.options.length > 1) {
                 sel.selectedIndex = 1;
-                onFoodSelectChange();
+                onFoodSelectChange(idx);
             }
+            updateLogAllButtonVisibility();
         }
 
         // Helper to format Nutritionix API response into our internal app schema
@@ -3758,25 +3919,14 @@
             };
         }
 
-        async function searchDatabases() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!query) return;
+        async function searchSingleWaterfallSlot(slotIdx) {
+            const slot = searchWaterfallSlots[slotIdx];
+            if (!slot) return;
+            const query = slot.query.toLowerCase();
+            const sel = getWaterfallSlotEl('foodSelect', slotIdx);
+            const loadInd = document.getElementById('searchLoadingIndicator_' + slotIdx);
 
-            const btn = document.getElementById('searchBtn');
-            btn.disabled = true;
-            btn.textContent = 'Searching...';
-
-            currentSearchResults = [];
-            searchVisibleCount = SEARCH_INITIAL_COUNT;  // reset pagination on each new search
-
-            const sel = document.getElementById('foodSelect');
-            sel.innerHTML = '<option value="" disabled selected>Searching databases...</option>';
-
-            // Remove any previous Show More footer
-            const oldFooter = document.getElementById('searchShowMoreRow');
-            if (oldFooter) oldFooter.remove();
-
-            // 1. ALWAYS search Local "My Foods" Database first (guaranteed, independent of APIs)
+            // 1. Search Local "My Foods" Database first
             let localMatches = [];
             try {
                 localMatches = appData.myFoods.filter(f => {
@@ -3786,43 +3936,37 @@
                     return desc.includes(query) || brand.includes(query) || upcMatch || myFoodMatchesAllTokens(f, query);
                 }).map(f => ({ ...f, source: 'My Foods' }));
 
-                // Closest match first (exact, starts-with, all words in any order), shortest description wins ties
                 localMatches.sort((a, b) => compareMyFoodMatches(a, b, query));
-
-                // Filter out zero-calorie items (except water)
                 localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
             } catch (e) {
                 console.error("Local search error", e);
                 localMatches = [];
             }
 
-            currentSearchResults = [...localMatches];
-            sel.innerHTML = '<option value="" disabled selected>search results</option>';
+            slot.results = [...localMatches];
+            if (slotIdx === 0) currentSearchResults = slot.results;
 
-            // IMMEDIATE: Show local My Foods hits right away
-            if (currentSearchResults.length > 0) {
-                renderSearchDropdown();
-            } else {
-                if (sel.options[0]) sel.options[0].textContent = 'Searching databases...';
+            if (sel) {
+                sel.innerHTML = '<option value="" disabled selected>search results</option>';
             }
 
-            // Show loading indicator for external databases
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'searchLoadingIndicator';
-            loadingDiv.style.cssText = 'font-size:0.78em; color:#64748b; margin-top:4px; font-style:italic;';
-            loadingDiv.textContent = '⏳ Searching USDA + Search-a-licious in background...';
-            const parentWrap = sel.parentElement;
-            const existingLoad = document.getElementById('searchLoadingIndicator');
-            if (existingLoad) existingLoad.remove();
-            parentWrap.appendChild(loadingDiv);
+            if (slot.results.length > 0) {
+                renderSearchDropdown(slotIdx);
+            } else if (sel && sel.options[0]) {
+                sel.options[0].textContent = 'Searching databases...';
+            }
 
-            // 2. Then fetch from external databases based on config in background and append results live
+            if (loadInd) {
+                loadInd.style.display = 'block';
+                loadInd.textContent = '⏳ Searching USDA + Search-a-licious in background...';
+            }
+
+            // 2. Fetch from external databases in background
             try {
-                // Helper function to fetch data and silently return null if an API fails/rate-limits
                 const fetchJSON = async (url, options = {}) => {
                     try {
                         const controller = new AbortController();
-                        const id = setTimeout(() => controller.abort(), 6000); // 6-second timeout
+                        const id = setTimeout(() => controller.abort(), 6000);
                         options.signal = controller.signal;
                         const res = await fetch(url, options);
                         if (!res.ok) {
@@ -3860,23 +4004,18 @@
                     body: JSON.stringify({ query: query })
                 };
 
-                const fetchPromises = [];
-                fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
-                fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
-                fetchPromises.push(runOff ? fetchJSON(legacyOffUrl) : Promise.resolve(null));
-                fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
-                fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
-
-                const [usdaData, searchALData, legacyOffData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
+                const [usdaData, searchALData, legacyOffData, apiNinjasData, nutritionixData] = await Promise.all([
+                    runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null),
+                    runOff ? fetchJSON(searchALUrl) : Promise.resolve(null),
+                    runOff ? fetchJSON(legacyOffUrl) : Promise.resolve(null),
+                    runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null),
+                    runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null)
+                ]);
 
                 let usdaFoods = [];
                 if (usdaData && usdaData.foods) {
                     usdaData.foods.forEach(f => {
-                        if (f.dataType === 'Branded') {
-                            usdaFoods.push({ ...f, source: 'USDA Branded' });
-                        } else {
-                            usdaFoods.push({ ...f, source: 'USDA Generic' });
-                        }
+                        usdaFoods.push({ ...f, source: f.dataType === 'Branded' ? 'USDA Branded' : 'USDA Generic' });
                     });
                 }
 
@@ -3893,7 +4032,6 @@
                             }
                             return 0;
                         };
-
                         return {
                             description: p.product_name || p.name || p.generic_name || 'Unknown Item',
                             brandOwner: p.brands || p.brand || '',
@@ -3913,7 +4051,6 @@
                     });
                 }
 
-                // Process legacy OFF results as fallback (helps when Search-a-licious is blocked by CORS)
                 let legacyOffFoods = [];
                 if (legacyOffData && legacyOffData.products) {
                     legacyOffFoods = legacyOffData.products.map(p => ({
@@ -3960,16 +4097,14 @@
                 }
 
                 const rawApiResults = [...nutritionixFoods, ...apiNinjasFoods, ...usdaFoods, ...searchALFoods, ...legacyOffFoods];
-
                 const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
                 const getPriority = (source) => {
                     if (source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
                     if (source === 'USDA') source = 'USDA Generic';
-                    const idx = priorities.indexOf(source);
-                    return idx === -1 ? 99 : idx;
+                    const pIdx = priorities.indexOf(source);
+                    return pIdx === -1 ? 99 : pIdx;
                 };
 
-                // Sort API results by closeness of match
                 rawApiResults.sort((a, b) => {
                     const aScore = scoreMatch(a.description, query);
                     const bScore = scoreMatch(b.description, query);
@@ -3980,45 +4115,58 @@
                     return String(a.description || '').localeCompare(String(b.description || ''));
                 });
 
-                // Include all valid results
                 const apiResults = rawApiResults.filter(apiFood => {
                     if (!apiFood.description) return false;
                     if (guessCategory(apiFood) !== 'Water' && getAllNutrients(apiFood).calories <= 0) return false;
                     return true;
                 });
 
-                currentSearchResults.push(...apiResults);
+                slot.results.push(...apiResults);
+                if (slotIdx === 0) currentSearchResults = slot.results;
 
-                // Remove loading indicator
-                const loadInd = document.getElementById('searchLoadingIndicator');
-                if (loadInd) loadInd.remove();
+                if (loadInd) loadInd.style.display = 'none';
 
-                if (currentSearchResults.length === 0) {
-                    sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
+                if (slot.results.length === 0) {
+                    if (sel) sel.innerHTML = '<option value="" disabled selected>No results found in any database</option>';
                 } else {
-                    renderSearchDropdown();
-                    sel.focus();
-                    try {
-                        sel.showPicker();
-                    } catch (e) {
-                        sel.size = Math.min(8, Math.min(searchVisibleCount, currentSearchResults.length) + 1);
-                        sel.onblur = function () { this.size = 1; };
-                    }
+                    renderSearchDropdown(slotIdx);
                 }
             } catch (e) {
-                console.error("API search error:", e);
-                const loadInd = document.getElementById('searchLoadingIndicator');
-                if (loadInd) loadInd.remove();
-
-                if (currentSearchResults.length === 0) {
+                console.error("API search error for slot " + slotIdx + ":", e);
+                if (loadInd) loadInd.style.display = 'none';
+                if (slot.results.length === 0 && sel) {
                     sel.innerHTML = '<option value="" disabled selected>Search error occurred</option>';
-                    alert("Search failed. Please check your network connection.");
                 } else {
-                    renderSearchDropdown();
+                    renderSearchDropdown(slotIdx);
                 }
+            }
+        }
+
+        async function searchDatabases() {
+            const rawInput = document.getElementById('searchInput').value;
+            const queries = rawInput
+                .split(/[;,]+/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            if (queries.length === 0) return;
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
+
+            searchVisibleCount = SEARCH_INITIAL_COUNT;
+            searchWaterfallSlots = queries.map((q, idx) => createWaterfallSlotState(idx, q));
+            currentSearchResults = searchWaterfallSlots[0].results;
+
+            renderSearchWaterfall();
+
+            try {
+                await Promise.all(searchWaterfallSlots.map((_, idx) => searchSingleWaterfallSlot(idx)));
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Search';
+                updateLogAllButtonVisibility();
             }
         }
 
@@ -4064,18 +4212,16 @@
             return 'Other';
         }
 
-        function getFoodCategory(food) {
-            // Check for user override from the dropdown (for current selection before Log/Save)
-            const overrideSelect = document.getElementById('foodGroupSelect');
+        function getFoodCategory(food, slotIdx = 0) {
+            const overrideSelect = getWaterfallSlotEl('foodGroupSelect', slotIdx);
             const override = overrideSelect ? overrideSelect.value : '';
 
             if (override && override !== '' && override !== 'none') {
                 return override;
             }
             if (override === 'none') {
-                return 'Other'; // 'Other' is not incremented in logFood
+                return 'Other';
             }
-            // Fallback to auto-detect (which also respects saved foodCategory in My Foods)
             return guessCategory(food);
         }
 
@@ -4113,10 +4259,14 @@
             return "3.5 oz (Database Default)";
         }
 
-        function getMultiplier(food) {
-            const amount = parseFloat(document.getElementById('amountInput').value);
-            const unit = document.getElementById('unitSelect').value;
-            const servings = parseFloat(document.getElementById('servingInput').value) || 1;
+        function getMultiplier(food, slotIdx = 0) {
+            const amtEl = getWaterfallSlotEl('amountInput', slotIdx);
+            const unitEl = getWaterfallSlotEl('unitSelect', slotIdx);
+            const servEl = getWaterfallSlotEl('servingInput', slotIdx);
+
+            const amount = amtEl ? parseFloat(amtEl.value) : NaN;
+            const unit = unitEl ? unitEl.value : 'oz';
+            const servings = (servEl ? parseFloat(servEl.value) : NaN) || 1;
 
             if (amount > 0) {
                 const grams = unit === 'oz' ? amount * 28.3495 : amount;
@@ -4131,44 +4281,64 @@
             return (servingSizeGrams / 100) * servings;
         }
 
-        // ==================== LOGGING & EDITING FUNCTIONS ====================
-        //============UPDATE PREVIEW FUNCTION 6/6/26 11:12===========
-        function onFoodSelectChange() {
-            const sel = document.getElementById('foodSelect');
-            if (sel.value !== "") {
-                document.getElementById('servingInput').value = 1;
+        function onFoodSelectChange(slotIdx = 0) {
+            const sel = getWaterfallSlotEl('foodSelect', slotIdx);
+            const servEl = getWaterfallSlotEl('servingInput', slotIdx);
+            if (sel && sel.value !== "" && servEl) {
+                servEl.value = 1;
             }
-            updatePreview();
+            updatePreview(slotIdx);
+            updateLogAllButtonVisibility();
         }
 
-        function updatePreview() {
-            const sel = document.getElementById('foodSelect');
+        function updatePreview(slotIdx = 0) {
+            const sel = getWaterfallSlotEl('foodSelect', slotIdx);
+            if (!sel) return;
             sel.size = 1;
             const idx = sel.value;
-            if (!idx) return;
+            if (idx === "" || idx === null || idx === undefined) return;
 
-            const food = currentSearchResults[idx];
+            const slotResults = (searchWaterfallSlots[slotIdx] && searchWaterfallSlots[slotIdx].results)
+                ? searchWaterfallSlots[slotIdx].results
+                : currentSearchResults;
+            const food = slotResults[idx];
+            if (!food) return;
+
             const nut = getAllNutrients(food);
-            const multiplier = getMultiplier(food);
+            const multiplier = getMultiplier(food, slotIdx);
             const ww = calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier);
             const servingText = getServingText(food);
-
-            // Check for UPC from either Open Food Facts or USDA format
             const upcText = (food.gtinUpc || food.upc) ? ` | <strong>UPC:</strong> ${food.gtinUpc || food.upc}` : '';
 
-            document.getElementById('nutritionPreview').innerHTML = `
+            const previewEl = getWaterfallSlotEl('nutritionPreview', slotIdx);
+            if (previewEl) {
+                previewEl.innerHTML = `
             <strong>${food.description}</strong><br>
-            <em>Category: ${getFoodCategory(food)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br>
+            <em>Category: ${getFoodCategory(food, slotIdx)} | <strong>1 Serving = ${servingText}</strong>${upcText}</em><br>
             Calories: ${(nut.calories * multiplier).toFixed(0)} kcal<br>
             Protein: ${(nut.protein * multiplier).toFixed(1)}g | Fat: ${(nut.fat * multiplier).toFixed(1)}g | Carbs: ${(nut.carbs * multiplier).toFixed(1)}g<br>
             <span style="color:var(--purple);font-weight:bold;font-size:1.1em;display:block;margin-top:8px;">Est. EMP Points: ${ww.toFixed(1)}</span>
         `;
+            }
         }
-        //===============LOG FOOD FUNCTION=======================
 
-        function showLogFoodModal() {
-            const idx = document.getElementById('foodSelect').value;
-            if (!idx) return alert("Please select a food from the dropdown first.");
+        function showLogFoodModal(slotIdx = 0) {
+            if (slotIdx === 'ALL') {
+                const anyReady = searchWaterfallSlots.some(s => {
+                    if (!s || s.logged) return false;
+                    const sel = getWaterfallSlotEl('foodSelect', s.slotIdx);
+                    return Boolean(sel && sel.value !== '' && s.results && s.results[sel.value]);
+                });
+                if (!anyReady) return alert("Please select at least one food item to log.");
+                activeLogSlotIdx = 'ALL';
+                document.getElementById('logFoodModal').style.display = 'flex';
+                return;
+            }
+
+            const sIdx = (typeof slotIdx === 'number' && slotIdx >= 0) ? slotIdx : 0;
+            const sel = getWaterfallSlotEl('foodSelect', sIdx);
+            if (!sel || !sel.value) return alert("Please select a food from the dropdown first.");
+            activeLogSlotIdx = sIdx;
             document.getElementById('logFoodModal').style.display = 'flex';
         }
 
@@ -4176,29 +4346,37 @@
             document.getElementById('logFoodModal').style.display = 'none';
         }
 
-        function logFood(meal) {
+        function closeMealSelectModal() {
             closeLogFoodModal();
-            if (recalledWeekData || isArchiveMode) {
-                alert("You are viewing an archive. Logging new foods is disabled.");
-                return;
-            }
-            const idx = document.getElementById('foodSelect').value;
-            if (!idx) return alert("Please select a food from the dropdown first.");
+        }
 
-            const food = currentSearchResults[idx];
+        function buildAndCommitSlotLogItem(slotIdx, meal) {
+            const sel = getWaterfallSlotEl('foodSelect', slotIdx);
+            if (!sel || sel.value === '') return false;
+
+            const slotResults = (searchWaterfallSlots[slotIdx] && searchWaterfallSlots[slotIdx].results)
+                ? searchWaterfallSlots[slotIdx].results
+                : currentSearchResults;
+            const food = slotResults[sel.value];
+            if (!food) return false;
+
             const nut = getAllNutrients(food);
-            const cat = getFoodCategory(food);
-            const multiplier = getMultiplier(food);
+            const cat = getFoodCategory(food, slotIdx);
+            const multiplier = getMultiplier(food, slotIdx);
 
-            const amountVal = parseFloat(document.getElementById('amountInput').value);
+            const amtEl = getWaterfallSlotEl('amountInput', slotIdx);
+            const unitEl = getWaterfallSlotEl('unitSelect', slotIdx);
+            const servEl = getWaterfallSlotEl('servingInput', slotIdx);
+
+            const amountVal = amtEl ? parseFloat(amtEl.value) : NaN;
             let logAmount = amountVal;
-            let logUnit = document.getElementById('unitSelect').value;
+            let logUnit = unitEl ? unitEl.value : 'oz';
             const servingSize = parseFloat(food.servingSize) || 100;
             let gramsPerUnit = servingSize;
             let foodGroupAmount = 1;
 
             if (!(amountVal > 0)) {
-                logAmount = parseFloat(document.getElementById('servingInput').value) || 1;
+                logAmount = (servEl ? parseFloat(servEl.value) : NaN) || 1;
                 logUnit = logAmount === 1 ? "serving" : "servings";
                 foodGroupAmount = logAmount;
             } else {
@@ -4207,7 +4385,6 @@
             }
 
             const upcCode = food.gtinUpc || food.upc || null;
-
             const item = {
                 name: food.description,
                 upc: upcCode,
@@ -4225,7 +4402,6 @@
                 fiber: nut.fiber * multiplier,
                 wwPoints: calculateWWPoints(nut.calories * multiplier, nut.fat * multiplier, nut.fiber * multiplier),
                 meal: meal,
-
                 calsPerUnit: nut.calories / (parseFloat(food.servingSize) || 100),
                 protPerUnit: nut.protein / (parseFloat(food.servingSize) || 100),
                 fatPerUnit: nut.fat / (parseFloat(food.servingSize) || 100),
@@ -4240,7 +4416,6 @@
             state.current.Fat += item.fat;
             state.current.Carbs += item.carbs;
 
-            // Defensive: ensure group key exists (for Water and legacy data), then increment if it's a tracked group
             const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (trackedGroups.includes(cat)) {
                 if (state.current[cat] === undefined) {
@@ -4248,38 +4423,74 @@
                 }
                 state.current[cat] += foodGroupAmount;
             }
-            // If cat === 'Other' (from "Do not count" or unknown), we intentionally do NOT increment any group serving total
 
+            if (searchWaterfallSlots[slotIdx]) {
+                searchWaterfallSlots[slotIdx].logged = true;
+            }
+            return true;
+        }
+
+        function logFood(meal) {
+            closeLogFoodModal();
+            if (recalledWeekData || isArchiveMode) {
+                alert("You are viewing an archive. Logging new foods is disabled.");
+                return;
+            }
+
+            let loggedCount = 0;
+            if (activeLogSlotIdx === 'ALL') {
+                searchWaterfallSlots.forEach(slot => {
+                    if (slot && !slot.logged) {
+                        if (buildAndCommitSlotLogItem(slot.slotIdx, meal)) {
+                            loggedCount++;
+                        }
+                    }
+                });
+            } else {
+                const targetSlot = (typeof activeLogSlotIdx === 'number' && activeLogSlotIdx >= 0) ? activeLogSlotIdx : 0;
+                if (buildAndCommitSlotLogItem(targetSlot, meal)) {
+                    loggedCount = 1;
+                }
+            }
+
+            if (loggedCount === 0) {
+                return alert("Please select a food from the dropdown first.");
+            }
+
+            activeLogSlotIdx = 0;
             saveData();
             renderLog();
             renderBarometers();
 
-            document.getElementById('searchInput').value = '';
-            document.getElementById('foodSelect').innerHTML = '<option value="" disabled selected>search results</option>';
-            document.getElementById('servingInput').value = '';
-            document.getElementById('amountInput').value = '';
-            const unitSel = document.getElementById('unitSelect');
-            if (unitSel) unitSel.value = appData.preferredUnit || 'oz';
-            document.getElementById('nutritionPreview').innerHTML = "<em>Nutritional information for the selected item in Search Results field.</em>";
+            const remainingUnlogged = searchWaterfallSlots.filter(s => s && !s.logged);
+            if (remainingUnlogged.length === 0) {
+                document.getElementById('searchInput').value = '';
+                resetSearchWaterfallToDefault();
+            } else {
+                // Remove logged cards from DOM while preserving input states of remaining unlogged cards
+                searchWaterfallSlots.forEach(s => {
+                    if (s && s.logged) {
+                        const c = document.getElementById('waterfallCard_' + s.slotIdx);
+                        if (c) c.remove();
+                    }
+                });
+                updateLogAllButtonVisibility();
+            }
 
-            // Reset override select after logging
-            const fgSelect = document.getElementById('foodGroupSelect');
-            if (fgSelect) fgSelect.value = '';
-
-            // Show temporary toast notification instead of alert
             const toast = document.createElement('div');
-            toast.textContent = "Food Logged!";
+            toast.textContent = loggedCount > 1 ? (loggedCount + " Foods Logged!") : "Food Logged!";
             toast.style.position = "fixed";
             toast.style.top = "20px";
             toast.style.left = "50%";
             toast.style.transform = "translateX(-50%)";
-            toast.style.backgroundColor = "var(--success-border)";
+            toast.style.background = "#10b981";
             toast.style.color = "white";
-            toast.style.padding = "12px 24px";
+            toast.style.padding = "10px 24px";
             toast.style.borderRadius = "8px";
+            toast.style.boxShadow = "none !important";
+            toast.style.zIndex = "9999";
             toast.style.fontWeight = "bold";
-            toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-            toast.style.zIndex = "10000";
+            toast.style.fontSize = "1em";
             toast.style.transition = "opacity 0.3s ease";
             document.body.appendChild(toast);
 
@@ -5775,12 +5986,14 @@
         }
 
         async function fetchOpenFoodFacts(barcode) {
-            const preview = document.getElementById('nutritionPreview');
+            let preview = getWaterfallSlotEl('nutritionPreview', 0);
 
             if (customFoodBarcodeMode) {
                 document.getElementById('customFoodModal').style.display = 'flex'; // Re-show modal
             } else if (!recipeBarcodeMode) {
-                preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
+                resetSearchWaterfallToDefault();
+                preview = getWaterfallSlotEl('nutritionPreview', 0);
+                if (preview) preview.innerHTML = `<em>Looking up barcode <strong>${barcode}</strong> securely...</em>`;
             } else {
                 const sel = document.getElementById('recipeFoodSelect');
                 sel.innerHTML = `<option value="" disabled selected>Looking up barcode ${barcode} securely...</option>`;
@@ -5813,12 +6026,16 @@
                     document.getElementById('recipeAmountInput').value = '';
                     recipeBarcodeMode = false;
                 } else {
-                    currentSearchResults = [{ ...localMatch, source: 'My Foods' }];
-                    const sel = document.getElementById('foodSelect');
-                    sel.innerHTML = `<option value="0" selected>★ ${localMatch.description}</option>`;
-                    document.getElementById('servingInput').value = 1;
-                    document.getElementById('amountInput').value = '';
-                    updatePreview();
+                    resetSearchWaterfallToDefault();
+                    searchWaterfallSlots[0].results = [{ ...localMatch, source: 'My Foods' }];
+                    currentSearchResults = searchWaterfallSlots[0].results;
+                    const sel = getWaterfallSlotEl('foodSelect', 0);
+                    if (sel) sel.innerHTML = `<option value="0" selected>★ ${localMatch.description}</option>`;
+                    const servEl = getWaterfallSlotEl('servingInput', 0);
+                    if (servEl) servEl.value = 1;
+                    const amtEl = getWaterfallSlotEl('amountInput', 0);
+                    if (amtEl) amtEl.value = '';
+                    updatePreview(0);
                 }
                 return;
             }
@@ -5836,32 +6053,32 @@
                         sel.innerHTML = `<option value="" disabled selected>Product not found in OFF.</option>`;
                         recipeBarcodeMode = false;
                     } else {
-                        preview.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in OFF.</strong></span><br>Barcode: ${barcode}`;
+                        const pEl = getWaterfallSlotEl('nutritionPreview', 0);
+                        if (pEl) pEl.innerHTML = `<span style="color:#ef4444;"><strong>Product not found in OFF.</strong></span><br>Barcode: ${barcode}`;
                     }
                     return;
                 }
 
                 const p = data.product;
+                const name = p.product_name || p.generic_name || "Unknown Item";
+                const brandText = p.brands || "";
+                const catText = p.categories || "Other";
+
+                const sSizeText = p.serving_size || "100g";
+                const sQuantity = parseFloat(p.serving_quantity) || 100;
 
                 const nut = {
-                    calories: parseFloat((p.nutriments && p.nutriments['energy-kcal_100g']) || 0),
-                    protein: parseFloat((p.nutriments && p.nutriments.proteins_100g) || 0),
-                    fat: parseFloat((p.nutriments && p.nutriments.fat_100g) || 0),
-                    carbs: parseFloat((p.nutriments && p.nutriments.carbohydrates_100g) || 0),
-                    fiber: parseFloat((p.nutriments && p.nutriments.fiber_100g) || 0)
+                    calories: parseFloat(p.nutriments['energy-kcal_100g'] || (p.nutriments['energy-kj_100g'] ? p.nutriments['energy-kj_100g'] / 4.184 : 0)) || 0,
+                    protein: parseFloat(p.nutriments.proteins_100g) || 0,
+                    fat: parseFloat(p.nutriments.fat_100g) || 0,
+                    carbs: parseFloat(p.nutriments.carbohydrates_100g) || 0,
+                    fiber: parseFloat(p.nutriments.fiber_100g) || 0
                 };
-
-                const name = p.product_name || `Scanned Item (${barcode})`;
-                const brandText = String(p.brands || "OFF");
-                const catText = String(p.categories || "Other");
-
-                const sSizeText = p.serving_size !== undefined && p.serving_size !== null ? String(p.serving_size) : "100g";
-                const sQuantity = parseFloat(p.serving_quantity) || 100;
 
                 if (customFoodBarcodeMode) {
                     document.getElementById('cf-name').value = name;
-                    document.getElementById('cf-brand').value = brandText === "OFF" ? "" : brandText;
-                    document.getElementById('cf-category').value = "Other"; // Try to leave generic if mapped
+                    document.getElementById('cf-brand').value = brandText;
+                    document.getElementById('cf-category').value = guessCategory({ description: name, foodCategory: catText });
                     document.getElementById('cf-upc').value = barcode;
                     document.getElementById('cf-serving').value = sQuantity;
                     document.getElementById('cf-serving-unit').value = 'g';
@@ -5901,12 +6118,16 @@
                     document.getElementById('recipeAmountInput').value = '';
                     recipeBarcodeMode = false;
                 } else {
-                    currentSearchResults = [fakeFood];
-                    const sel = document.getElementById('foodSelect');
-                    sel.innerHTML = `<option value="0" selected>[OFF] ${name} (${brandText})</option>`;
-                    document.getElementById('servingInput').value = 1;
-                    document.getElementById('amountInput').value = '';
-                    updatePreview();
+                    resetSearchWaterfallToDefault();
+                    searchWaterfallSlots[0].results = [fakeFood];
+                    currentSearchResults = searchWaterfallSlots[0].results;
+                    const sel = getWaterfallSlotEl('foodSelect', 0);
+                    if (sel) sel.innerHTML = `<option value="0" selected>[OFF] ${name} (${brandText})</option>`;
+                    const servEl = getWaterfallSlotEl('servingInput', 0);
+                    if (servEl) servEl.value = 1;
+                    const amtEl = getWaterfallSlotEl('amountInput', 0);
+                    if (amtEl) amtEl.value = '';
+                    updatePreview(0);
                 }
 
             } catch (e) {
@@ -5919,22 +6140,29 @@
                     sel.innerHTML = `<option value="" disabled selected>Error reading product data.</option>`;
                     recipeBarcodeMode = false;
                 } else {
-                    preview.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
+                    const pEl = getWaterfallSlotEl('nutritionPreview', 0);
+                    if (pEl) pEl.innerHTML = `<span style="color:#ef4444;"><strong>Error reading product data.</strong></span><br>The database returned an unexpected format. Please manually search for this item.`;
                 }
             }
         }
 
         // ==================== MY FOODS LOGIC ====================
-        function saveCurrentToMyFoods() {
-            const idx = document.getElementById('foodSelect').value;
+        function saveCurrentToMyFoods(slotIdx = 0) {
+            const sIdx = (typeof slotIdx === 'number' && slotIdx >= 0) ? slotIdx : 0;
+            const sel = getWaterfallSlotEl('foodSelect', sIdx);
+            const idx = sel ? sel.value : null;
             if (!idx) return alert("Please select a food from the dropdown to save.");
 
-            const food = currentSearchResults[idx];
+            const slotResults = (searchWaterfallSlots[sIdx] && searchWaterfallSlots[sIdx].results)
+                ? searchWaterfallSlots[sIdx].results
+                : currentSearchResults;
+            const food = slotResults[idx];
+            if (!food) return alert("Food item not found.");
 
             const customFood = {
                 description: String(food.description || 'Unnamed Food'),
                 brandOwner: String(food.brandOwner || ''),
-                foodCategory: getFoodCategory(food),
+                foodCategory: getFoodCategory(food, sIdx),
                 servingSize: food.servingSize || 100,
                 householdServingFullText: food.householdServingFullText || '100g',
                 upc: food.gtinUpc || food.upc || '',
@@ -5947,15 +6175,17 @@
             );
 
             if (exists) {
-                if (!confirm(`An item named "${customFood.description}" is already saved in My Foods. Proceed to save another copy?`)) return;
+                if (!confirm(`An item named "${customFood.description}" is already saved in your My Foods. Do you want to save another copy?`)) {
+                    return;
+                }
             }
 
             appData.myFoods.push(customFood);
             saveData();
-            alert(`${food.description} saved to My Foods! You can now search for it locally.`);
+            alert(`${food.description} saved to My Foods! You can now search for it locally anytime.`);
 
             // Reset override after save
-            const fgSelect2 = document.getElementById('foodGroupSelect');
+            const fgSelect2 = getWaterfallSlotEl('foodGroupSelect', sIdx);
             if (fgSelect2) fgSelect2.value = '';
         }
 
@@ -6067,7 +6297,7 @@
 
         let editingMyFoodIndex = -1;
 
-        function showCustomFoodModal(index = -1, customTitle = null) {
+        function showCustomFoodModal(index = -1, customTitle = null, slotIdx = 0) {
             editingMyFoodIndex = index;
             if (index >= 0) {
                 const food = appData.myFoods[index];
@@ -6098,13 +6328,17 @@
                 document.getElementById('cf-carb').value = (carb * multiplier).toFixed(1);
                 document.getElementById('cf-fib').value = (fib * multiplier).toFixed(1);
 
-                document.querySelector('#customFoodModal h3').innerText = customTitle || 'Edit Food Entry';
+                document.querySelector('#customFoodModal h3').innerText = customTitle || 'Custom Food Entry';
             } else {
-                const sel = document.getElementById('foodSelect');
+                const sIdx = (typeof slotIdx === 'number' && slotIdx >= 0) ? slotIdx : 0;
+                const sel = getWaterfallSlotEl('foodSelect', sIdx);
                 const selectedIdx = sel ? sel.value : null;
+                const slotResults = (searchWaterfallSlots[sIdx] && searchWaterfallSlots[sIdx].results)
+                    ? searchWaterfallSlots[sIdx].results
+                    : currentSearchResults;
 
-                if (selectedIdx && currentSearchResults[selectedIdx]) {
-                    const food = currentSearchResults[selectedIdx];
+                if (selectedIdx && slotResults[selectedIdx]) {
+                    const food = slotResults[selectedIdx];
                     document.getElementById('cf-name').value = food.description || '';
                     document.getElementById('cf-brand').value = food.brandOwner || '';
                     document.getElementById('cf-category').value = guessCategory(food);
@@ -6126,11 +6360,21 @@
 
                     document.querySelector('#customFoodModal h3').innerText = customTitle || 'Modify Search Item';
                 } else {
-                    clearCustomFoodModalFields();
-                    document.querySelector('#customFoodModal h3').innerText = customTitle || 'Modify Search Item';
+                    document.getElementById('cf-name').value = '';
+                    document.getElementById('cf-brand').value = '';
+                    document.getElementById('cf-category').value = 'Other';
+                    document.getElementById('cf-upc').value = '';
+                    document.getElementById('cf-serving').value = '100';
+                    document.getElementById('cf-serving-unit').value = 'g';
+                    document.getElementById('cf-cal').value = '';
+                    document.getElementById('cf-pro').value = '';
+                    document.getElementById('cf-fat').value = '';
+                    document.getElementById('cf-carb').value = '';
+                    document.getElementById('cf-fib').value = '';
+
+                    document.querySelector('#customFoodModal h3').innerText = customTitle || 'Custom Food Entry';
                 }
             }
-            setBaseServingInfo();
             document.getElementById('customFoodModal').style.display = 'flex';
         }
 
@@ -8318,12 +8562,8 @@
                 saveData();
                 renderRestaurantsList();
 
-                // Clear dropdown if open
-                const sel = document.getElementById('foodSelect');
-                if (sel) {
-                    sel.innerHTML = '<option value="" disabled selected>search results</option>';
-                }
-                if (typeof currentSearchResults !== 'undefined') currentSearchResults = [];
+                // Reset search waterfall if open
+                resetSearchWaterfallToDefault();
             }
         }
 
@@ -8338,11 +8578,7 @@
                 alert("My Foods database has been cleared and reset.\n\nFuture searches will no longer show any custom items until you add new ones.");
 
                 // If a search dropdown is currently populated, clear it so user sees fresh state
-                const sel = document.getElementById('foodSelect');
-                if (sel) {
-                    sel.innerHTML = '<option value="" disabled selected>search results</option>';
-                }
-                currentSearchResults = [];
+                resetSearchWaterfallToDefault();
             }
         }
 
