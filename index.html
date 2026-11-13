@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v9.2</title>
+    <title>EatMyPyramid v9.3</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "9.2";
+        const APP_VERSION = "9.3";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -839,7 +839,7 @@
                             </div>
                         </div>
                         <div id="appVersionDisplay"
-                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v9.2)
+                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v9.3)
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
@@ -10260,22 +10260,46 @@
     
     <script>
         // ==================== ADVANCED PTS CALCULATOR ====================
+        // ACSM / 2011 Compendium MET lookup per exercise type and exertion tier, plus wearable HR clamps
+        const EP_MET_TABLE = {
+            casual_walk: { low: 2.0, moderate: 2.8, high: 3.5, min: 1.8, max: 4.5, label: 'Casual Walk' },
+            brisk_walk:  { low: 2.8, moderate: 3.8, high: 4.8, min: 2.5, max: 5.8, label: 'Brisk Walking' },
+            speed_walk:  { low: 3.5, moderate: 4.5, high: 5.8, min: 3.0, max: 6.8, label: 'Speed Walking' },
+            pilates:     { low: 2.5, moderate: 3.3, high: 4.5, min: 2.0, max: 5.2, label: 'Pilates' },
+            yoga:        { low: 2.0, moderate: 3.0, high: 4.5, min: 1.8, max: 5.2, label: 'Yoga' },
+            strength:    { low: 3.0, moderate: 4.5, high: 6.0, min: 2.5, max: 7.5, label: 'Strength Training' },
+            elliptical:  { low: 3.5, moderate: 5.0, high: 7.5, min: 3.0, max: 9.5, label: 'Elliptical' },
+            treadmill:   { low: 3.3, moderate: 5.0, high: 8.5, min: 2.8, max: 10.5, label: 'Treadmill' },
+            run:         { low: 6.0, moderate: 8.5, high: 11.0, min: 5.0, max: 13.5, label: 'Running' }
+        };
+
         function openAdvancedExModal() {
             if (typeof recalledWeekData !== 'undefined' && recalledWeekData) {
                 alert("Cannot add exercise points while viewing an archived week. Return to live tracking first.");
                 return;
             }
-            document.getElementById('advancedExModal').style.display = 'flex';
-            
+            const modal = document.getElementById('advancedExModal');
+            modal.style.display = 'flex';
+            const card = modal.querySelector('.exercise-points-container');
+            if (card) card.scrollTop = 0;
+
             // Pre-fill weight
             const w = parseFloat(document.getElementById('weightInput').value) || (state.current && state.current.bodyWeight) || appData.weight || 0;
             if (w > 0) document.getElementById('ep-weight').value = w;
-            
+
             // Pre-fill gender & age if saved
             if (appData.gender) document.getElementById('ep-gender').value = appData.gender;
             if (appData.age) document.getElementById('ep-age').value = appData.age;
-            
+
             calculateAdvancedPts();
+        }
+
+        function clearAdvancedHR() {
+            const hrEl = document.getElementById('ep-hr');
+            if (hrEl) {
+                hrEl.value = '';
+                calculateAdvancedPts();
+            }
         }
 
         function calculateAdvancedPts() {
@@ -10285,157 +10309,274 @@
             const duration = parseFloat(document.getElementById('ep-duration').value) || 0;
             const exertion = document.getElementById('ep-exertion').value;
             const type = document.getElementById('ep-type').value;
+            const hrInput = document.getElementById('ep-hr');
+            const hrRaw = hrInput ? hrInput.value.trim() : '';
+            const hrVal = hrRaw === '' ? NaN : parseFloat(hrRaw);
+
+            const clearBtn = document.getElementById('ep-hr-clear');
+            if (clearBtn) clearBtn.style.display = hrRaw !== '' ? 'flex' : 'none';
 
             const calResultEl = document.getElementById('ep-cal-result');
+            const netCalNoteEl = document.getElementById('ep-net-cal-note');
             const pointsResultEl = document.getElementById('ep-points-result');
+            const basisNoteEl = document.getElementById('ep-basis-note');
 
-            if (age === 0 || weightLbs === 0 || duration === 0) {
+            if (age <= 0 || weightLbs <= 0 || duration <= 0) {
                 calResultEl.textContent = "--";
+                if (netCalNoteEl) netCalNoteEl.textContent = "Net active: --";
                 pointsResultEl.textContent = "--";
-                return;
+                if (basisNoteEl) basisNoteEl.textContent = "Classic WW Hybrid Rate: 1 EMP Pt = 100 kcal";
+                return 0;
             }
 
+            const row = EP_MET_TABLE[type] || EP_MET_TABLE.brisk_walk;
             const weightKg = weightLbs / 2.20462;
-            const exertionToHR = { 'low': 110, 'moderate': 135, 'high': 160 };
-            const avgHR = exertionToHR[exertion];
-            
-            const typeModifiers = {
-                'strength': 0.75,
-                'elliptical': 1.0,
-                'treadmill': 1.0,
-                'run': 1.1,
-                'brisk_walk': 0.95,
-                'speed_walk': 1.0
-            };
-            const typeMod = typeModifiers[type];
-            
-            let calories = 0;
-            let points = 0;
+            const sexFactor = gender === 'male' ? 1.0 : 0.94;
+            const ageFactor = Math.max(0.85, 1.0 - Math.max(0, age - 25) * 0.002);
+            const bioFactor = sexFactor * ageFactor;
 
-            // Keytel (2005) Energy Expenditure Formula
-            if (gender === 'male') {
-                calories = ((age * 0.2017) + (weightKg * 0.09036) + (avgHR * 0.6309) - 55.0969) * duration / 4.184;
-            } else {
-                calories = ((age * 0.074) - (weightKg * 0.05741) + (avgHR * 0.4472) - 20.4022) * duration / 4.184;
+            const hasValidHR = !isNaN(hrVal) && hrVal >= 45 && hrVal <= 220;
+            let effectiveMET = row[exertion] || row.moderate;
+            let effBio = bioFactor;
+
+            if (hasValidHR) {
+                // Karvonen %HRR (~%VO2R) blended 65/35 with modality tier and biomechanically clamped
+                const hrMax = 208.0 - (0.7 * age);
+                const hrRest = gender === 'male' ? 68.0 : 72.0;
+                const hrr = Math.max(0.05, Math.min(1.05, (hrVal - hrRest) / Math.max(30.0, hrMax - hrRest)));
+                const maxCapMET = 12.0 * bioFactor;
+                const hrMET = 1.0 + hrr * (maxCapMET - 1.0);
+                const blendedMET = 0.65 * hrMET + 0.35 * (effectiveMET * bioFactor);
+                effectiveMET = Math.max(row.min * bioFactor, Math.min(row.max, blendedMET));
+                // bioFactor is already embedded inside both hrMET and baseMET above
+                effBio = 1.0;
             }
 
-            calories = calories * typeMod;
-            calories = Math.max(0, calories);
+            const grossKcal = Math.max(0, effectiveMET * effBio * 3.5 * weightKg / 200.0 * duration);
+            const netKcal = Math.max(0, (effectiveMET - 1.0) * effBio * 3.5 * weightKg / 200.0 * duration);
 
-            // Convert to Points
-            points = calories / 75;
-            
-            calResultEl.textContent = Math.round(calories) + " kcal";
+            // Option A2 Default: Classic WW Quick-Add Parity (~100 gross kcal per EMP Exercise Point)
+            const points = grossKcal / 100.0;
+
+            const exertionLabel = exertion.charAt(0).toUpperCase() + exertion.slice(1);
+            calResultEl.textContent = Math.round(grossKcal) + " kcal";
+            if (netCalNoteEl) netCalNoteEl.textContent = "Net active: ~" + Math.round(netKcal) + " kcal";
             pointsResultEl.textContent = points.toFixed(1);
+            if (basisNoteEl) {
+                if (hasValidHR) {
+                    basisNoteEl.textContent = "Smartwatch HR (" + Math.round(hrVal) + " BPM) + " + exertionLabel + " • 1 pt = 100 kcal";
+                } else if (hrRaw !== '') {
+                    basisNoteEl.textContent = "Enter 45–220 BPM (using " + exertionLabel + " preset) • 1 pt = 100 kcal";
+                } else {
+                    basisNoteEl.textContent = "Preset: " + row.label + " (" + exertionLabel + ") • 1 pt = 100 kcal";
+                }
+            }
             return points;
         }
 
         function applyAdvancedPts() {
             const points = calculateAdvancedPts();
-            if (points === undefined || isNaN(points)) return;
-            
+            if (points === undefined || isNaN(points) || points <= 0) return;
+
             // Save gender and age for future use
             appData.gender = document.getElementById('ep-gender').value;
             appData.age = parseFloat(document.getElementById('ep-age').value) || 0;
-            
+
             let currentPoints = parseFloat(document.getElementById('exerciseInput').value) || 0;
             let newTotal = currentPoints + points;
             document.getElementById('exerciseInput').value = newTotal.toFixed(1);
-            
+
             updateExercisePoints();
             document.getElementById('advancedExModal').style.display = 'none';
         }
     </script>
 
     <!-- Advanced Pts Modal -->
-    <div id="advancedExModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
-        <div class="exercise-points-container" style="background:white; padding:25px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); max-height: 90vh; overflow-y: auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
-                <h3 style="margin:0;">Activity Points Calculator</h3>
-                <button onclick="document.getElementById('advancedExModal').style.display='none'" style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0;">&times;</button>
+    <div id="advancedExModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; padding: max(12px, env(safe-area-inset-top, 12px)) 12px max(12px, env(safe-area-inset-bottom, 12px)); background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
+        <div class="exercise-points-container">
+            <div class="ep-modal-header">
+                <h3 style="margin:0; font-size:1.15rem;">Activity Points Calculator</h3>
+                <button type="button" class="ep-close-btn" onclick="document.getElementById('advancedExModal').style.display='none'" aria-label="Close Activity Points Calculator">&times;</button>
             </div>
-            
+
             <div class="ep-inputs">
                 <!-- User Biometrics -->
                 <div class="ep-row dual-input">
-                <div class="ep-group">
-                    <label>Gender:</label>
-                    <select id="ep-gender" onchange="calculateAdvancedPts()">
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    </select>
-                </div>
-                <div class="ep-group">
-                    <label>Age:</label>
-                    <input type="number" id="ep-age" value="35" min="15" max="100" oninput="calculateAdvancedPts()">
-                </div>
+                    <div class="ep-group">
+                        <label for="ep-gender">Gender:</label>
+                        <select id="ep-gender" onchange="calculateAdvancedPts()">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="ep-group">
+                        <label for="ep-age">Age:</label>
+                        <input type="number" id="ep-age" value="35" min="15" max="100" inputmode="numeric" pattern="[0-9]*" oninput="calculateAdvancedPts()">
+                    </div>
                 </div>
 
                 <div class="ep-row dual-input">
-                <div class="ep-group">
-                    <label>Weight (lbs):</label>
-                    <input type="number" id="ep-weight" value="180" min="80" max="500" oninput="calculateAdvancedPts()">
-                </div>
-                <div class="ep-group">
-                    <label>Duration (mins):</label>
-                    <input type="number" id="ep-duration" value="45" min="1" step="1" oninput="calculateAdvancedPts()">
-                </div>
+                    <div class="ep-group">
+                        <label for="ep-weight">Weight (lbs):</label>
+                        <input type="number" id="ep-weight" value="180" min="60" max="600" step="0.5" inputmode="decimal" oninput="calculateAdvancedPts()">
+                    </div>
+                    <div class="ep-group">
+                        <label for="ep-duration">Duration (mins):</label>
+                        <input type="number" id="ep-duration" value="45" min="1" step="1" inputmode="numeric" pattern="[0-9]*" oninput="calculateAdvancedPts()">
+                    </div>
                 </div>
 
                 <hr class="ep-divider">
 
                 <!-- Workout Data -->
                 <div class="ep-group">
-                <label>Exercise Type:</label>
-                <select id="ep-type" onchange="calculateAdvancedPts()">
-                    <option value="strength">Strength Training</option>
-                    <option value="elliptical">Elliptical</option>
-                    <option value="treadmill">Treadmill</option>
-                    <option value="run">Running</option>
-                    <option value="brisk_walk">Brisk Walking</option>
-                    <option value="speed_walk">Speed Walking</option>
-                </select>
+                    <label for="ep-type">Exercise Type:</label>
+                    <select id="ep-type" onchange="calculateAdvancedPts()">
+                        <option value="casual_walk">Casual Walk</option>
+                        <option value="brisk_walk">Brisk Walking</option>
+                        <option value="speed_walk">Speed Walking</option>
+                        <option value="pilates">Pilates</option>
+                        <option value="yoga">Yoga</option>
+                        <option value="strength">Strength Training</option>
+                        <option value="elliptical">Elliptical</option>
+                        <option value="treadmill">Treadmill</option>
+                        <option value="run">Running</option>
+                    </select>
                 </div>
 
                 <div class="ep-group">
-                    <label>HR Zone / Exertion:</label>
+                    <label for="ep-exertion">Exertion Tier:</label>
                     <select id="ep-exertion" onchange="calculateAdvancedPts()">
-                    <option value="low">Low (Zone 1/2: ~110 BPM)</option>
-                    <option value="moderate" selected>Moderate (Zone 3: ~135 BPM)</option>
-                    <option value="high">High (Zone 4/5: ~160 BPM)</option>
+                        <option value="low">Low (Zone 1/2 — Easy / Conversational)</option>
+                        <option value="moderate" selected>Moderate (Zone 3 — Brisk / Steady Sweat)</option>
+                        <option value="high">High (Zone 4/5 — Vigorous / Hard Breathing)</option>
                     </select>
+                </div>
+
+                <div class="ep-group" style="margin-bottom:0;">
+                    <label for="ep-hr">Smartwatch Avg HR (BPM, optional):</label>
+                    <div class="ep-hr-row">
+                        <input type="number" id="ep-hr" placeholder="Optional (e.g. 132)" min="45" max="220" step="1" inputmode="numeric" pattern="[0-9]*" oninput="calculateAdvancedPts()">
+                        <button type="button" id="ep-hr-clear" class="ep-clear-btn" onclick="clearAdvancedHR()">Clear</button>
+                    </div>
+                    <div class="ep-hint">Leave blank to use the Exertion Tier above.</div>
                 </div>
             </div>
 
             <div class="ep-results">
                 <div class="ep-result-box">
-                <h4>Est. Calories Burned</h4>
-                <span id="ep-cal-result">--</span>
+                    <h4>Est. Calories Burned</h4>
+                    <span id="ep-cal-result">--</span>
+                    <div id="ep-net-cal-note" class="ep-subnote">Net active: --</div>
                 </div>
                 <div class="ep-result-box ep-highlight">
-                <h4>Earned Points</h4>
-                <span id="ep-points-result">--</span>
+                    <h4>Earned Points</h4>
+                    <span id="ep-points-result">--</span>
+                    <div class="ep-subnote">1 pt = 100 kcal</div>
                 </div>
             </div>
-            
-            <button onclick="applyAdvancedPts()" style="width:100%; margin-top:20px; padding:12px; background-color:var(--teal); color:white; font-weight:bold; border-radius:8px; border:none; font-size:1em;">Apply Points</button>
+            <div id="ep-basis-note" class="ep-basis-note">Classic WW Hybrid Rate: 1 EMP Pt = 100 kcal</div>
+
+            <button type="button" class="ep-apply-btn" onclick="applyAdvancedPts()">Apply Points</button>
         </div>
     </div>
 
     <style>
-        .ep-row { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 12px; }
-        .ep-group { display: flex; flex-direction: column; flex: 1; margin-bottom: 12px; }
+        .exercise-points-container {
+            background: #ffffff;
+            padding: 22px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 410px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        .ep-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .ep-close-btn {
+            background: none !important;
+            border: none;
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            min-width: 44px;
+            min-height: 44px;
+            margin-right: -8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: none !important;
+        }
+        .ep-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .ep-group { display: flex; flex-direction: column; flex: 1; min-width: 0; margin-bottom: 10px; }
         .dual-input .ep-group { margin-bottom: 0; }
-        .ep-group label { font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; color: #475569; }
-        .ep-group input, .ep-group select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; }
-        .ep-divider { border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0; }
-        .ep-results { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
-        .ep-result-box { flex: 1; text-align: center; padding: 15px 10px; border-radius: 6px; background: #f1f5f9; }
+        .ep-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
+        .ep-group input, .ep-group select {
+            width: 100%;
+            min-width: 0;
+            min-height: 44px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f8fafc;
+        }
+        .ep-hr-row { display: flex; gap: 8px; align-items: center; }
+        .ep-hr-row input { flex: 1; min-width: 0; }
+        .ep-clear-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            min-width: 64px;
+            padding: 0 12px;
+            background-color: #e2e8f0;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: none !important;
+        }
+        .ep-hint { font-size: 0.78rem; color: #64748b; margin-top: 3px; }
+        .ep-divider { border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0; }
+        .ep-results { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+        .ep-result-box { flex: 1; min-width: 0; text-align: center; padding: 12px 8px; border-radius: 8px; background: #f1f5f9; }
         .ep-result-box.ep-highlight { background: #e0f2fe; border: 1px solid #bae6fd; }
-        .ep-result-box h4 { margin: 0 0 8px 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+        .ep-result-box h4 { margin: 0 0 6px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; }
         .ep-highlight h4 { color: #0284c7; }
-        .ep-result-box span { font-size: 1.5rem; font-weight: bold; color: #0f172a; }
+        .ep-result-box span { font-size: 1.4rem; font-weight: bold; color: #0f172a; }
         .ep-highlight span { color: #0284c7; }
+        .ep-subnote { font-size: 0.75rem; color: #64748b; margin-top: 4px; font-weight: 500; }
+        .ep-basis-note { text-align: center; font-size: 0.78rem; color: #475569; margin-top: 8px; font-weight: 500; }
+        .ep-apply-btn {
+            width: 100%;
+            min-height: 48px;
+            margin-top: 12px;
+            padding: 12px;
+            background-color: var(--teal);
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            box-shadow: none !important;
+        }
+        @media (max-width: 480px) {
+            .exercise-points-container { padding: 16px 14px; }
+            .ep-result-box { padding: 10px 6px; }
+        }
     </style>
 </body>
 
