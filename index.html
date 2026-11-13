@@ -13,7 +13,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EatMyPyramid v9.1</title>
+    <title>EatMyPyramid v9.2</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -21,7 +21,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "9.1";
+        const APP_VERSION = "9.2";
         if (localStorage.getItem("eatMyPyramidVersion") !== APP_VERSION) {
             localStorage.setItem("eatMyPyramidVersion", APP_VERSION);
             // Appending a unique timestamp query parameter forces the browser to fetch the new file from the server
@@ -248,6 +248,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .log-item-name-btn {
+            display: inline;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font: inherit;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            text-align: left;
+            text-decoration: underline;
+            text-decoration-color: #94a3b8;
+            text-underline-offset: 2px;
+            box-shadow: none !important;
+        }
+
+        .log-item-name-btn:hover {
+            color: var(--primary);
+            text-decoration-color: var(--primary);
+            box-shadow: none !important;
         }
 
         .exercise-box {
@@ -816,7 +839,7 @@
                             </div>
                         </div>
                         <div id="appVersionDisplay"
-                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v9.1)
+                            style="font-size:0.82em; color:#64748b; margin-top:3px; font-weight:500;">(EatMyPyramid v9.2)
                         </div>
                     </div>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
@@ -998,7 +1021,7 @@
                         easy to do. There are multiple ways to search for items. You can do it one at a time using the
                         search field or use the barcode button to scan an item’s barcode. You can enter multiple items
                         at a time manually, use AI text parsing or even upload a picture from your camera all using the
-                        ‘Search a Meal’ button.
+                        ‘Ai Meal Search’ button.
                     </div>
                     <div id="search-content">
 
@@ -1008,8 +1031,8 @@
                                     style="background:#10b981; color:white; white-space: nowrap; padding: 6px 2px; font-size: 0.85em; flex: 1 1 0; border:none; border-radius:4px; cursor:pointer;">📷
                                     Barcode</button>
                                 <button onclick="openEnterMealModal()"
-                                    style="background:#8b5cf6; color:white; white-space: nowrap; padding: 6px 2px; font-size: 0.85em; flex: 1 1 0; border:none; border-radius:4px; cursor:pointer;">Search
-                                    a Meal</button>
+                                    style="background:#8b5cf6; color:white; white-space: nowrap; padding: 6px 2px; font-size: 0.85em; flex: 1 1 0; border:none; border-radius:4px; cursor:pointer;">Ai
+                                    Meal Search</button>
                             </div>
 
                             <div style="display:flex; gap:8px;">
@@ -1018,7 +1041,7 @@
                                 <button id="searchBtn" onclick="searchDatabases()"
                                     style="padding: 6px 2px; font-size: 0.85em; white-space:nowrap; box-shadow:none !important;">Search</button>
                             </div>
-                            <small style="color:#64748b; display:block; margin-top:4px; font-size:0.78em;">Tip: Enter multiple items separated by a comma (<strong>,</strong>) or semicolon (<strong>;</strong>).</small>
+                            <small style="color:#64748b; display:block; margin-top:4px; font-size:0.78em;">Tip: Enter multiple items separated by a comma (<strong>,</strong>) or semicolon (<strong>;</strong>). Use Voice for easy entry.</small>
                         </div>
 
                         <!-- Waterfall Search Results Container -->
@@ -1845,13 +1868,13 @@
                     <div class="fg-info-wrap">
                         <button type="button" class="fg-info-btn" id="searchMealInfoBtn"
                             onclick="document.getElementById('searchMealInfoPopup').style.display=''; document.getElementById('searchMealInfoPopup').classList.toggle('open'); event.stopPropagation();"
-                            aria-label="Search a Meal Info">i</button>
+                            aria-label="Ai Meal Search Info">i</button>
                         <div class="fg-info-popup" id="searchMealInfoPopup"
                             style="min-width:280px; max-width:340px; left:0;">
                             <button
                                 onclick="this.parentElement.style.display=''; this.parentElement.classList.remove('open'); event.stopPropagation();"
                                 style="position:absolute; top:4px; right:8px; background:none; border:none; cursor:pointer; font-size:1.5em; color:#6b7280; padding:0; line-height:1; z-index:100;">&times;</button>
-                            <p style="margin:0; padding-right:15px;">Search a Meal allows two options for you to enter
+                            <p style="margin:0; padding-right:15px;">Ai Meal Search allows two options for you to enter
                                 multiple items at
                                 a time. There is a manual meal builder or you can describe what you had to eat and
                                 let Gemini AI parse it into a list. Note: parsing and lookups may not always render
@@ -2017,6 +2040,25 @@
                     style="background:var(--text-muted); flex:1; padding:12px;">Cancel</button>
                 <button onclick="saveEditItem()"
                     style="background:#f59e0b; flex:1; padding:12px; font-weight:bold; color:white;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOGGED ITEM NUTRITION DETAILS MODAL ==================== -->
+    <div id="loggedItemNutritionModal" onclick="if(event.target === this) closeLoggedItemNutritionModal()"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10006; align-items:center; justify-content:center;">
+        <div
+            style="background:white; padding:24px; border-radius:16px; width:92%; max-width:440px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:14px;">
+                <h3 style="margin:0; color:var(--primary);">Nutrition Details</h3>
+                <button type="button" onclick="closeLoggedItemNutritionModal()"
+                    style="background:none; border:none; font-size:1.5em; cursor:pointer; color:#6b7280; padding:0; line-height:1; box-shadow:none !important;">&times;</button>
+            </div>
+            <div id="loggedItemNutritionBody"></div>
+            <div style="margin-top:18px;">
+                <button type="button" onclick="closeLoggedItemNutritionModal()"
+                    style="width:100%; background:#64748b; color:white; padding:11px; border:none; border-radius:8px; font-weight:600; cursor:pointer; box-shadow:none !important;">Close</button>
             </div>
         </div>
     </div>
@@ -2947,8 +2989,12 @@
         }
 
         function calculateWWPoints(cal, fat, fib) {
-            const capped = Math.min(fib, 4);
-            return Math.max(0, Math.round(((cal / 50) + (fat / 12) - (capped / 4)) * 10) / 10);
+            const safeCal = Math.max(0, parseFloat(cal) || 0);
+            const safeFat = Math.max(0, parseFloat(fat) || 0);
+            const safeFib = Math.max(0, parseFloat(fib) || 0);
+            // Cap fiber at 4g so fiber can reduce EMP points by at most 1.0 pt regardless of total fiber grams
+            const capped = Math.min(safeFib, 4);
+            return Math.max(0, Math.round(((safeCal / 50) + (safeFat / 12) - (capped / 4)) * 10) / 10);
         }
 
         function saveData() {
@@ -5753,7 +5799,7 @@
                             div.innerHTML = `
                                 ${sharingCheckboxHtml}
                                 <div style="flex-grow:1; padding-right:10px;">
-                                    <strong>${item.name}</strong>${sourceDisplay}<br>
+                                    <button type="button" class="log-item-name-btn" onclick="showLoggedItemNutritionModal(${index})" title="Click to view detailed saved nutrition information">${escapeHtml(item.name)}</button>${sourceDisplay}<br>
                                     <small>${item.amount ? item.amount.toFixed(1) + ' ' + item.unit : ''} • ${item.calories.toFixed(0)} cal • EMP: ${item.wwPoints.toFixed(1)}${upcDisplay}</small>
                                 </div>
                                 <div style="display:grid; grid-template-columns: auto auto; gap:10px; justify-content:end; align-items:center; flex-shrink:0;">
@@ -5768,6 +5814,102 @@
                     }
                 }
             });
+        }
+
+        function showLoggedItemNutritionModal(index) {
+            const item = state && Array.isArray(state.log) ? state.log[index] : null;
+            if (!item) return;
+
+            const body = document.getElementById('loggedItemNutritionBody');
+            const modal = document.getElementById('loggedItemNutritionModal');
+            if (!body || !modal) return;
+
+            const cals = parseFloat(item.calories) || 0;
+            const prot = parseFloat(item.protein) || 0;
+            const fat = parseFloat(item.fat) || 0;
+            const carbs = parseFloat(item.carbs) || 0;
+            const fib = parseFloat(item.fiber) || 0;
+            const pts = item.wwPoints !== undefined && item.wwPoints !== null
+                ? (parseFloat(item.wwPoints) || 0)
+                : calculateWWPoints(cals, fat, fib);
+
+            const amt = parseFloat(item.amount) || 0;
+            const unitStr = item.unit ? String(item.unit) : '';
+            const portionText = amt > 0 ? (amt.toFixed(1).replace(/\.0$/, '') + (unitStr ? ' ' + unitStr : '')) : '1 serving';
+
+            const catRaw = item.category || 'Other';
+            const catDisplay = catRaw === 'Other' ? 'Not counted in Food Group servings' : catRaw;
+            const mealRaw = item.meal || 'Other';
+            const mealDisplay = mealRaw === 'Discretionary' ? 'Snacks/Discretionary' : mealRaw;
+            const sourceDisplay = item.source || 'Unknown';
+            const upcHtml = item.upc
+                ? `<div><strong>UPC:</strong> ${escapeHtml(item.upc)}</div>`
+                : '';
+
+            const servingSizeG = parseFloat(item.servingSize);
+            const servingRefHtml = (!isNaN(servingSizeG) && servingSizeG > 0)
+                ? `<div><strong>1 Serving Reference:</strong> ${servingSizeG.toFixed(0)} g (${formatWeight(servingSizeG)})</div>`
+                : '';
+
+            const fgAmt = parseFloat(item.foodGroupAmount);
+            const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
+            const fgServHtml = (trackedGroups.includes(catRaw) && !isNaN(fgAmt) && fgAmt > 0)
+                ? `<div><strong>Food Group Servings:</strong> ${fgAmt.toFixed(2)}</div>`
+                : '';
+
+            const fibReduction = Math.min(Math.max(0, fib), 4) / 4;
+            const fibNote = fib > 4
+                ? ` <span style="font-size:0.82em; color:#64748b;">(capped at 4g = -1.0 pt max)</span>`
+                : (fib > 0 ? ` <span style="font-size:0.82em; color:#64748b;">(-${fibReduction.toFixed(2)} pt)</span>` : '');
+
+            body.innerHTML = `
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:1.12em; font-weight:700; color:#0f172a; margin-bottom:4px;">${escapeHtml(item.name || 'Logged Food')}</div>
+                    <div style="font-size:0.84em; color:#64748b; display:flex; flex-direction:column; gap:2px;">
+                        <div><strong>Meal:</strong> ${escapeHtml(mealDisplay)} &bull; <strong>Food Group:</strong> ${escapeHtml(catDisplay)}</div>
+                        <div><strong>Logged Portion:</strong> ${escapeHtml(portionText)} &bull; <strong>Source:</strong> ${escapeHtml(sourceDisplay)}</div>
+                        ${servingRefHtml}
+                        ${fgServHtml}
+                        ${upcHtml}
+                    </div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
+                    <div style="font-size:0.82em; text-transform:uppercase; letter-spacing:0.04em; color:#475569; font-weight:700; border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:8px;">
+                        Saved Nutrition Summary
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #e2e8f0;">
+                        <span style="color:#334155;">Calories</span>
+                        <strong style="color:#0f172a;">${cals.toFixed(0)} kcal</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #e2e8f0;">
+                        <span style="color:#334155;">Protein</span>
+                        <strong style="color:#0f172a;">${prot.toFixed(1)} g</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #e2e8f0;">
+                        <span style="color:#334155;">Total Fat</span>
+                        <strong style="color:#0f172a;">${fat.toFixed(1)} g</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #e2e8f0;">
+                        <span style="color:#334155;">Carbohydrates</span>
+                        <strong style="color:#0f172a;">${carbs.toFixed(1)} g</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #e2e8f0;">
+                        <span style="color:#334155;">Dietary Fiber${fibNote}</span>
+                        <strong style="color:#0f172a;">${fib.toFixed(1)} g</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0 2px 0; margin-top:4px;">
+                        <span style="color:var(--purple); font-weight:700;">EMP Points</span>
+                        <strong style="color:var(--purple); font-size:1.1em;">${pts.toFixed(1)}</strong>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeLoggedItemNutritionModal() {
+            const modal = document.getElementById('loggedItemNutritionModal');
+            if (modal) modal.style.display = 'none';
         }
 
         let currentCopyIndex = -1;
