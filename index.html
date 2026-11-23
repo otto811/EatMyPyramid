@@ -1951,8 +1951,15 @@
                         <div class="ios-row-title">Daily Protein (g)</div>
                         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                             <button type="button" class="icon-pill-btn" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="showProteinCalculatorModal(event)">Calculate</button>
-                            <input type="number" inputmode="numeric" id="proteinGoalInput" class="inline-input" style="width:72px !important;" value="0" min="0" onchange="updateTarget('ProteinGrams', this.value); showToast('Protein goal saved');">
+                            <input type="number" inputmode="numeric" id="proteinGoalInput" class="inline-input" style="width:72px !important;" value="0" min="0" onchange="updateTarget('ProteinGrams', this.value); updateV10ProfileSummary(); showToast('Protein goal saved');">
                         </div>
+                    </div>
+                    <div class="ios-row static">
+                        <div style="min-width:0;">
+                            <div class="ios-row-title">Macro Split (P / C / F)</div>
+                            <div id="v10ProfileMacroSplitSub" class="ios-row-sub">30% / 40% / 30% &middot; Total 100%</div>
+                        </div>
+                        <button type="button" class="icon-pill-btn" style="height:36px; padding:0 12px; font-size:12.5px; flex-shrink:0;" onclick="openV10MacroTargetsSheet()">Edit %</button>
                     </div>
                 </div>
 
@@ -2353,13 +2360,13 @@
             <p style="font-size:13px; color:var(--text-muted); margin:0 0 14px;">
                 Protein % is calculated automatically from your Daily Calories &amp; Protein (g). Adjusting Fat % or Carbs % auto-balances the other.
             </p>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                 <div>
                     <label style="display:flex; justify-content:space-between; align-items:center;">
                         <span>Daily Calories</span>
                         <button type="button" onclick="document.getElementById('v10MacroTargetsModal').style.display='none'; showCalorieCalculatorModal(event);" style="background:none; border:none; color:var(--accent-text); font-size:11.5px; font-weight:700; padding:0; cursor:pointer;">Calculate</button>
                     </label>
-                    <input type="number" inputmode="numeric" id="v10GoalCal" style="width:100%;">
+                    <input type="number" inputmode="numeric" id="v10GoalCal" style="width:100%;" oninput="syncV10MacroTargetsPreview('cal')">
                 </div>
                 <div>
                     <label style="display:flex; justify-content:space-between; align-items:center;">
@@ -2373,16 +2380,24 @@
                         <span>Daily Protein (g)</span>
                         <button type="button" onclick="document.getElementById('v10MacroTargetsModal').style.display='none'; showProteinCalculatorModal(event);" style="background:none; border:none; color:var(--accent-text); font-size:11.5px; font-weight:700; padding:0; cursor:pointer;">Calculate</button>
                     </label>
-                    <input type="number" inputmode="numeric" id="v10GoalProG" style="width:100%;">
+                    <input type="number" inputmode="numeric" id="v10GoalProG" style="width:100%;" oninput="syncV10MacroTargetsPreview('pro')">
+                </div>
+                <div>
+                    <label>Protein Target (%)</label>
+                    <input type="text" id="v10GoalProPctReadonly" readonly style="width:100%; opacity:0.8; font-weight:700;">
+                </div>
+                <div>
+                    <label>Carbs Target (%)</label>
+                    <input type="number" inputmode="numeric" id="v10GoalCarbPct" min="0" max="100" style="width:100%;" oninput="syncV10MacroTargetsPreview('carbs')">
                 </div>
                 <div>
                     <label>Fat Target (%)</label>
-                    <input type="number" inputmode="numeric" id="v10GoalFatPct" style="width:100%;">
+                    <input type="number" inputmode="numeric" id="v10GoalFatPct" min="0" max="100" style="width:100%;" oninput="syncV10MacroTargetsPreview('fat')">
                 </div>
-                <div style="grid-column: 1 / -1;">
-                    <label>Carbs Target (%)</label>
-                    <input type="number" inputmode="numeric" id="v10GoalCarbPct" style="width:100%;">
-                </div>
+            </div>
+            <div id="v10MacroSumBar" class="cal-align-box ok" style="margin-top:0; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <span id="v10MacroSumText">Total: 100%</span>
+                <button type="button" id="v10AutoBalanceBtn" onclick="autoBalanceV10MacroSheet()" style="display:none; background:#d97706; color:#ffffff; border:none; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700; cursor:pointer; flex-shrink:0;">Auto-Balance 100%</button>
             </div>
             <button type="button" class="v10-btn full" onclick="saveV10MacroTargetsSheet()">Save Targets</button>
         </div>
@@ -4751,7 +4766,7 @@
             updateTarget('Calories', appData.calorieGoal);
         }
 
-        function updateTarget(cat, val) {
+        function updateTarget(cat, val, silentMacroWarning) {
             let v = parseFloat(val);
             const isMacroField = ['Calories', 'Protein', 'Fat', 'Carbs', 'ProteinGrams', 'CarbsGrams', 'FatGrams'].includes(cat);
             if (isMacroField) v = Math.round(v);
@@ -4778,10 +4793,10 @@
                     state.targets.CarbsGrams = Math.round((v * (state.targets.Carbs / 100)) / 4) || 0;
                 }
                 
-                if (['Protein', 'Fat', 'Carbs', 'ProteinGrams', 'Calories'].includes(cat)) {
+                if (!silentMacroWarning && ['Protein', 'Fat', 'Carbs', 'ProteinGrams', 'Calories'].includes(cat)) {
                      const total = Math.round((state.targets.Protein || 0) + (state.targets.Fat || 0) + (state.targets.Carbs || 0));
                      if (total !== 100 && total > 0) {
-                         alert(`Warning: Your Macro targets currently add up to ${total}%. Please adjust Protein, Fat, and Carbs percentages in the Macros tab to equal exactly 100%.`);
+                         alert(`Warning: Your Macro targets currently add up to ${total}%. Tap "Edit %" next to Macro Split in Profile (or "Edit Goals" on Today \u2192 Macros) to adjust Carbs & Fat % to equal 100%.`);
                      }
                 }
 
@@ -12118,6 +12133,20 @@
                     gEl.textContent = 'Tap for chart & history';
                 }
             }
+            var splitSub = document.getElementById('v10ProfileMacroSplitSub');
+            if (splitSub && typeof state !== 'undefined' && state.targets) {
+                var pPct = Math.round(state.targets.Protein || 0);
+                var cPct = Math.round(state.targets.Carbs || 0);
+                var fPct = Math.round(state.targets.Fat || 0);
+                var tot = pPct + cPct + fPct;
+                if (tot === 100) {
+                    splitSub.textContent = 'P ' + pPct + '% / C ' + cPct + '% / F ' + fPct + '% · Total 100%';
+                    splitSub.style.color = '';
+                } else {
+                    splitSub.textContent = 'P ' + pPct + '% / C ' + cPct + '% / F ' + fPct + '% · Total ' + tot + '% (Adjust to 100%)';
+                    splitSub.style.color = 'var(--warning)';
+                }
+            }
         }
 
         // ---- 5-Tab Navigation + Top Segmented Controls ----
@@ -12254,7 +12283,75 @@
         };
         closeManageMyFoodsModal = function() {};
 
-        // ---- Today -> Edit Macro Goals Sheet ----
+        // ---- Today & Profile -> Edit Macro Goals Sheet ----
+        function syncV10MacroTargetsPreview(changedField) {
+            var calEl = document.getElementById('v10GoalCal');
+            var proGEl = document.getElementById('v10GoalProG');
+            var proPctEl = document.getElementById('v10GoalProPctReadonly');
+            var carbEl = document.getElementById('v10GoalCarbPct');
+            var fatEl = document.getElementById('v10GoalFatPct');
+            var sumBar = document.getElementById('v10MacroSumBar');
+            var sumTxt = document.getElementById('v10MacroSumText');
+            var balBtn = document.getElementById('v10AutoBalanceBtn');
+
+            var cal = parseFloat(calEl ? calEl.value : 0) || 0;
+            var proG = parseFloat(proGEl ? proGEl.value : 0) || 0;
+            var proPct = cal > 0 ? Math.round((proG * 4 / cal) * 100) : Math.round(state.targets.Protein || 0);
+            if (proPctEl) proPctEl.value = proPct + '%';
+
+            var carbP = parseFloat(carbEl ? carbEl.value : 0);
+            var fatP = parseFloat(fatEl ? fatEl.value : 0);
+            if (isNaN(carbP)) carbP = 0;
+            if (isNaN(fatP)) fatP = 0;
+
+            var rem = Math.max(0, 100 - proPct);
+            if (changedField === 'carbs' && carbEl && fatEl) {
+                carbP = Math.max(0, Math.min(rem, Math.round(carbP)));
+                fatP = Math.max(0, rem - carbP);
+                fatEl.value = fatP;
+            } else if (changedField === 'fat' && carbEl && fatEl) {
+                fatP = Math.max(0, Math.min(rem, Math.round(fatP)));
+                carbP = Math.max(0, rem - fatP);
+                carbEl.value = carbP;
+            }
+
+            var total = Math.round(proPct + carbP + fatP);
+            if (sumTxt) {
+                sumTxt.innerHTML = 'P ' + proPct + '% + C ' + Math.round(carbP) + '% + F ' + Math.round(fatP) + '% = <strong>' + total + '%</strong>';
+            }
+            if (sumBar) {
+                sumBar.className = 'cal-align-box ' + (total === 100 ? 'ok' : 'warn');
+            }
+            if (balBtn) {
+                balBtn.style.display = (total === 100) ? 'none' : 'inline-block';
+            }
+        }
+
+        function autoBalanceV10MacroSheet() {
+            var cal = parseFloat(document.getElementById('v10GoalCal').value) || 0;
+            var proG = parseFloat(document.getElementById('v10GoalProG').value) || 0;
+            var proPct = cal > 0 ? Math.round((proG * 4 / cal) * 100) : Math.round(state.targets.Protein || 0);
+            var rem = Math.max(0, 100 - proPct);
+            var curC = Math.max(0, parseFloat(document.getElementById('v10GoalCarbPct').value) || 0);
+            var curF = Math.max(0, parseFloat(document.getElementById('v10GoalFatPct').value) || 0);
+            var newC, newF;
+            if (curC + curF > 0) {
+                newC = Math.round(rem * (curC / (curC + curF)));
+                newF = rem - newC;
+            } else {
+                newC = Math.round(rem * 0.55);
+                newF = rem - newC;
+            }
+            document.getElementById('v10GoalCarbPct').value = newC;
+            document.getElementById('v10GoalFatPct').value = newF;
+            syncV10MacroTargetsPreview('init');
+        }
+
+        function handleV10MacroCardClick(e) {
+            if (e && e.target && e.target.closest && e.target.closest('.fg-info-wrap')) return;
+            openV10MacroTargetsSheet();
+        }
+
         function openV10MacroTargetsSheet() {
             document.getElementById('v10GoalCal').value = Math.round(appData.calorieGoal || 0);
             document.getElementById('v10GoalEmp').value = Math.round(appData.wwGoal || 0);
@@ -12262,6 +12359,7 @@
             document.getElementById('v10GoalFatPct').value = Math.round(state.targets.Fat || 0);
             document.getElementById('v10GoalCarbPct').value = Math.round(state.targets.Carbs || 0);
             document.getElementById('v10MacroTargetsModal').style.display = 'flex';
+            syncV10MacroTargetsPreview('init');
         }
 
         function saveV10MacroTargetsSheet() {
@@ -12272,23 +12370,34 @@
             var carbP = parseFloat(document.getElementById('v10GoalCarbPct').value);
 
             if (!isNaN(cal) && cal > 0) {
-                document.getElementById('calorieGoalInput').value = cal;
-                recalculateMacroTargets();
+                appData.calorieGoal = Math.round(cal);
+                document.getElementById('calorieGoalInput').value = appData.calorieGoal;
+                state.targets.Calories = appData.calorieGoal;
             }
             if (!isNaN(emp) && emp >= 0) {
-                document.getElementById('wwGoalInput').value = emp;
+                document.getElementById('wwGoalInput').value = Math.round(emp);
                 updateWWGoal();
             }
             if (!isNaN(proG) && proG >= 0) {
-                document.getElementById('proteinGoalInput').value = proG;
-                updateTarget('ProteinGrams', proG);
+                document.getElementById('proteinGoalInput').value = Math.round(proG);
+                updateTarget('ProteinGrams', proG, true);
+            } else if (!isNaN(cal) && cal > 0) {
+                updateTarget('Calories', cal, true);
             }
-            if (!isNaN(fatP) && fatP !== Math.round(state.targets.Fat || 0)) {
-                updateTarget('Fat', fatP);
-            } else if (!isNaN(carbP) && carbP !== Math.round(state.targets.Carbs || 0)) {
-                updateTarget('Carbs', carbP);
+            if (!isNaN(fatP) && fatP >= 0) {
+                updateTarget('Fat', fatP, true);
             }
+            if (!isNaN(carbP) && carbP >= 0) {
+                updateTarget('Carbs', carbP, true);
+            }
+
+            var finalTotal = Math.round((state.targets.Protein || 0) + (state.targets.Fat || 0) + (state.targets.Carbs || 0));
+            if (finalTotal !== 100 && finalTotal > 0) {
+                alert('Warning: Your Macro targets currently add up to ' + finalTotal + '%. Please adjust Carbs % and Fat % so Protein + Carbs + Fat equals 100%.');
+            }
+
             document.getElementById('v10MacroTargetsModal').style.display = 'none';
+            if (typeof updateV10ProfileSummary === 'function') updateV10ProfileSummary();
             renderBarometers();
             showToast('Daily targets updated');
         }
@@ -12373,7 +12482,7 @@
                     var pctCurr = calGoal > 0 ? Math.round(((gCurr * m.mult) / calGoal) * 100) : 0;
                     var barW = gTarget > 0 ? Math.min(100, (gCurr / gTarget) * 100) : (pctTarget > 0 ? Math.min(100, (pctCurr / pctTarget) * 100) : 0);
 
-                    macroCardsHtml += '<div class="macro-card">' +
+                    macroCardsHtml += '<div class="macro-card" style="cursor:pointer;" onclick="handleV10MacroCardClick(event)">' +
                         '<div class="macro-head">' +
                             '<span>' + m.label + '</span>' +
                             '<div class="fg-info-wrap">' +
@@ -12430,10 +12539,19 @@
                             '</div>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="section-heading"><span class="section-label">Macros (Grams &amp; % of Calories)</span></div>' +
+                    (function() {
+                        var pP = Math.round(state.targets.Protein || 0), cP = Math.round(state.targets.Carbs || 0), fP = Math.round(state.targets.Fat || 0);
+                        var totP = pP + cP + fP;
+                        return (totP > 0 && totP !== 100)
+                            ? '<button type="button" onclick="openV10MacroTargetsSheet()" class="cal-align-box warn" style="width:100%; margin:0 0 10px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px;"><span><strong>&#9888; Macro targets total ' + totP + '%</strong> (P ' + pP + '% / C ' + cP + '% / F ' + fP + '%)</span><span style="font-weight:700; text-decoration:underline; flex-shrink:0;">Fix &rarr;</span></button>'
+                            : '';
+                    })() +
+                    '<div class="section-heading"><span class="section-label">Macros (Grams &amp; % of Calories)</span><button type="button" class="section-action" onclick="openV10MacroTargetsSheet()">Edit %</button></div>' +
                     '<div class="macro-grid">' + macroCardsHtml + '</div>' +
                     vmCardHtml;
             }
+
+            if (typeof updateV10ProfileSummary === 'function') updateV10ProfileSummary();
 
             // 3. Food Groups (Right-Thumb Ergonomics)
             var groupCont = document.getElementById('groupBarometersContainer');
