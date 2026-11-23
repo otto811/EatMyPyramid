@@ -2012,7 +2012,7 @@
                         </div>
                         <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
-                    <input type="file" id="importAppDataInput" accept=".json" style="display:none;" onchange="importAppData(event)">
+                    <input type="file" id="importAppDataInput" accept=".json,application/json,text/plain" style="display:none;" onchange="importAppData(event)">
 
                     <button type="button" class="ios-row" onclick="event.preventDefault(); document.getElementById('viewArchiveInput').click()">
                         <div class="ios-row-left">
@@ -2023,7 +2023,7 @@
                         </div>
                         <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
-                    <input type="file" id="viewArchiveInput" accept=".json" style="display:none;" onchange="loadArchiveData(event)">
+                    <input type="file" id="viewArchiveInput" accept=".json,application/json,text/plain" style="display:none;" onchange="loadArchiveData(event)">
 
                     <button type="button" class="ios-row" onclick="event.preventDefault(); showManageStorageModal()">
                         <div class="ios-row-left">
@@ -8370,8 +8370,22 @@
             if (!appData) {
                 return alert("No data to export.");
             }
+            // Ensure current week snapshot is up to date before exporting
+            if (appData.currentWeekStart && appData.history) {
+                if (!appData.archivedWeeks) appData.archivedWeeks = {};
+                appData.archivedWeeks[appData.currentWeekStart] = {
+                    history: JSON.parse(JSON.stringify(appData.history)),
+                    savedAt: new Date().toISOString()
+                };
+            }
+            var themePref = 'auto';
+            try { themePref = localStorage.getItem('empThemePref') || 'auto'; } catch (e) {}
+
             const exportPayload = Object.assign({}, appData, {
-                vitaminsAndMedicines: loadVitaminsAndMedicinesDB()
+                vitaminsAndMedicines: loadVitaminsAndMedicinesDB(),
+                empThemePref: themePref,
+                exportedFromVersion: (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'v10.0',
+                exportedAt: new Date().toISOString()
             });
             const dataStr = JSON.stringify(exportPayload, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
@@ -8382,14 +8396,17 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            // Delay revoking Blob URL so iOS Safari / standalone PWA finishes handing the file off
+            setTimeout(function () {
+                try { URL.revokeObjectURL(url); } catch (e) {}
+            }, 10000);
         }
 
         function importAppData(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            if (!confirm("⚠️ This will overwrite all your current app data (logs, settings, foods) with the imported file.\n\nAre you sure you want to continue?")) {
+            if (!confirm("⚠️ This will overwrite all your current app data (logs, settings, foods, recipes, history, vitamins) with the imported file.\n\nAre you sure you want to continue?")) {
                 event.target.value = "";
                 return;
             }
@@ -8398,16 +8415,50 @@
             reader.onload = function (e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (typeof importedData !== 'object' || (!importedData.hasOwnProperty('history') && !importedData.hasOwnProperty('archivedWeeks'))) {
+                    if (!importedData || typeof importedData !== 'object' || (!importedData.hasOwnProperty('history') && !importedData.hasOwnProperty('archivedWeeks'))) {
                         throw new Error("Invalid file format.");
                     }
+
+                    // Restore Vitamins & Medicines separate localStorage database
+                    let vmCount = 0;
                     if (Array.isArray(importedData.vitaminsAndMedicines)) {
+                        vmCount = importedData.vitaminsAndMedicines.length;
                         localStorage.setItem(VITAMINS_DB_KEY, JSON.stringify(importedData.vitaminsAndMedicines));
                         delete importedData.vitaminsAndMedicines;
                     }
+
+                    // Restore Appearance theme preference (v10.0)
+                    if (typeof importedData.empThemePref === 'string') {
+                        try { localStorage.setItem('empThemePref', importedData.empThemePref); } catch (err) {}
+                        delete importedData.empThemePref;
+                    }
+
+                    // Remove export-only metadata fields so appData stays clean
+                    delete importedData.exportedFromVersion;
+                    delete importedData.exportedAt;
+
+                    // Ensure archive viewing mode cannot block saving the newly imported database
+                    isArchiveMode = false;
+                    recalledWeekData = null;
+
                     appData = importedData;
                     saveData();
-                    alert("Import complete! The app will now reload to apply your data.");
+
+                    const foodCount = Array.isArray(appData.myFoods) ? appData.myFoods.length : 0;
+                    const recipeCount = Array.isArray(appData.myRecipes) ? appData.myRecipes.length : 0;
+                    const weekCount = (appData.archivedWeeks && typeof appData.archivedWeeks === 'object') ? Object.keys(appData.archivedWeeks).length : 0;
+                    const weightCount = Array.isArray(appData.weightHistory) ? appData.weightHistory.length : 0;
+
+                    alert(
+                        "Import complete!\n\n" +
+                        "Restored:\n" +
+                        "• " + weekCount + " week(s) of daily history\n" +
+                        "• " + foodCount + " My Foods / Restaurant item(s)\n" +
+                        "• " + recipeCount + " Recipe(s)\n" +
+                        "• " + weightCount + " Weight history entry(ies)\n" +
+                        "• " + vmCount + " Vitamin / Medicine item(s)\n\n" +
+                        "The app will now reload to apply your data."
+                    );
                     location.reload();
                 } catch (error) {
                     console.error("Import error:", error);
