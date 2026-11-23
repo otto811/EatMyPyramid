@@ -3232,12 +3232,16 @@
             </div>
 
             <div class="form-group" style="margin-top: 15px;">
-                <label>Amount</label>
-                <div style="display:flex; gap:10px; align-items:flex-end;">
-                    <input type="number" id="edit-amount" inputmode="decimal" step="0.1" style="flex:2; padding:12px; font-size:1em;">
-                    <span id="edit-unit-display"
-                        style="flex:1; padding:12px; background:#f3f4f6; border-radius:6px; color:#6b7280; text-align:center; display:inline-block; height:45px; box-sizing:border-box; line-height: 21px;"></span>
+                <label>Amount &amp; Unit</label>
+                <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap:10px; align-items:center;">
+                    <input type="number" id="edit-amount" inputmode="decimal" step="0.1" min="0.01" oninput="updateEditLogPreview()" style="width:100%; min-width:0; padding:12px; font-size:1em;">
+                    <select id="edit-unit-select" onchange="updateEditLogPreview()" style="width:100%; min-width:0; padding:12px; font-size:1em;">
+                        <option value="servings">serving(s)</option>
+                        <option value="oz">ounces (oz)</option>
+                        <option value="g">grams (g)</option>
+                    </select>
                 </div>
+                <div id="edit-serving-preview" class="preview-box" style="display:none; margin-top:8px; padding:9px 11px; font-size:12.5px; line-height:1.45;"></div>
             </div>
 
             <div class="form-group" style="margin-top: 15px;">
@@ -3346,7 +3350,7 @@
                     <option value="Saturday">Saturday</option>
                 </select>
             </div>
-            <!-- Meal selector — shown only when copying from My Foods -->
+            <!-- Meal selector — shown when logging from My Foods or copying a single item -->
             <div class="form-group" id="copyMealGroup" style="display:none; margin-top:12px;">
                 <label style="font-size:0.9em; font-weight:600; margin-bottom:5px;">Meal</label>
                 <select id="copyMealSelect" style="width:100%; padding:12px; font-size:1.05em;">
@@ -3357,6 +3361,33 @@
                     <option value="Other">Other / Unclassified</option>
                 </select>
             </div>
+            <!-- Amount & Unit selector -->
+            <div class="form-group" id="copyAmountGroup" style="display:none; margin-top:12px;">
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px;">Servings / Amount &amp; Unit</label>
+                <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap:10px; align-items:center;">
+                    <input type="number" inputmode="decimal" step="0.1" min="0.01" id="copyAmountInput" value="1" oninput="updateCopyToDayPreview()" style="width:100%; min-width:0; padding:12px; font-size:1em;">
+                    <select id="copyUnitSelect" onchange="updateCopyToDayPreview()" style="width:100%; min-width:0; padding:12px; font-size:1em;">
+                        <option value="servings">serving(s)</option>
+                        <option value="oz">ounces (oz)</option>
+                        <option value="g">grams (g)</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Food Group Assignment selector -->
+            <div class="form-group" id="copyFoodGroupGroup" style="display:none; margin-top:12px;">
+                <label style="font-size:0.9em; font-weight:600; margin-bottom:5px;">Food Group Assignment</label>
+                <select id="copyFoodGroupSelect" onchange="updateCopyToDayPreview()" style="width:100%; padding:12px; font-size:1em;">
+                    <option value="Fruit">Fruit</option>
+                    <option value="Vegetable">Vegetable</option>
+                    <option value="Proteins">Proteins</option>
+                    <option value="Dairy">Dairy</option>
+                    <option value="Grain">Grain</option>
+                    <option value="Water">Water (counts as 1 cup / 8oz serving)</option>
+                    <option value="Other">Do not count in any Food Group</option>
+                </select>
+            </div>
+            <!-- Live Nutrition Preview -->
+            <div id="copyNutritionPreview" class="preview-box" style="display:none; margin-top:12px; padding:10px 12px; font-size:12.5px; line-height:1.45;"></div>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="closeCopyToDayModal()"
                     style="background:var(--text-muted); flex:1; padding:12px; color:white; border:none; border-radius:6px; font-size:1.05em; cursor:pointer;">Cancel</button>
@@ -5741,6 +5772,117 @@
         let currentEditIndex = -1;
         let currentEditContext = 'log'; // 'log', 'pending', 'manual'
 
+        function populateUnitDropdown(selectEl, rawUnit) {
+            if (!selectEl) return;
+            // Remove any previous temporary custom-unit option
+            Array.from(selectEl.options).forEach(function (opt) {
+                if (opt.getAttribute('data-custom-unit') === '1') {
+                    opt.remove();
+                }
+            });
+            var u = String(rawUnit || 'servings').trim().toLowerCase();
+            if (!u || u === 'serving' || u === 'servings') {
+                selectEl.value = 'servings';
+            } else if (u === 'oz' || u === 'ounce' || u === 'ounces') {
+                selectEl.value = 'oz';
+            } else if (u === 'g' || u === 'gram' || u === 'grams') {
+                selectEl.value = 'g';
+            } else {
+                var customOpt = document.createElement('option');
+                customOpt.value = rawUnit;
+                customOpt.textContent = rawUnit;
+                customOpt.setAttribute('data-custom-unit', '1');
+                selectEl.appendChild(customOpt);
+                selectEl.value = rawUnit;
+            }
+        }
+
+        function computeItemOldGrams(item) {
+            var sSize = parseFloat(item.servingSize) || 100;
+            var amt = parseFloat(item.amount) || 0;
+            var u = String(item.unit || 'servings').trim().toLowerCase();
+            if (u === 'serving' || u === 'servings') {
+                return amt * (parseFloat(item.gramsPerUnit) || sSize);
+            } else if (u === 'oz') {
+                return amt * 28.3495;
+            } else if (u === 'g') {
+                return amt;
+            }
+            return amt * (parseFloat(item.gramsPerUnit) || sSize);
+        }
+
+        function computeUnitConversion(val, selectedUnit, servingSize, fallbackGramsPerUnit) {
+            var sSize = parseFloat(servingSize) || 100;
+            var u = String(selectedUnit || 'servings');
+            if (u === 'servings' || u === 'serving') {
+                return {
+                    unit: val === 1 ? 'serving' : 'servings',
+                    gramsPerUnit: sSize,
+                    grams: val * sSize,
+                    foodGroupAmount: val
+                };
+            } else if (u === 'oz') {
+                var gOz = val * 28.3495;
+                return {
+                    unit: 'oz',
+                    gramsPerUnit: 28.3495,
+                    grams: gOz,
+                    foodGroupAmount: gOz / sSize
+                };
+            } else if (u === 'g') {
+                return {
+                    unit: 'g',
+                    gramsPerUnit: 1,
+                    grams: val,
+                    foodGroupAmount: val / sSize
+                };
+            }
+            var gpu = parseFloat(fallbackGramsPerUnit) || sSize;
+            var gCust = val * gpu;
+            return {
+                unit: u,
+                gramsPerUnit: gpu,
+                grams: gCust,
+                foodGroupAmount: gCust / sSize
+            };
+        }
+
+        function updateEditLogPreview() {
+            var prevEl = document.getElementById('edit-serving-preview');
+            if (!prevEl) return;
+            if (currentEditContext !== 'log' || currentEditIndex < 0 || !state.log[currentEditIndex]) {
+                prevEl.style.display = 'none';
+                return;
+            }
+            var item = state.log[currentEditIndex];
+            var amtVal = parseFloat(document.getElementById('edit-amount').value);
+            var selUnit = document.getElementById('edit-unit-select').value;
+            var sSize = parseFloat(item.servingSize) || 100;
+            var sOz = (sSize / 28.3495).toFixed(1);
+
+            if (isNaN(amtVal) || amtVal <= 0) {
+                prevEl.style.display = 'block';
+                prevEl.innerHTML = '<em>1 serving = ' + Math.round(sSize) + 'g (' + sOz + ' oz). Enter a positive amount.</em>';
+                return;
+            }
+
+            var oldGrams = computeItemOldGrams(item);
+            var conv = computeUnitConversion(amtVal, selUnit, sSize, item.gramsPerUnit);
+            var ratio = oldGrams > 0 ? (conv.grams / oldGrams) : 1;
+
+            var pCal = (item.calories || 0) * ratio;
+            var pPro = (item.protein || 0) * ratio;
+            var pFat = (item.fat || 0) * ratio;
+            var pCarb = (item.carbs || 0) * ratio;
+            var pFib = (item.fiber || 0) * ratio;
+            var pPts = calculateWWPoints(pCal, pFat, pFib);
+
+            prevEl.style.display = 'block';
+            prevEl.innerHTML =
+                '<div style="color:var(--text-muted); font-size:11.5px; margin-bottom:3px;">1 serving = ' + Math.round(sSize) + 'g (' + sOz + ' oz) &middot; Selected: <strong>' + Math.round(conv.grams) + 'g</strong> (' + conv.foodGroupAmount.toFixed(2).replace(/\.?0+$/, '') + ' serv)</div>' +
+                '<div><strong>' + Math.round(pCal) + ' kcal</strong> &middot; P ' + pPro.toFixed(1) + 'g &middot; C ' + pCarb.toFixed(1) + 'g &middot; F ' + pFat.toFixed(1) + 'g &middot; <strong style="color:var(--purple);">' + pPts.toFixed(1) + ' EMP</strong></div>';
+        }
+
         function editItem(index) {
             if (recalledWeekData) {
                 alert("Editing logged items is disabled while viewing an archived week.");
@@ -5752,7 +5894,7 @@
 
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-amount').value = item.amount;
-            document.getElementById('edit-unit-display').textContent = item.unit || '';
+            populateUnitDropdown(document.getElementById('edit-unit-select'), item.unit || 'servings');
 
             let cat = item.category || 'Other';
             const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
@@ -5763,6 +5905,7 @@
 
             document.getElementById('edit-meal').value = item.meal || 'Other';
 
+            updateEditLogPreview();
             document.getElementById('editLogModal').style.display = 'flex';
         }
 
@@ -5795,13 +5938,14 @@
 
             document.getElementById('edit-name').value = name || '';
             document.getElementById('edit-amount').value = amount;
-            document.getElementById('edit-unit-display').textContent = unit;
+            populateUnitDropdown(document.getElementById('edit-unit-select'), unit);
 
             const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
             if (!validGroups.includes(cat)) cat = 'Other';
             document.getElementById('edit-food-group').value = cat;
 
             document.getElementById('edit-meal').value = meal || 'Other';
+            updateEditLogPreview();
             document.getElementById('editLogModal').style.display = 'flex';
         }
 
@@ -5817,6 +5961,8 @@
             const newName = document.getElementById('edit-name').value;
             const newCat = document.getElementById('edit-food-group').value;
             const newMeal = document.getElementById('edit-meal').value;
+            const selUnitEl = document.getElementById('edit-unit-select');
+            const selUnit = selUnitEl ? selUnitEl.value : 'servings';
 
             if (newAmtVal === null || newAmtVal === "") return alert("Please enter an amount.");
 
@@ -5826,15 +5972,16 @@
             if (currentEditContext === 'pending') {
                 const item = pendingMealItems[currentEditIndex];
                 item.parsed.amount = val;
+                item.parsed.unit = (selUnit === 'servings') ? (val === 1 ? 'serving' : 'servings') : selUnit;
                 if (newName) item.parsed.description = newName;
-                item.groupOverride = newCat; // we'll use this in builderLogMeal
-                // meal override isn't strictly necessary per-item since builder logs the whole meal together, but we can set it
+                item.groupOverride = newCat;
                 renderPendingMealItems();
                 closeEditModal();
                 return;
             } else if (currentEditContext === 'manual') {
                 const item = manualEntryItems[currentEditIndex];
                 item.amount = val;
+                item.unit = (selUnit === 'servings') ? (val === 1 ? 'serving' : 'servings') : selUnit;
                 if (newName) item.query = newName;
                 item.groupOverride = newCat;
                 renderManualEntryList();
@@ -5846,27 +5993,15 @@
             const oldName = item.name;
             const oldCat = item.category;
 
-            // Calculate old food group servings to subtract
-            let oldFgAmount = item.foodGroupAmount || 1;
-            let oldGrams = 100;
-            if (item.unit === 'serving' || item.unit === 'servings') {
-                oldGrams = item.amount * (item.gramsPerUnit || item.servingSize || 100);
-            } else {
-                oldGrams = item.unit === 'oz' ? item.amount * 28.3495 : item.amount;
-            }
+            // Calculate old food group servings & grams to subtract
+            const oldFgAmount = item.foodGroupAmount || 1;
+            const sSize = parseFloat(item.servingSize) || 100;
+            const oldGrams = computeItemOldGrams(item);
 
-            // Calculate new food group servings and new grams
-            let newFgAmount = 1;
-            let newGrams = val;
-
-            if (item.unit === 'serving' || item.unit === 'servings') {
-                newFgAmount = val;
-                newGrams = val * (item.gramsPerUnit || item.servingSize || 100);
-            } else {
-                newGrams = item.unit === 'oz' ? val * 28.3495 : val;
-                const sSize = item.servingSize || 100;
-                newFgAmount = newGrams / sSize;
-            }
+            // Calculate new unit, gramsPerUnit, food group servings, and grams
+            const conv = computeUnitConversion(val, selUnit, sSize, item.gramsPerUnit);
+            const newFgAmount = conv.foodGroupAmount;
+            const newGrams = conv.grams;
 
             // Subtract old values from daily totals
             state.current.Calories -= item.calories;
@@ -5882,10 +6017,12 @@
             }
 
             item.amount = val;
+            item.unit = conv.unit;
+            item.gramsPerUnit = conv.gramsPerUnit;
             if (newName) item.name = newName;
             item.foodGroupAmount = newFgAmount;
 
-            const ratio = newGrams / (oldGrams || 1);
+            const ratio = oldGrams > 0 ? (newGrams / oldGrams) : 1;
 
             item.calories = item.calories * ratio;
             item.protein = item.protein * ratio;
@@ -7304,9 +7441,79 @@
         let currentCopyIndex = -1;
         let currentMyFoodCopyIndex = -1;
 
+        function updateCopyToDayPreview() {
+            var prevEl = document.getElementById('copyNutritionPreview');
+            if (!prevEl) return;
+            var amtEl = document.getElementById('copyAmountInput');
+            var unitEl = document.getElementById('copyUnitSelect');
+            var grpEl = document.getElementById('copyFoodGroupSelect');
+            var amtVal = parseFloat(amtEl ? amtEl.value : 1);
+            var selUnit = unitEl ? unitEl.value : 'servings';
+            var selGrp = grpEl ? grpEl.value : 'Other';
+
+            if (currentMyFoodCopyIndex >= 0 && appData.myFoods && appData.myFoods[currentMyFoodCopyIndex]) {
+                var food = appData.myFoods[currentMyFoodCopyIndex];
+                var sSize = parseFloat(food.servingSize) || 100;
+                var sOz = (sSize / 28.3495).toFixed(1);
+                var householdTxt = food.householdServingFullText ? (escapeHtml(food.householdServingFullText) + ' / ') : '';
+                if (isNaN(amtVal) || amtVal <= 0) {
+                    prevEl.style.display = 'block';
+                    prevEl.innerHTML = '<em>1 serving = ' + householdTxt + Math.round(sSize) + 'g (' + sOz + ' oz). Enter a positive amount.</em>';
+                    return;
+                }
+                var conv = computeUnitConversion(amtVal, selUnit, sSize, sSize);
+                var mult = conv.grams / 100;
+                var nut = getAllNutrients(food);
+                var pCal = (nut.calories || 0) * mult;
+                var pPro = (nut.protein || 0) * mult;
+                var pFat = (nut.fat || 0) * mult;
+                var pCarb = (nut.carbs || 0) * mult;
+                var pFib = (nut.fiber || 0) * mult;
+                var pPts = calculateWWPoints(pCal, pFat, pFib);
+                var grpLabel = (selGrp === 'Other') ? 'Not counted in Food Groups' : (selGrp + ' (+' + conv.foodGroupAmount.toFixed(2).replace(/\.?0+$/, '') + ')');
+
+                prevEl.style.display = 'block';
+                prevEl.innerHTML =
+                    '<div style="color:var(--text-muted); font-size:11.5px; margin-bottom:3px;">1 serving = ' + householdTxt + Math.round(sSize) + 'g (' + sOz + ' oz) &middot; ' + grpLabel + '</div>' +
+                    '<div><strong>' + Math.round(pCal) + ' kcal</strong> &middot; P ' + pPro.toFixed(1) + 'g &middot; C ' + pCarb.toFixed(1) + 'g &middot; F ' + pFat.toFixed(1) + 'g &middot; <strong style="color:var(--purple);">' + pPts.toFixed(1) + ' EMP</strong></div>';
+            } else if (currentCopyIndex >= 0 && state.log && state.log[currentCopyIndex]) {
+                var item = state.log[currentCopyIndex];
+                var iSize = parseFloat(item.servingSize) || 100;
+                var iOz = (iSize / 28.3495).toFixed(1);
+                if (isNaN(amtVal) || amtVal <= 0) {
+                    prevEl.style.display = 'block';
+                    prevEl.innerHTML = '<em>1 serving = ' + Math.round(iSize) + 'g (' + iOz + ' oz). Enter a positive amount.</em>';
+                    return;
+                }
+                var oldGrams = computeItemOldGrams(item);
+                var iConv = computeUnitConversion(amtVal, selUnit, iSize, item.gramsPerUnit);
+                var ratio = oldGrams > 0 ? (iConv.grams / oldGrams) : 1;
+                var cCal = (item.calories || 0) * ratio;
+                var cPro = (item.protein || 0) * ratio;
+                var cFat = (item.fat || 0) * ratio;
+                var cCarb = (item.carbs || 0) * ratio;
+                var cFib = (item.fiber || 0) * ratio;
+                var cPts = calculateWWPoints(cCal, cFat, cFib);
+                var cGrpLabel = (selGrp === 'Other') ? 'Not counted in Food Groups' : (selGrp + ' (+' + iConv.foodGroupAmount.toFixed(2).replace(/\.?0+$/, '') + ')');
+
+                prevEl.style.display = 'block';
+                prevEl.innerHTML =
+                    '<div style="color:var(--text-muted); font-size:11.5px; margin-bottom:3px;">1 serving = ' + Math.round(iSize) + 'g (' + iOz + ' oz) &middot; ' + cGrpLabel + '</div>' +
+                    '<div><strong>' + Math.round(cCal) + ' kcal</strong> &middot; P ' + cPro.toFixed(1) + 'g &middot; C ' + cCarb.toFixed(1) + 'g &middot; F ' + cFat.toFixed(1) + 'g &middot; <strong style="color:var(--purple);">' + cPts.toFixed(1) + ' EMP</strong></div>';
+            } else {
+                prevEl.style.display = 'none';
+            }
+        }
+
         function showCopyToDayModal(index) {
             currentCopyIndex = index;
             currentMyFoodCopyIndex = -1;
+            window.isCopyingMultipleSelectedItems = false;
+
+            const activeDayEl = document.getElementById('daySelect');
+            if (activeDayEl && activeDayEl.value) {
+                document.getElementById('copyToDaySelect').value = activeDayEl.value;
+            }
 
             const itemToCopy = state.log[index];
             if (itemToCopy && itemToCopy.meal) {
@@ -7315,20 +7522,64 @@
                 document.getElementById('copyMealSelect').value = 'Discretionary';
             }
 
-            // Show the meal selector for copied items
+            const amtEl = document.getElementById('copyAmountInput');
+            const unitEl = document.getElementById('copyUnitSelect');
+            const grpEl = document.getElementById('copyFoodGroupSelect');
+            const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
+
+            if (amtEl) amtEl.value = (itemToCopy && itemToCopy.amount) ? itemToCopy.amount : 1;
+            if (unitEl) populateUnitDropdown(unitEl, (itemToCopy && itemToCopy.unit) ? itemToCopy.unit : 'servings');
+            if (grpEl) {
+                var icat = (itemToCopy && itemToCopy.category) ? itemToCopy.category : 'Other';
+                grpEl.value = validGroups.includes(icat) ? icat : 'Other';
+            }
+
             document.getElementById('copyMealGroup').style.display = 'block';
+            document.getElementById('copyAmountGroup').style.display = 'block';
+            document.getElementById('copyFoodGroupGroup').style.display = 'block';
             document.getElementById('copyToDayTitle').textContent = 'Copy Item to Day';
-            document.getElementById('copyToDayDesc').textContent = 'Select which day and meal to copy this item to:';
+            document.getElementById('copyToDayDesc').textContent = (itemToCopy && itemToCopy.name)
+                ? ('Copy "' + itemToCopy.name + '" to:')
+                : 'Select which day and meal to copy this item to:';
+            updateCopyToDayPreview();
             document.getElementById('copyToDayModal').style.display = 'flex';
         }
 
         function copyMyFoodToDay(index) {
             currentMyFoodCopyIndex = index;
             currentCopyIndex = -1;
-            // My Foods items need a meal selection
+            window.isCopyingMultipleSelectedItems = false;
+
+            const activeDayEl = document.getElementById('daySelect');
+            if (activeDayEl && activeDayEl.value) {
+                document.getElementById('copyToDaySelect').value = activeDayEl.value;
+            }
+
+            const food = (appData && appData.myFoods) ? appData.myFoods[index] : null;
+            const amtEl = document.getElementById('copyAmountInput');
+            const unitEl = document.getElementById('copyUnitSelect');
+            const grpEl = document.getElementById('copyFoodGroupSelect');
+            const validGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
+
+            if (amtEl) amtEl.value = 1;
+            if (unitEl) populateUnitDropdown(unitEl, 'servings');
+            if (grpEl) {
+                var detectedCat = (food && food.foodCategory) ? food.foodCategory : '';
+                if (!validGroups.includes(detectedCat) && food && typeof getFoodCategory === 'function') {
+                    var autoCat = getFoodCategory(food);
+                    if (validGroups.includes(autoCat)) detectedCat = autoCat;
+                }
+                grpEl.value = validGroups.includes(detectedCat) ? detectedCat : 'Other';
+            }
+
             document.getElementById('copyMealGroup').style.display = 'block';
-            document.getElementById('copyToDayTitle').textContent = 'Log My Food to Day';
-            document.getElementById('copyToDayDesc').textContent = 'Choose a day and meal to log this food to (1 serving):';
+            document.getElementById('copyAmountGroup').style.display = 'block';
+            document.getElementById('copyFoodGroupGroup').style.display = 'block';
+            document.getElementById('copyToDayTitle').textContent = 'Log Food to Day';
+            document.getElementById('copyToDayDesc').textContent = (food && food.description)
+                ? food.description
+                : 'Choose day, meal, amount, and food group:';
+            updateCopyToDayPreview();
             document.getElementById('copyToDayModal').style.display = 'flex';
         }
 
@@ -7353,27 +7604,32 @@
             const trackedGroups = ['Fruit', 'Vegetable', 'Proteins', 'Dairy', 'Grain', 'Water'];
 
             if (currentMyFoodCopyIndex >= 0) {
-                // ---- PATH A: Copy from My Foods (build a full log item) ----
+                // ---- PATH A: Log from My Foods / Recent / Restaurants with chosen amount, unit, meal & food group ----
                 const food = appData.myFoods[currentMyFoodCopyIndex];
                 if (!food) { closeCopyToDayModal(); return; }
 
+                const amtVal = parseFloat(document.getElementById('copyAmountInput').value);
+                if (isNaN(amtVal) || amtVal <= 0) {
+                    return alert('Please enter a valid positive amount.');
+                }
+                const selUnit = document.getElementById('copyUnitSelect').value || 'servings';
+                const category = document.getElementById('copyFoodGroupSelect').value || 'Other';
                 const meal = document.getElementById('copyMealSelect').value;
                 const nut = getAllNutrients(food);
                 const servingSize = parseFloat(food.servingSize) || 100;
-                const multiplier = servingSize / 100;  // nutrients stored per 100g
-
-                const category = food.foodCategory || 'Other';
+                const conv = computeUnitConversion(amtVal, selUnit, servingSize, servingSize);
+                const multiplier = conv.grams / 100; // nutrients stored per 100g
 
                 const item = {
                     name: food.description,
                     upc: food.upc || null,
-                    source: food.source || 'Unknown',
-                    amount: 1,
-                    unit: 'serving',
+                    source: food.source || 'My Foods',
+                    amount: amtVal,
+                    unit: conv.unit,
                     category: category,
                     servingSize: servingSize,
-                    gramsPerUnit: servingSize,
-                    foodGroupAmount: 1,
+                    gramsPerUnit: conv.gramsPerUnit,
+                    foodGroupAmount: conv.foodGroupAmount,
                     calories: nut.calories * multiplier,
                     protein: nut.protein * multiplier,
                     fat: nut.fat * multiplier,
@@ -7397,7 +7653,7 @@
 
                 if (trackedGroups.includes(category)) {
                     if (targetCurrent[category] === undefined) targetCurrent[category] = 0;
-                    targetCurrent[category] += 1;  // 1 serving
+                    targetCurrent[category] += conv.foodGroupAmount;
                 }
 
                 saveData();
@@ -7407,16 +7663,43 @@
                     renderLog();
                     renderBarometers();
                 }
+                if (typeof renderRecentFoodsQuickList === 'function') renderRecentFoodsQuickList();
 
-                alert(`${food.description} logged to ${targetDay} (${meal})!`);
+                if (typeof showToast === 'function') {
+                    showToast('Logged to ' + targetDay + ' (' + (meal === 'Discretionary' ? 'Snacks' : meal) + ')');
+                }
 
             } else if (currentCopyIndex >= 0) {
-                // ---- PATH B: Copy existing log item to another day ----
+                // ---- PATH B: Copy existing log item to another day with optional amount/unit/meal/group edits ----
                 const itemToCopy = state.log[currentCopyIndex];
                 if (!itemToCopy) { closeCopyToDayModal(); return; }
 
+                const amtVal = parseFloat(document.getElementById('copyAmountInput').value);
+                if (isNaN(amtVal) || amtVal <= 0) {
+                    return alert('Please enter a valid positive amount.');
+                }
+                const selUnit = document.getElementById('copyUnitSelect').value || 'servings';
+                const newCat = document.getElementById('copyFoodGroupSelect').value || 'Other';
+
                 const clonedItem = JSON.parse(JSON.stringify(itemToCopy));
+                const sSize = parseFloat(clonedItem.servingSize) || 100;
+                const oldGrams = computeItemOldGrams(clonedItem);
+                const conv = computeUnitConversion(amtVal, selUnit, sSize, clonedItem.gramsPerUnit);
+                const ratio = oldGrams > 0 ? (conv.grams / oldGrams) : 1;
+
+                clonedItem.amount = amtVal;
+                clonedItem.unit = conv.unit;
+                clonedItem.gramsPerUnit = conv.gramsPerUnit;
+                clonedItem.foodGroupAmount = conv.foodGroupAmount;
+                clonedItem.category = newCat;
                 clonedItem.meal = document.getElementById('copyMealSelect').value;
+                clonedItem.calories = (clonedItem.calories || 0) * ratio;
+                clonedItem.protein = (clonedItem.protein || 0) * ratio;
+                clonedItem.fat = (clonedItem.fat || 0) * ratio;
+                clonedItem.carbs = (clonedItem.carbs || 0) * ratio;
+                clonedItem.fiber = (clonedItem.fiber || 0) * ratio;
+                clonedItem.wwPoints = calculateWWPoints(clonedItem.calories, clonedItem.fat, clonedItem.fiber);
+
                 targetLog.push(clonedItem);
 
                 targetCurrent.Calories += clonedItem.calories;
@@ -7437,7 +7720,9 @@
                     renderBarometers();
                 }
 
-                alert(`${clonedItem.name} copied to ${targetDay}!`);
+                if (typeof showToast === 'function') {
+                    showToast('Copied to ' + targetDay);
+                }
             } else if (window.isCopyingMultipleSelectedItems) {
                 // ---- PATH C: Copy multiple selected items to another day ----
                 window.selectedLogItemsToShare.forEach(index => {
@@ -8167,8 +8452,14 @@
                 return alert("Please select at least one item to copy.");
             }
             window.isCopyingMultipleSelectedItems = true;
-            const mealGroup = document.getElementById('copyMealGroup');
-            if (mealGroup) mealGroup.style.display = 'none';
+            const activeDayEl = document.getElementById('daySelect');
+            if (activeDayEl && activeDayEl.value) {
+                document.getElementById('copyToDaySelect').value = activeDayEl.value;
+            }
+            ['copyMealGroup', 'copyAmountGroup', 'copyFoodGroupGroup', 'copyNutritionPreview'].forEach(function (id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
             document.getElementById('copyToDayTitle').textContent = 'Copy Selected to Day';
             document.getElementById('copyToDayDesc').textContent = 'Choose a day to copy the selected items to:';
             document.getElementById('copyToDayModal').style.display = 'flex';
