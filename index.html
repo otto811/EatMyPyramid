@@ -14,7 +14,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" id="metaThemeColor" content="#f2f4f8">
-    <title>EatMyPyramid v10.0</title>
+    <title>EatMyPyramid v10.5</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -22,7 +22,7 @@
     <script>
         // Force a cache-busting reload on iOS PWAs when a new version is detected
         // Update this string to automatically update the title and UI version display!
-        const APP_VERSION = "10.0";
+        const APP_VERSION = "10.5";
         (function() {
             try {
                 var pref = localStorage.getItem("empThemePref") || "auto";
@@ -1887,6 +1887,148 @@
             margin-top: 6px;
         }
 
+        /* Exercise Tracker Modal (v10.5 — Weight Tracker Style, Light & OLED Dark) */
+        .ex-goal-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .ex-goal-row {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .ex-goal-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .ex-goal-row:first-child {
+            padding-top: 0;
+        }
+        .ex-goal-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .ex-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .ex-day-dots {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .ex-day-pill {
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            padding: 3px 0;
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+        .ex-day-pill.hit {
+            color: #ffffff;
+            border-color: transparent;
+        }
+        .ex-goal-editor-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .ex-goal-editor-row:last-child {
+            border-bottom: none;
+        }
+        .ex-stepper {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .ex-step-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .ex-step-val {
+            min-width: 24px;
+            text-align: center;
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .ex-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .ex-badge-pill.met {
+            background: rgba(16, 185, 129, 0.14);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: var(--success);
+        }
+        /* Expanded full-screen Exercise Tracker overlay */
+        #exerciseTrackerModal.ex-expanded > div {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px calc(max(12px, env(safe-area-inset-bottom, 0px)) + 6px) !important;
+            display: flex;
+            flex-direction: column;
+        }
+        #exerciseTrackerModal.ex-expanded .ex-collapse-on-expand {
+            display: none !important;
+        }
+        #exerciseTrackerModal.ex-expanded .wt-chart-shell {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        #exerciseTrackerModal.ex-expanded .wt-chart-scroll {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: stretch;
+        }
+        #exerciseTrackerModal.ex-expanded .wt-chart-canvas-wrap {
+            height: 100% !important;
+            min-height: 320px;
+        }
+
         /* Calorie Calculator Alignment Card (Light & Dark Mode) */
         .cal-summary-box {
             margin-top: 14px;
@@ -2006,7 +2148,7 @@
                 <div class="v10-splash-fill"></div>
             </div>
             <div class="v10-splash-meta">
-                <span class="v10-splash-pill">v10.0</span>
+                <span class="v10-splash-pill">v10.5</span>
                 <span>Tap anywhere to skip</span>
             </div>
         </div>
@@ -2204,6 +2346,18 @@
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </div>
                     </button>
+                    <button type="button" class="ios-row" onclick="event.preventDefault(); showExerciseTrackerModal()">
+                        <div class="ios-row-left">
+                            <div class="ios-row-icon" style="background:var(--accent-soft); color:var(--accent-text);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                            </div>
+                            <div class="ios-row-title">Exercise Tracker &amp; Goals</div>
+                        </div>
+                        <div class="ios-row-right">
+                            <span id="exProfileGoalBadge" class="pill-badge">Set goals</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                    </button>
                 </div>
 
                 <div class="section-heading">
@@ -2305,7 +2459,7 @@
                     </button>
                 </div>
 
-                <div id="appVersionDisplay" style="text-align:center; font-size:12px; color:var(--text-muted); padding:6px 0 12px;">(EatMyPyramid v10.0)</div>
+                <div id="appVersionDisplay" style="text-align:center; font-size:12px; color:var(--text-muted); padding:6px 0 12px;">(EatMyPyramid v10.5)</div>
             </div>
         </div>
 
@@ -2430,7 +2584,15 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="icon-pill-btn" onclick="openAdvancedExModal()">Pro Pts</button>
+                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                                    <button type="button" class="icon-pill-btn neutral" onclick="showExerciseTrackerModal()">Tracker</button>
+                                    <button type="button" class="icon-pill-btn" onclick="openAdvancedExModal()">Pro Pts</button>
+                                </div>
+                            </div>
+
+                            <!-- Exercise Type selector (synced with Pro Pts + Custom Activities) -->
+                            <div style="width:100%;">
+                                <select id="quickExType" aria-label="Exercise Type" style="width:100%; font-weight:600;"></select>
                             </div>
 
                             <!-- Segmented Intensity Control synced with hidden #exIntensity -->
@@ -2449,6 +2611,21 @@
                                 <input type="number" inputmode="numeric" id="exDuration" placeholder="Minutes" style="width:100%; min-width:0;">
                                 <button type="button" class="v10-btn" style="padding:0 16px; flex-shrink:0;" onclick="addExercisePoints()">+ Add Exercise</button>
                             </div>
+                        </div>
+
+                        <!-- Live Weekly Exercise Goals Summary Card (v10.5) -->
+                        <div class="ios-card" id="v10WeeklyExerciseCard" onclick="showExerciseTrackerModal()" style="cursor:pointer; display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                <div>
+                                    <div style="font-size:14.5px; font-weight:700; color:var(--text-main);">Weekly Exercise Goals</div>
+                                    <div id="v10WeeklyExSub" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Tap to set weekly goals &amp; view exercise history</div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                                    <span id="v10WeeklyExPill" class="pill-badge">0 / 0</span>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+                            <div id="v10WeeklyExBadges" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                         </div>
 
                         <div class="section-heading">
@@ -4172,6 +4349,183 @@
         </div>
     </div>
 
+    <!-- ==================== EXERCISE TRACKER MODAL (v10.5) ==================== -->
+    <div id="exerciseTrackerModal" class="v10-modal"
+        onclick="if(event.target===this) closeExerciseTrackerModal()"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+        <div
+            style="background:var(--bg-card); padding:20px; border-radius:20px; width:95%; max-width:720px; margin:16px auto; max-height:94vh; display:flex; flex-direction:column; overflow-y:auto;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px; flex-shrink:0;">
+                <h3 style="margin:0;">Exercise Tracker</h3>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" id="exGoalsToggleBtn" class="icon-pill-btn neutral ex-collapse-on-expand" style="height:32px; font-size:12px; padding:0 10px;" onclick="toggleExGoalsEditor()">Goals</button>
+                    <button type="button" id="exExpandBtn" class="icon-pill-btn" style="height:32px; font-size:12px; padding:0 11px;" onclick="toggleExChartExpand()">Expand &#x2922;</button>
+                    <button type="button" class="icon-circle-btn" onclick="closeExerciseTrackerModal()">&times;</button>
+                </div>
+            </div>
+
+            <!-- Top KPI Summary (Current Week Sun-Sat) -->
+            <div class="wt-summary-grid ex-collapse-on-expand">
+                <div class="wt-kpi-card">
+                    <div class="wt-kpi-label">Weekly Goals</div>
+                    <div class="wt-kpi-val" id="exKpiGoals">0 / 0</div>
+                </div>
+                <div class="wt-kpi-card">
+                    <div class="wt-kpi-label">Week Minutes</div>
+                    <div class="wt-kpi-val" id="exKpiMinutes">0 min</div>
+                </div>
+                <div class="wt-kpi-card">
+                    <div class="wt-kpi-label">Week EMP</div>
+                    <div class="wt-kpi-val" id="exKpiPoints" style="color:var(--emp-color);">0.0 pts</div>
+                </div>
+            </div>
+
+            <!-- Inline Weekly Goals & Custom Activities Editor (Toggled via Goals button) -->
+            <div id="exGoalsEditorPanel" class="ex-goal-card ex-collapse-on-expand" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div>
+                        <div style="font-size:13.5px; font-weight:800; color:var(--text-main);">Weekly Goals (Times / Week)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted);">Set 1–7 sessions/week for activities you want to track</div>
+                    </div>
+                    <button type="button" class="icon-pill-btn" style="height:28px; font-size:11.5px; padding:0 10px;" onclick="toggleExGoalsEditor()">Done</button>
+                </div>
+                <div id="exGoalsEditorList" style="max-height:220px; overflow-y:auto; padding-right:2px;"></div>
+
+                <!-- Add Custom Exercise Activity -->
+                <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-main); margin-bottom:6px;">Add Custom Exercise Type</div>
+                    <div style="display:grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap:6px; align-items:center;">
+                        <input type="text" id="exCustomNameInput" placeholder="e.g. Pickleball" style="width:100%; min-width:0; padding:8px; font-size:13px;">
+                        <select id="exCustomMetPreset" style="width:100%; min-width:0; padding:8px; font-size:12.5px;">
+                            <option value="light">Light (~3 MET)</option>
+                            <option value="moderate" selected>Moderate (~5 MET)</option>
+                            <option value="vigorous">Vigorous (~7.5 MET)</option>
+                        </select>
+                        <button type="button" class="v10-btn" style="height:38px; padding:0 12px; font-size:12.5px;" onclick="addCustomExerciseType()">+ Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- This Week's Goals vs. Met Breakdown -->
+            <div class="ex-goal-card ex-collapse-on-expand">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-size:13px; font-weight:800; color:var(--text-main);" id="exWeekHeading">This Week's Goals</div>
+                    <button type="button" style="background:none; border:none; color:var(--accent-text); font-size:12px; font-weight:700; padding:0; cursor:pointer;" onclick="toggleExGoalsEditor()">Edit Goals</button>
+                </div>
+                <div id="exWeeklyGoalsView"></div>
+            </div>
+
+            <!-- Log / Edit Exercise Entry Form -->
+            <div class="wt-log-card ex-collapse-on-expand">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-size:12.5px; font-weight:700; color:var(--text-main);" id="exFormTitle">Log Exercise Session</div>
+                    <button type="button" id="exCancelEditBtn" style="display:none; background:none; border:none; color:var(--danger); font-size:12px; font-weight:700; padding:0; cursor:pointer;" onclick="cancelEditExerciseSession()">Cancel Edit</button>
+                </div>
+                <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap:8px; margin-bottom:8px;">
+                    <div style="min-width:0;">
+                        <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Date</label>
+                        <input type="date" id="exLogDate" style="width:100%; min-width:0; padding:8px; font-size:13.5px;">
+                    </div>
+                    <div style="min-width:0;">
+                        <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Exercise Type</label>
+                        <select id="exLogType" style="width:100%; min-width:0; padding:8px; font-size:13.5px;"></select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) auto; gap:8px; align-items:end;">
+                    <div style="min-width:0;">
+                        <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Minutes</label>
+                        <input type="number" id="exLogDuration" inputmode="numeric" min="1" step="1" value="30" placeholder="30" style="width:100%; min-width:0; padding:8px; font-size:13.5px;">
+                    </div>
+                    <div style="min-width:0;">
+                        <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Intensity</label>
+                        <select id="exLogExertion" style="width:100%; min-width:0; padding:8px; font-size:13.5px;">
+                            <option value="low">Low</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <button type="button" id="exSaveBtn" class="v10-btn" style="height:40px; padding:0 14px; font-size:13px;" onclick="saveExerciseFromTracker()">Save</button>
+                </div>
+                <label style="display:flex; align-items:center; gap:8px; margin-top:9px; font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer;">
+                    <input type="checkbox" id="exSyncEmpToggle" checked style="width:17px; height:17px; accent-color:var(--accent); flex-shrink:0;">
+                    <span>Auto-sync EMP Exercise Points for current-week days</span>
+                </label>
+            </div>
+
+            <!-- Historical Chart Controls -->
+            <div class="wt-controls-bar" style="flex-shrink:0;">
+                <select id="exRangeSelect" onchange="onExRangeChange()" style="flex:1; min-width:130px; padding:8px 10px; font-size:13px; font-weight:600;">
+                    <option value="30d">Last 30 Days</option>
+                    <option value="month">Current Month</option>
+                    <option value="90d">Last 90 Days</option>
+                    <option value="ytd">Year to Date (YTD)</option>
+                    <option value="all" selected>All Dates</option>
+                    <option value="custom">Custom Time Frame...</option>
+                </select>
+                <select id="exFilterType" onchange="renderExerciseChart()" style="flex:1; min-width:130px; padding:8px 10px; font-size:13px; font-weight:600;">
+                    <option value="all">All Exercise Types</option>
+                </select>
+                <button type="button" id="exEntriesToggleBtn" class="icon-pill-btn neutral ex-collapse-on-expand" style="height:36px; font-size:12px; padding:0 11px;" onclick="toggleExEntriesDrawer()">Entries (0)</button>
+            </div>
+
+            <!-- Custom Date Range Pickers -->
+            <div id="exCustomRangeRow" style="display:none; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; flex-shrink:0;">
+                <div style="min-width:0;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">From</label>
+                    <input type="date" id="exCustomStart" onchange="renderExerciseChart()" style="width:100%; min-width:0; padding:7px; font-size:13px;">
+                </div>
+                <div style="min-width:0;">
+                    <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">To</label>
+                    <input type="date" id="exCustomEnd" onchange="renderExerciseChart()" style="width:100%; min-width:0; padding:7px; font-size:13px;">
+                </div>
+            </div>
+
+            <!-- Chart View Mode Chips -->
+            <div class="wt-chip-row" style="flex-shrink:0;">
+                <button type="button" id="exAggWeeklyBtn" class="wt-chip active" onclick="setExAggregation('weekly')">Weekly</button>
+                <button type="button" id="exAggDailyBtn" class="wt-chip" onclick="setExAggregation('daily')">Daily</button>
+                <button type="button" id="exMetricSessionsBtn" class="wt-chip active" onclick="setExMetric('sessions')">Sessions</button>
+                <button type="button" id="exMetricMinutesBtn" class="wt-chip" onclick="setExMetric('minutes')">Minutes</button>
+                <button type="button" id="exMetricPointsBtn" class="wt-chip" onclick="setExMetric('points')">EMP Pts</button>
+                <button type="button" id="exGoalLineBtn" class="wt-chip active" onclick="toggleExGoalLine()">Goal Line</button>
+            </div>
+
+            <!-- Period Summary Strip -->
+            <div class="wt-period-strip" style="flex-shrink:0;">
+                <div>
+                    <div class="wt-stat-lbl">Sessions</div>
+                    <div class="wt-stat-val" id="exStatSessions">0</div>
+                </div>
+                <div>
+                    <div class="wt-stat-lbl">Total Minutes</div>
+                    <div class="wt-stat-val" id="exStatMinutes">0 min</div>
+                </div>
+                <div>
+                    <div class="wt-stat-lbl">Avg / Week</div>
+                    <div class="wt-stat-val" id="exStatAvgWk">0.0</div>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="wt-chart-shell">
+                <div class="wt-chart-scroll" id="exChartScroll">
+                    <div class="wt-chart-canvas-wrap" id="exChartCanvasWrap">
+                        <canvas id="exerciseChart"></canvas>
+                    </div>
+                </div>
+                <div id="exScrollHint" class="wt-scroll-hint">&larr; Swipe chart horizontally to inspect all periods &rarr;</div>
+            </div>
+
+            <!-- Collapsible Entries List -->
+            <div id="exEntriesDrawer" class="wt-entries-drawer ex-collapse-on-expand"></div>
+
+            <div class="ex-collapse-on-expand" style="margin-top:12px;">
+                <button type="button" class="v10-btn secondary full" onclick="closeExerciseTrackerModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
     <div id="manageStorageModal" class="v10-modal"
         style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); z-index:9000; align-items:center; justify-content:center; overflow-y: auto;">
         <div
@@ -4696,6 +5050,17 @@
                     }
                 }
             }
+
+            // Migration 12 (v10.5): Exercise Tracker goals, session history, and custom exercise types
+            if (!appData.exerciseGoals || typeof appData.exerciseGoals !== 'object') {
+                appData.exerciseGoals = {};
+            }
+            if (!Array.isArray(appData.exerciseHistory)) {
+                appData.exerciseHistory = [];
+            }
+            if (!Array.isArray(appData.customExerciseTypes)) {
+                appData.customExerciseTypes = [];
+            }
         }
 
         // ==================== WEEK ARCHIVING / RECALL A WEEK HELPER ====================
@@ -5013,8 +5378,27 @@
             // Clear duration input for the next entry
             document.getElementById('exDuration').value = '';
 
+            // Record structured workout session in Exercise Tracker (v10.5)
+            if (typeof recordExerciseSession === 'function') {
+                const qTypeEl = document.getElementById('quickExType');
+                const qTypeKey = (qTypeEl && qTypeEl.value) ? qTypeEl.value : 'brisk_walk';
+                recordExerciseSession({
+                    date: (typeof getActiveTrackedDateStr === 'function') ? getActiveTrackedDateStr() : formatIsoLocal(new Date()),
+                    type: qTypeKey,
+                    duration: duration,
+                    exertion: String(intensityText || 'Low').toLowerCase(),
+                    hr: null,
+                    calories: Math.round(earned * 100),
+                    points: Math.round(earned * 10) / 10,
+                    source: 'quick_add',
+                    syncedToEmp: true
+                });
+            }
+
             // Call the existing function to save and update UI
             updateExercisePoints();
+            if (typeof renderV10ExerciseSummaryCards === 'function') renderV10ExerciseSummaryCards();
+            if (typeof showToast === 'function') showToast('Logged ' + duration + ' min exercise (+' + earned.toFixed(1) + ' pts)');
         }
 
         function recalculateMacroTargets() {
@@ -6809,6 +7193,7 @@
             }
 
             if (typeof updateV10ProfileSummary === 'function') updateV10ProfileSummary();
+            if (typeof renderV10ExerciseSummaryCards === 'function') renderV10ExerciseSummaryCards();
             closeCalorieCalculatorModal();
 
             if (typeof showToast === 'function') {
@@ -8666,7 +9051,7 @@
             const exportPayload = Object.assign({}, appData, {
                 vitaminsAndMedicines: loadVitaminsAndMedicinesDB(),
                 empThemePref: themePref,
-                exportedFromVersion: (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'v10.0',
+                exportedFromVersion: (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'v10.5',
                 exportedAt: new Date().toISOString()
             });
             const dataStr = JSON.stringify(exportPayload, null, 2);
@@ -8730,6 +9115,7 @@
                     const recipeCount = Array.isArray(appData.myRecipes) ? appData.myRecipes.length : 0;
                     const weekCount = (appData.archivedWeeks && typeof appData.archivedWeeks === 'object') ? Object.keys(appData.archivedWeeks).length : 0;
                     const weightCount = Array.isArray(appData.weightHistory) ? appData.weightHistory.length : 0;
+                    const exCount = Array.isArray(appData.exerciseHistory) ? appData.exerciseHistory.length : 0;
 
                     alert(
                         "Import complete!\n\n" +
@@ -8738,6 +9124,7 @@
                         "• " + foodCount + " My Foods / Restaurant item(s)\n" +
                         "• " + recipeCount + " Recipe(s)\n" +
                         "• " + weightCount + " Weight history entry(ies)\n" +
+                        "• " + exCount + " Exercise session(s)\n" +
                         "• " + vmCount + " Vitamin / Medicine item(s)\n\n" +
                         "The app will now reload to apply your data."
                     );
@@ -12655,16 +13042,78 @@
         // ==================== ADVANCED PTS CALCULATOR ====================
         // ACSM / 2011 Compendium MET lookup per exercise type and exertion tier, plus wearable HR clamps
         const EP_MET_TABLE = {
-            casual_walk: { low: 2.0, moderate: 2.8, high: 3.5, min: 1.8, max: 4.5, label: 'Casual Walk' },
-            brisk_walk:  { low: 2.8, moderate: 3.8, high: 4.8, min: 2.5, max: 5.8, label: 'Brisk Walking' },
-            speed_walk:  { low: 3.5, moderate: 4.5, high: 5.8, min: 3.0, max: 6.8, label: 'Speed Walking' },
-            pilates:     { low: 2.5, moderate: 3.3, high: 4.5, min: 2.0, max: 5.2, label: 'Pilates' },
-            yoga:        { low: 2.0, moderate: 3.0, high: 4.5, min: 1.8, max: 5.2, label: 'Yoga' },
-            strength:    { low: 3.0, moderate: 4.5, high: 6.0, min: 2.5, max: 7.5, label: 'Strength Training' },
-            elliptical:  { low: 3.5, moderate: 5.0, high: 7.5, min: 3.0, max: 9.5, label: 'Elliptical' },
-            treadmill:   { low: 3.3, moderate: 5.0, high: 8.5, min: 2.8, max: 10.5, label: 'Treadmill' },
-            run:         { low: 6.0, moderate: 8.5, high: 11.0, min: 5.0, max: 13.5, label: 'Running' }
+            casual_walk: { low: 2.0, moderate: 2.8, high: 3.5, min: 1.8, max: 4.5, label: 'Casual Walk', color: '#0ea5e9' },
+            brisk_walk:  { low: 2.8, moderate: 3.8, high: 4.8, min: 2.5, max: 5.8, label: 'Brisk Walking', color: '#4f46e5' },
+            speed_walk:  { low: 3.5, moderate: 4.5, high: 5.8, min: 3.0, max: 6.8, label: 'Speed Walking', color: '#6366f1' },
+            pilates:     { low: 2.5, moderate: 3.3, high: 4.5, min: 2.0, max: 5.2, label: 'Pilates', color: '#ec4899' },
+            yoga:        { low: 2.0, moderate: 3.0, high: 4.5, min: 1.8, max: 5.2, label: 'Yoga', color: '#14b8a6' },
+            strength:    { low: 3.0, moderate: 4.5, high: 6.0, min: 2.5, max: 7.5, label: 'Strength Training', color: '#f59e0b' },
+            elliptical:  { low: 3.5, moderate: 5.0, high: 7.5, min: 3.0, max: 9.5, label: 'Elliptical', color: '#8b5cf6' },
+            treadmill:   { low: 3.3, moderate: 5.0, high: 8.5, min: 2.8, max: 10.5, label: 'Treadmill', color: '#3b82f6' },
+            run:         { low: 6.0, moderate: 8.5, high: 11.0, min: 5.0, max: 13.5, label: 'Running', color: '#ef4444' },
+            cycling:     { low: 4.0, moderate: 6.8, high: 10.0, min: 3.2, max: 12.5, label: 'Cycling', color: '#10b981' },
+            swimming:    { low: 4.5, moderate: 6.8, high: 9.8, min: 3.5, max: 11.5, label: 'Swimming', color: '#06b6d4' },
+            rowing:      { low: 4.2, moderate: 7.0, high: 10.5, min: 3.5, max: 12.5, label: 'Rowing', color: '#f97316' },
+            hiit:        { low: 5.5, moderate: 8.0, high: 11.0, min: 4.5, max: 13.0, label: 'HIIT', color: '#d946ef' }
         };
+
+        const EX_CUSTOM_COLORS = ['#059669', '#0284c7', '#7c3aed', '#db2777', '#ea580c', '#65a30d', '#ca8a04', '#0891b2'];
+
+        function getExerciseTypeMeta(typeKey) {
+            if (EP_MET_TABLE[typeKey]) {
+                return Object.assign({ key: typeKey, isCustom: false }, EP_MET_TABLE[typeKey]);
+            }
+            if (typeof appData !== 'undefined' && Array.isArray(appData.customExerciseTypes)) {
+                for (var i = 0; i < appData.customExerciseTypes.length; i++) {
+                    if (appData.customExerciseTypes[i] && appData.customExerciseTypes[i].key === typeKey) {
+                        return Object.assign({ isCustom: true }, appData.customExerciseTypes[i]);
+                    }
+                }
+            }
+            return Object.assign({ key: 'brisk_walk', isCustom: false }, EP_MET_TABLE.brisk_walk);
+        }
+
+        function getAllExerciseTypes() {
+            var list = [];
+            Object.keys(EP_MET_TABLE).forEach(function (k) {
+                list.push(Object.assign({ key: k, isCustom: false }, EP_MET_TABLE[k]));
+            });
+            if (typeof appData !== 'undefined' && Array.isArray(appData.customExerciseTypes)) {
+                appData.customExerciseTypes.forEach(function (c) {
+                    if (c && c.key && c.label) {
+                        list.push(Object.assign({ isCustom: true }, c));
+                    }
+                });
+            }
+            return list;
+        }
+
+        function refreshAllExerciseTypeSelects() {
+            var allTypes = getAllExerciseTypes();
+            var selectIds = ['quickExType', 'ep-type', 'exLogType', 'exFilterType'];
+            selectIds.forEach(function (id) {
+                var sel = document.getElementById(id);
+                if (!sel) return;
+                var prevVal = sel.value;
+                var htmlOpts = '';
+                if (id === 'exFilterType') {
+                    htmlOpts += '<option value="all">All Exercise Types</option>';
+                }
+                allTypes.forEach(function (t) {
+                    var suffix = t.isCustom ? ' (Custom)' : '';
+                    htmlOpts += '<option value="' + t.key + '">' + escapeHtml(t.label + suffix) + '</option>';
+                });
+                sel.innerHTML = htmlOpts;
+                var valid = Array.from(sel.options).some(function (o) { return o.value === prevVal; });
+                if (valid && prevVal) {
+                    sel.value = prevVal;
+                } else if (id === 'exFilterType') {
+                    sel.value = 'all';
+                } else {
+                    sel.value = 'brisk_walk';
+                }
+            });
+        }
 
         function openAdvancedExModal() {
             if (typeof recalledWeekData !== 'undefined' && recalledWeekData) {
@@ -12679,6 +13128,8 @@
             // Pre-fill weight
             const w = parseFloat(document.getElementById('weightInput').value) || (state.current && state.current.bodyWeight) || appData.weight || 0;
             if (w > 0) document.getElementById('ep-weight').value = w;
+
+            refreshAllExerciseTypeSelects();
 
             // Pre-fill gender & age if saved
             if (appData.gender) document.getElementById('ep-gender').value = appData.gender;
@@ -12722,7 +13173,7 @@
                 return 0;
             }
 
-            const row = EP_MET_TABLE[type] || EP_MET_TABLE.brisk_walk;
+            const row = getExerciseTypeMeta(type);
             const weightKg = weightLbs / 2.20462;
             const sexFactor = gender === 'male' ? 1.0 : 0.94;
             const ageFactor = Math.max(0.85, 1.0 - Math.max(0, age - 25) * 0.002);
@@ -12779,8 +13230,30 @@
             let newTotal = currentPoints + points;
             document.getElementById('exerciseInput').value = newTotal.toFixed(1);
 
+            // Record structured workout session in Exercise Tracker (v10.5)
+            if (typeof recordExerciseSession === 'function') {
+                const epType = document.getElementById('ep-type').value || 'brisk_walk';
+                const epDur = parseFloat(document.getElementById('ep-duration').value) || 0;
+                const epExertion = document.getElementById('ep-exertion').value || 'moderate';
+                const epHrRaw = document.getElementById('ep-hr') ? document.getElementById('ep-hr').value.trim() : '';
+                const epHr = epHrRaw !== '' ? (parseFloat(epHrRaw) || null) : null;
+                recordExerciseSession({
+                    date: (typeof getActiveTrackedDateStr === 'function') ? getActiveTrackedDateStr() : formatIsoLocal(new Date()),
+                    type: epType,
+                    duration: epDur,
+                    exertion: epExertion,
+                    hr: epHr,
+                    calories: Math.round(points * 100),
+                    points: Math.round(points * 10) / 10,
+                    source: 'pro_pts',
+                    syncedToEmp: true
+                });
+            }
+
             updateExercisePoints();
+            if (typeof renderV10ExerciseSummaryCards === 'function') renderV10ExerciseSummaryCards();
             document.getElementById('advancedExModal').style.display = 'none';
+            if (typeof showToast === 'function') showToast('Logged workout (+' + points.toFixed(1) + ' EMP pts)');
         }
     </script>
 
@@ -12834,6 +13307,10 @@
                         <option value="elliptical">Elliptical</option>
                         <option value="treadmill">Treadmill</option>
                         <option value="run">Running</option>
+                        <option value="cycling">Cycling</option>
+                        <option value="swimming">Swimming</option>
+                        <option value="rowing">Rowing</option>
+                        <option value="hiit">HIIT</option>
                     </select>
                 </div>
 
@@ -14341,13 +14818,961 @@
 
         // Weight chart now natively handles Light & OLED Dark mode inside renderWeightChart().
 
+        // ==================== EXERCISE TRACKER & WEEKLY GOALS ENGINE (v10.5) ====================
+        var exerciseChartInstance = null;
+        var editingExerciseId = null;
+        var exViewState = {
+            range: 'all',          // '30d' | 'month' | '90d' | 'ytd' | 'all' | 'custom'
+            aggregation: 'weekly', // 'weekly' | 'daily'
+            metric: 'sessions',    // 'sessions' | 'minutes' | 'points'
+            showGoalLine: true,
+            expanded: false,
+            showEntries: false,
+            showGoalsEditor: false
+        };
+
+        function getActiveTrackedDateStr() {
+            var daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            var dayEl = document.getElementById('daySelect');
+            var dayName = dayEl ? dayEl.value : '';
+            var dayIdx = daysArr.indexOf(dayName);
+            if (dayIdx >= 0 && appData && appData.currentWeekStart) {
+                var d = new Date(appData.currentWeekStart + 'T00:00:00');
+                d.setDate(d.getDate() + dayIdx);
+                return formatIsoLocal(d);
+            }
+            return formatIsoLocal(new Date());
+        }
+
+        function getDayNameIfInCurrentWeek(dateStr) {
+            if (!appData || !appData.currentWeekStart || !dateStr) return null;
+            var daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            var ws = new Date(appData.currentWeekStart + 'T00:00:00');
+            var target = new Date(dateStr + 'T00:00:00');
+            var diffDays = Math.round((target.getTime() - ws.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays <= 6) return daysArr[diffDays];
+            return null;
+        }
+
+        function adjustEmpPointsForDate(dateStr, deltaPts) {
+            if (!deltaPts || Math.abs(deltaPts) < 0.01) return;
+            var dayName = getDayNameIfInCurrentWeek(dateStr);
+            if (!dayName || !appData.history || !appData.history[dayName] || !appData.history[dayName].current) return;
+            var cur = parseFloat(appData.history[dayName].current.exercisePoints) || 0;
+            var next = Math.max(0, Math.round((cur + deltaPts) * 10) / 10);
+            appData.history[dayName].current.exercisePoints = next;
+            var activeDayEl = document.getElementById('daySelect');
+            if (activeDayEl && activeDayEl.value === dayName) {
+                var exIn = document.getElementById('exerciseInput');
+                if (exIn) exIn.value = next.toFixed(1);
+                if (typeof state !== 'undefined' && state && state.current) {
+                    state.current.exercisePoints = next;
+                }
+            }
+        }
+
+        function estimateSessionCaloriesAndPoints(typeKey, duration, exertion) {
+            var meta = getExerciseTypeMeta(typeKey);
+            var weightLbs = parseFloat(document.getElementById('weightInput').value) || (appData && appData.weight) || 175;
+            var age = (appData && appData.age) ? parseFloat(appData.age) : 40;
+            var gender = (appData && appData.gender) ? appData.gender : 'female';
+            var weightKg = weightLbs / 2.20462;
+            var sexFactor = (gender === 'male') ? 1.0 : 0.94;
+            var ageFactor = Math.max(0.85, 1.0 - Math.max(0, age - 25) * 0.002);
+            var met = meta[exertion] || meta.moderate || 4.0;
+            var grossKcal = Math.max(0, met * sexFactor * ageFactor * 3.5 * weightKg / 200.0 * duration);
+            var pts = Math.round((grossKcal / 100.0) * 10) / 10;
+            return { calories: Math.round(grossKcal), points: pts };
+        }
+
+        function recordExerciseSession(entry) {
+            if (!appData) return null;
+            if (!Array.isArray(appData.exerciseHistory)) appData.exerciseHistory = [];
+            var meta = getExerciseTypeMeta(entry.type);
+            var rec = {
+                id: entry.id || ('ex_' + Date.now() + '_' + Math.floor(Math.random() * 10000)),
+                date: entry.date || formatIsoLocal(new Date()),
+                type: meta.key,
+                label: entry.label || meta.label,
+                duration: Math.max(1, Math.round(parseFloat(entry.duration) || 0)),
+                exertion: entry.exertion || 'moderate',
+                hr: entry.hr || null,
+                calories: Math.round(parseFloat(entry.calories) || 0),
+                points: Math.round((parseFloat(entry.points) || 0) * 10) / 10,
+                source: entry.source || 'tracker',
+                syncedToEmp: entry.syncedToEmp === true
+            };
+            appData.exerciseHistory.push(rec);
+            appData.exerciseHistory.sort(function (a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+            saveData();
+            return rec;
+        }
+
+        function getCurrentWeekRangeDates() {
+            var wsStr = (appData && appData.currentWeekStart) ? appData.currentWeekStart : getWeekStartDate();
+            var startD = new Date(wsStr + 'T00:00:00');
+            var endD = new Date(startD);
+            endD.setDate(startD.getDate() + 6);
+            return { startStr: formatIsoLocal(startD), endStr: formatIsoLocal(endD), startDate: startD };
+        }
+
+        function computeCurrentWeekExerciseStats() {
+            var wk = getCurrentWeekRangeDates();
+            var goals = (appData && appData.exerciseGoals) ? appData.exerciseGoals : {};
+            var hist = (appData && Array.isArray(appData.exerciseHistory)) ? appData.exerciseHistory : [];
+            var weekSessions = hist.filter(function (s) {
+                return s && s.date && s.date >= wk.startStr && s.date <= wk.endStr;
+            });
+
+            var byType = {};
+            var totalMin = 0;
+            var totalPts = 0;
+            weekSessions.forEach(function (s) {
+                totalMin += parseFloat(s.duration) || 0;
+                totalPts += parseFloat(s.points) || 0;
+                if (!byType[s.type]) {
+                    byType[s.type] = { count: 0, days: [false, false, false, false, false, false, false], minutes: 0, points: 0 };
+                }
+                byType[s.type].count += 1;
+                byType[s.type].minutes += parseFloat(s.duration) || 0;
+                byType[s.type].points += parseFloat(s.points) || 0;
+                var dObj = new Date(s.date + 'T00:00:00');
+                var dow = dObj.getDay();
+                if (dow >= 0 && dow <= 6) byType[s.type].days[dow] = true;
+            });
+
+            var goalItems = [];
+            var totalGoalTarget = 0;
+            var totalGoalMetCapped = 0;
+            var allTypes = getAllExerciseTypes();
+            allTypes.forEach(function (t) {
+                var target = parseInt(goals[t.key], 10) || 0;
+                if (target > 0) {
+                    var info = byType[t.key] || { count: 0, days: [false, false, false, false, false, false, false], minutes: 0, points: 0 };
+                    totalGoalTarget += target;
+                    totalGoalMetCapped += Math.min(info.count, target);
+                    goalItems.push({
+                        meta: t,
+                        target: target,
+                        count: info.count,
+                        days: info.days,
+                        minutes: info.minutes,
+                        points: info.points
+                    });
+                }
+            });
+
+            // Bonus logged workouts this week whose type has no active weekly goal
+            var bonusTypes = [];
+            Object.keys(byType).forEach(function (k) {
+                var target = parseInt(goals[k], 10) || 0;
+                if (target <= 0) {
+                    bonusTypes.push({ meta: getExerciseTypeMeta(k), count: byType[k].count, minutes: byType[k].minutes });
+                }
+            });
+
+            return {
+                weekStart: wk.startStr,
+                weekEnd: wk.endStr,
+                sessions: weekSessions,
+                goalItems: goalItems,
+                bonusTypes: bonusTypes,
+                totalGoalTarget: totalGoalTarget,
+                totalGoalMetCapped: totalGoalMetCapped,
+                totalSessions: weekSessions.length,
+                totalMinutes: Math.round(totalMin),
+                totalPoints: Math.round(totalPts * 10) / 10
+            };
+        }
+
+        function renderV10ExerciseSummaryCards() {
+            var stats = computeCurrentWeekExerciseStats();
+
+            // 1. Profile pill badge
+            var profBadge = document.getElementById('exProfileGoalBadge');
+            if (profBadge) {
+                if (stats.totalGoalTarget > 0) {
+                    profBadge.textContent = stats.totalGoalMetCapped + '/' + stats.totalGoalTarget + ' this wk';
+                    profBadge.classList.toggle('success', stats.totalGoalMetCapped >= stats.totalGoalTarget);
+                } else if (stats.totalSessions > 0) {
+                    profBadge.textContent = stats.totalSessions + (stats.totalSessions === 1 ? ' workout' : ' workouts');
+                    profBadge.classList.remove('success');
+                } else {
+                    profBadge.textContent = 'Set goals';
+                    profBadge.classList.remove('success');
+                }
+            }
+
+            // 2. Today -> EMP Points Weekly Exercise Goals mini-card
+            var pillEl = document.getElementById('v10WeeklyExPill');
+            var subEl = document.getElementById('v10WeeklyExSub');
+            var badgesEl = document.getElementById('v10WeeklyExBadges');
+            if (pillEl && subEl && badgesEl) {
+                if (stats.totalGoalTarget > 0) {
+                    var allMet = stats.totalGoalMetCapped >= stats.totalGoalTarget;
+                    pillEl.textContent = stats.totalGoalMetCapped + ' / ' + stats.totalGoalTarget;
+                    pillEl.classList.toggle('success', allMet);
+                    subEl.textContent = allMet
+                        ? ('All weekly exercise goals met! · ' + stats.totalMinutes + ' min this week')
+                        : (stats.totalGoalMetCapped + ' of ' + stats.totalGoalTarget + ' goal sessions met · ' + stats.totalMinutes + ' min this week');
+                    var bHtml = '';
+                    stats.goalItems.forEach(function (g) {
+                        var isMet = g.count >= g.target;
+                        bHtml += '<span class="ex-badge-pill' + (isMet ? ' met' : '') + '">' +
+                            '<span class="ex-dot" style="background:' + g.meta.color + ';"></span>' +
+                            escapeHtml(g.meta.label) + ' ' + g.count + '/' + g.target + (isMet ? ' &#10003;' : '') +
+                        '</span>';
+                    });
+                    badgesEl.innerHTML = bHtml;
+                } else {
+                    pillEl.textContent = stats.totalSessions + ' logged';
+                    pillEl.classList.remove('success');
+                    subEl.textContent = stats.totalSessions > 0
+                        ? (stats.totalMinutes + ' min logged this week · Tap to set weekly goals')
+                        : 'Tap to set weekly goals & view exercise history';
+                    badgesEl.innerHTML = '';
+                }
+            }
+        }
+
+        function showExerciseTrackerModal() {
+            var modal = document.getElementById('exerciseTrackerModal');
+            if (!modal) return;
+            exViewState.expanded = false;
+            editingExerciseId = null;
+            refreshAllExerciseTypeSelects();
+
+            var dateEl = document.getElementById('exLogDate');
+            if (dateEl) dateEl.value = getActiveTrackedDateStr();
+            var titleEl = document.getElementById('exFormTitle');
+            if (titleEl) titleEl.textContent = 'Log Exercise Session';
+            var saveBtn = document.getElementById('exSaveBtn');
+            if (saveBtn) saveBtn.textContent = 'Save';
+            var cancelBtn = document.getElementById('exCancelEditBtn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+
+            modal.style.display = 'flex';
+            syncExControlPills();
+            renderExWeeklyGoalsSection();
+            renderExGoalsEditorList();
+            renderExerciseChart();
+        }
+
+        function closeExerciseTrackerModal() {
+            var modal = document.getElementById('exerciseTrackerModal');
+            exViewState.expanded = false;
+            editingExerciseId = null;
+            if (modal) {
+                modal.classList.remove('ex-expanded');
+                modal.style.display = 'none';
+            }
+            if (exerciseChartInstance) {
+                exerciseChartInstance.destroy();
+                exerciseChartInstance = null;
+            }
+        }
+
+        function syncExControlPills() {
+            var modal = document.getElementById('exerciseTrackerModal');
+            var expBtn = document.getElementById('exExpandBtn');
+            var rangeSel = document.getElementById('exRangeSelect');
+            var customRow = document.getElementById('exCustomRangeRow');
+            var goalsPanel = document.getElementById('exGoalsEditorPanel');
+            var goalsBtn = document.getElementById('exGoalsToggleBtn');
+
+            if (rangeSel) rangeSel.value = exViewState.range;
+            if (customRow) customRow.style.display = (exViewState.range === 'custom') ? 'grid' : 'none';
+            if (goalsPanel) goalsPanel.style.display = exViewState.showGoalsEditor ? 'block' : 'none';
+            if (goalsBtn) goalsBtn.classList.toggle('active', exViewState.showGoalsEditor);
+
+            var map = [
+                ['exAggWeeklyBtn', exViewState.aggregation === 'weekly'],
+                ['exAggDailyBtn', exViewState.aggregation === 'daily'],
+                ['exMetricSessionsBtn', exViewState.metric === 'sessions'],
+                ['exMetricMinutesBtn', exViewState.metric === 'minutes'],
+                ['exMetricPointsBtn', exViewState.metric === 'points'],
+                ['exGoalLineBtn', exViewState.showGoalLine]
+            ];
+            map.forEach(function (pair) {
+                var el = document.getElementById(pair[0]);
+                if (el) el.classList.toggle('active', pair[1]);
+            });
+
+            if (modal) modal.classList.toggle('ex-expanded', exViewState.expanded);
+            if (expBtn) expBtn.innerHTML = exViewState.expanded ? 'Collapse &#x2715;' : 'Expand &#x2922;';
+        }
+
+        function toggleExGoalsEditor() {
+            exViewState.showGoalsEditor = !exViewState.showGoalsEditor;
+            syncExControlPills();
+            if (exViewState.showGoalsEditor) renderExGoalsEditorList();
+        }
+
+        function toggleExChartExpand() {
+            exViewState.expanded = !exViewState.expanded;
+            syncExControlPills();
+            setTimeout(function () { renderExerciseChart(); }, 40);
+        }
+
+        function toggleExEntriesDrawer() {
+            exViewState.showEntries = !exViewState.showEntries;
+            var drw = document.getElementById('exEntriesDrawer');
+            if (drw) drw.style.display = exViewState.showEntries ? 'block' : 'none';
+        }
+
+        function onExRangeChange() {
+            var sel = document.getElementById('exRangeSelect');
+            if (!sel) return;
+            exViewState.range = sel.value;
+            if (exViewState.range === 'custom') {
+                var sEl = document.getElementById('exCustomStart');
+                var eEl = document.getElementById('exCustomEnd');
+                var hist = (appData.exerciseHistory || []).slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+                var todayStr = formatIsoLocal(new Date());
+                if (eEl && !eEl.value) eEl.value = hist.length > 0 ? hist[hist.length - 1].date : todayStr;
+                if (sEl && !sEl.value) {
+                    var d30 = new Date();
+                    d30.setDate(d30.getDate() - 30);
+                    sEl.value = hist.length > 0 ? hist[0].date : formatIsoLocal(d30);
+                }
+            }
+            syncExControlPills();
+            renderExerciseChart();
+        }
+
+        function setExAggregation(mode) {
+            exViewState.aggregation = (mode === 'daily') ? 'daily' : 'weekly';
+            syncExControlPills();
+            renderExerciseChart();
+        }
+
+        function setExMetric(m) {
+            exViewState.metric = m;
+            syncExControlPills();
+            renderExerciseChart();
+        }
+
+        function toggleExGoalLine() {
+            exViewState.showGoalLine = !exViewState.showGoalLine;
+            syncExControlPills();
+            renderExerciseChart();
+        }
+
+        function adjustExerciseWeeklyGoal(typeKey, delta) {
+            if (!appData.exerciseGoals) appData.exerciseGoals = {};
+            var cur = parseInt(appData.exerciseGoals[typeKey], 10) || 0;
+            var next = Math.max(0, Math.min(7, cur + delta));
+            if (next === 0) {
+                delete appData.exerciseGoals[typeKey];
+            } else {
+                appData.exerciseGoals[typeKey] = next;
+            }
+            saveData();
+            renderExGoalsEditorList();
+            renderExWeeklyGoalsSection();
+            renderV10ExerciseSummaryCards();
+            renderExerciseChart();
+        }
+
+        function addCustomExerciseType() {
+            var nameEl = document.getElementById('exCustomNameInput');
+            var presetEl = document.getElementById('exCustomMetPreset');
+            var label = nameEl ? nameEl.value.trim() : '';
+            if (!label) return alert('Please enter a name for the custom exercise.');
+
+            var all = getAllExerciseTypes();
+            var dup = all.some(function (t) { return t.label.toLowerCase() === label.toLowerCase(); });
+            if (dup) return alert('An exercise named "' + label + '" already exists.');
+
+            var preset = presetEl ? presetEl.value : 'moderate';
+            var metCfg = { low: 3.5, moderate: 5.0, high: 7.0, min: 2.5, max: 9.0 };
+            if (preset === 'light') metCfg = { low: 2.2, moderate: 3.0, high: 4.2, min: 1.8, max: 5.5 };
+            else if (preset === 'vigorous') metCfg = { low: 5.0, moderate: 7.5, high: 10.5, min: 4.0, max: 13.0 };
+
+            if (!Array.isArray(appData.customExerciseTypes)) appData.customExerciseTypes = [];
+            var colorIdx = appData.customExerciseTypes.length % EX_CUSTOM_COLORS.length;
+            var newKey = 'custom_' + Date.now();
+            appData.customExerciseTypes.push(Object.assign({
+                key: newKey,
+                label: label,
+                color: EX_CUSTOM_COLORS[colorIdx]
+            }, metCfg));
+
+            if (nameEl) nameEl.value = '';
+            saveData();
+            refreshAllExerciseTypeSelects();
+            renderExGoalsEditorList();
+            renderExWeeklyGoalsSection();
+            if (typeof showToast === 'function') showToast('Added custom activity: ' + label);
+        }
+
+        function deleteCustomExerciseType(typeKey) {
+            if (!Array.isArray(appData.customExerciseTypes)) return;
+            var meta = getExerciseTypeMeta(typeKey);
+            if (!confirm('Remove custom activity "' + meta.label + '" from dropdowns? Past logged sessions will be kept.')) return;
+            appData.customExerciseTypes = appData.customExerciseTypes.filter(function (c) { return c.key !== typeKey; });
+            if (appData.exerciseGoals && appData.exerciseGoals[typeKey]) {
+                delete appData.exerciseGoals[typeKey];
+            }
+            saveData();
+            refreshAllExerciseTypeSelects();
+            renderExGoalsEditorList();
+            renderExWeeklyGoalsSection();
+            renderV10ExerciseSummaryCards();
+            renderExerciseChart();
+        }
+
+        function renderExGoalsEditorList() {
+            var listEl = document.getElementById('exGoalsEditorList');
+            if (!listEl) return;
+            var goals = (appData && appData.exerciseGoals) ? appData.exerciseGoals : {};
+            var allTypes = getAllExerciseTypes();
+            var htmlOut = '';
+            allTypes.forEach(function (t) {
+                var val = parseInt(goals[t.key], 10) || 0;
+                var delBtn = t.isCustom
+                    ? '<button type="button" onclick="deleteCustomExerciseType(\'' + t.key + '\')" style="background:none; border:none; color:var(--danger); font-size:12px; font-weight:700; cursor:pointer; padding:2px 6px;">Remove</button>'
+                    : '';
+                htmlOut += '<div class="ex-goal-editor-row">' +
+                    '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
+                        '<span class="ex-dot" style="background:' + t.color + ';"></span>' +
+                        '<span style="font-size:13px; font-weight:600; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(t.label) + '</span>' +
+                        delBtn +
+                    '</div>' +
+                    '<div class="ex-stepper">' +
+                        '<button type="button" class="ex-step-btn" onclick="adjustExerciseWeeklyGoal(\'' + t.key + '\', -1)">&minus;</button>' +
+                        '<span class="ex-step-val">' + val + '</span>' +
+                        '<button type="button" class="ex-step-btn" onclick="adjustExerciseWeeklyGoal(\'' + t.key + '\', 1)">+</button>' +
+                    '</div>' +
+                '</div>';
+            });
+            listEl.innerHTML = htmlOut;
+        }
+
+        function renderExWeeklyGoalsSection() {
+            var stats = computeCurrentWeekExerciseStats();
+            var kpiGoals = document.getElementById('exKpiGoals');
+            var kpiMin = document.getElementById('exKpiMinutes');
+            var kpiPts = document.getElementById('exKpiPoints');
+            var wkHead = document.getElementById('exWeekHeading');
+            var viewEl = document.getElementById('exWeeklyGoalsView');
+
+            if (kpiGoals) {
+                if (stats.totalGoalTarget > 0) {
+                    kpiGoals.textContent = stats.totalGoalMetCapped + ' / ' + stats.totalGoalTarget;
+                    kpiGoals.style.color = (stats.totalGoalMetCapped >= stats.totalGoalTarget) ? 'var(--success)' : 'var(--text-main)';
+                } else {
+                    kpiGoals.textContent = stats.totalSessions + ' done';
+                    kpiGoals.style.color = 'var(--text-main)';
+                }
+            }
+            if (kpiMin) kpiMin.textContent = stats.totalMinutes + ' min';
+            if (kpiPts) kpiPts.textContent = stats.totalPoints.toFixed(1) + ' pts';
+
+            if (wkHead) {
+                var sD = new Date(stats.weekStart + 'T00:00:00');
+                var eD = new Date(stats.weekEnd + 'T00:00:00');
+                wkHead.textContent = 'Week of ' + sD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
+                    ' – ' + eD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            }
+
+            if (!viewEl) return;
+            var dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            var outHtml = '';
+
+            if (stats.goalItems.length === 0) {
+                outHtml += '<div style="font-size:12.5px; color:var(--text-muted); padding:6px 0;">No weekly exercise goals set yet. Tap <strong>Edit Goals</strong> above to pick your weekly targets (e.g. Brisk Walking 4x, Strength Training 3x).</div>';
+            } else {
+                stats.goalItems.forEach(function (g) {
+                    var pct = Math.min(100, (g.count / g.target) * 100);
+                    var isMet = g.count >= g.target;
+                    var dotsHtml = '<div class="ex-day-dots">';
+                    for (var d = 0; d < 7; d++) {
+                        dotsHtml += '<div class="ex-day-pill' + (g.days[d] ? ' hit' : '') + '" style="' + (g.days[d] ? ('background:' + g.meta.color + ';') : '') + '">' + dayLetters[d] + '</div>';
+                    }
+                    dotsHtml += '</div>';
+
+                    outHtml += '<div class="ex-goal-row">' +
+                        '<div class="ex-goal-top">' +
+                            '<div style="display:flex; align-items:center; gap:7px; min-width:0;">' +
+                                '<span class="ex-dot" style="background:' + g.meta.color + ';"></span>' +
+                                '<span style="font-size:13px; font-weight:700; color:var(--text-main);">' + escapeHtml(g.meta.label) + '</span>' +
+                            '</div>' +
+                            '<span style="font-size:12.5px; font-weight:800; color:' + (isMet ? 'var(--success)' : 'var(--text-muted)') + ';">' +
+                                g.count + ' / ' + g.target + (isMet ? ' &#10003; Met' : ' times') +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="thin-bar"><div class="thin-bar-fill" style="width:' + pct.toFixed(0) + '%; background:' + (isMet ? 'var(--success)' : g.meta.color) + ';"></div></div>' +
+                        dotsHtml +
+                    '</div>';
+                });
+            }
+
+            if (stats.bonusTypes.length > 0) {
+                var bonusBadges = stats.bonusTypes.map(function (b) {
+                    return '<span class="ex-badge-pill"><span class="ex-dot" style="background:' + b.meta.color + ';"></span>' + escapeHtml(b.meta.label) + ' (' + b.count + 'x · ' + Math.round(b.minutes) + 'm)</span>';
+                }).join(' ');
+                outHtml += '<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">' +
+                    '<div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.04em;">Additional Logged This Week</div>' +
+                    '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + bonusBadges + '</div>' +
+                '</div>';
+            }
+
+            viewEl.innerHTML = outHtml;
+        }
+
+        function saveExerciseFromTracker() {
+            var dateStr = document.getElementById('exLogDate').value;
+            var typeKey = document.getElementById('exLogType').value || 'brisk_walk';
+            var dur = parseFloat(document.getElementById('exLogDuration').value);
+            var exertion = document.getElementById('exLogExertion').value || 'moderate';
+            var syncEmp = document.getElementById('exSyncEmpToggle') ? document.getElementById('exSyncEmpToggle').checked : true;
+
+            if (!dateStr) return alert('Please select a date.');
+            if (isNaN(dur) || dur <= 0) return alert('Please enter a valid duration in minutes.');
+
+            var est = estimateSessionCaloriesAndPoints(typeKey, dur, exertion);
+            var meta = getExerciseTypeMeta(typeKey);
+
+            if (editingExerciseId) {
+                var idx = (appData.exerciseHistory || []).findIndex(function (s) { return s.id === editingExerciseId; });
+                if (idx >= 0) {
+                    var oldRec = appData.exerciseHistory[idx];
+                    if (oldRec.syncedToEmp && oldRec.points > 0) {
+                        adjustEmpPointsForDate(oldRec.date, -oldRec.points);
+                    }
+                    oldRec.date = dateStr;
+                    oldRec.type = meta.key;
+                    oldRec.label = meta.label;
+                    oldRec.duration = Math.round(dur);
+                    oldRec.exertion = exertion;
+                    oldRec.calories = est.calories;
+                    oldRec.points = est.points;
+                    oldRec.syncedToEmp = syncEmp;
+                    if (syncEmp && est.points > 0) {
+                        adjustEmpPointsForDate(dateStr, est.points);
+                    }
+                    appData.exerciseHistory.sort(function (a, b) { return a.date.localeCompare(b.date); });
+                    saveData();
+                }
+                cancelEditExerciseSession();
+                if (typeof showToast === 'function') showToast('Updated ' + meta.label + ' (' + Math.round(dur) + ' min)');
+            } else {
+                recordExerciseSession({
+                    date: dateStr,
+                    type: meta.key,
+                    label: meta.label,
+                    duration: Math.round(dur),
+                    exertion: exertion,
+                    hr: null,
+                    calories: est.calories,
+                    points: est.points,
+                    source: 'tracker',
+                    syncedToEmp: syncEmp
+                });
+                if (syncEmp && est.points > 0) {
+                    adjustEmpPointsForDate(dateStr, est.points);
+                    saveData();
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Logged ' + meta.label + ' (' + Math.round(dur) + ' min' + (syncEmp ? (' · +' + est.points.toFixed(1) + ' pts') : '') + ')');
+                }
+            }
+
+            renderBarometers();
+            renderExWeeklyGoalsSection();
+            renderV10ExerciseSummaryCards();
+            renderExerciseChart();
+        }
+
+        function editExerciseSession(id) {
+            var rec = (appData.exerciseHistory || []).find(function (s) { return s.id === id; });
+            if (!rec) return;
+            editingExerciseId = id;
+            refreshAllExerciseTypeSelects();
+            document.getElementById('exLogDate').value = rec.date;
+            var typeSel = document.getElementById('exLogType');
+            if (typeSel) {
+                var exists = Array.from(typeSel.options).some(function (o) { return o.value === rec.type; });
+                if (exists) typeSel.value = rec.type;
+            }
+            document.getElementById('exLogDuration').value = rec.duration;
+            document.getElementById('exLogExertion').value = rec.exertion || 'moderate';
+            var syncEl = document.getElementById('exSyncEmpToggle');
+            if (syncEl) syncEl.checked = rec.syncedToEmp !== false;
+
+            document.getElementById('exFormTitle').textContent = 'Edit Session (' + rec.date + ')';
+            document.getElementById('exSaveBtn').textContent = 'Update';
+            document.getElementById('exCancelEditBtn').style.display = 'inline-block';
+            if (typeof showToast === 'function') showToast('Loaded session into form');
+        }
+
+        function cancelEditExerciseSession() {
+            editingExerciseId = null;
+            document.getElementById('exFormTitle').textContent = 'Log Exercise Session';
+            document.getElementById('exSaveBtn').textContent = 'Save';
+            document.getElementById('exCancelEditBtn').style.display = 'none';
+            document.getElementById('exLogDate').value = getActiveTrackedDateStr();
+            document.getElementById('exLogDuration').value = '30';
+        }
+
+        function deleteExerciseSession(id) {
+            var idx = (appData.exerciseHistory || []).findIndex(function (s) { return s.id === id; });
+            if (idx < 0) return;
+            var rec = appData.exerciseHistory[idx];
+            if (!confirm('Delete ' + (rec.label || rec.type) + ' (' + rec.duration + ' min) on ' + rec.date + '?')) return;
+            if (rec.syncedToEmp && rec.points > 0) {
+                adjustEmpPointsForDate(rec.date, -rec.points);
+            }
+            appData.exerciseHistory.splice(idx, 1);
+            saveData();
+            if (editingExerciseId === id) cancelEditExerciseSession();
+            renderBarometers();
+            renderExWeeklyGoalsSection();
+            renderV10ExerciseSummaryCards();
+            renderExerciseChart();
+            if (typeof showToast === 'function') showToast('Deleted exercise entry');
+        }
+
+        function getFilteredExerciseHistory() {
+            var raw = (appData && Array.isArray(appData.exerciseHistory))
+                ? appData.exerciseHistory.filter(function (e) { return e && e.date; }).slice().sort(function (a, b) { return a.date.localeCompare(b.date); })
+                : [];
+            if (raw.length === 0) return [];
+
+            var typeFilterEl = document.getElementById('exFilterType');
+            var typeFilter = typeFilterEl ? typeFilterEl.value : 'all';
+
+            var now = new Date();
+            now.setHours(0, 0, 0, 0);
+            var startStr = null;
+            var endStr = null;
+
+            if (exViewState.range === '30d') {
+                var d30 = new Date(now);
+                d30.setDate(d30.getDate() - 29);
+                startStr = formatIsoLocal(d30);
+            } else if (exViewState.range === '90d') {
+                var d90 = new Date(now);
+                d90.setDate(d90.getDate() - 89);
+                startStr = formatIsoLocal(d90);
+            } else if (exViewState.range === 'month') {
+                startStr = formatIsoLocal(new Date(now.getFullYear(), now.getMonth(), 1));
+            } else if (exViewState.range === 'ytd') {
+                startStr = now.getFullYear() + '-01-01';
+            } else if (exViewState.range === 'custom') {
+                var sEl = document.getElementById('exCustomStart');
+                var eEl = document.getElementById('exCustomEnd');
+                if (sEl && sEl.value) startStr = sEl.value;
+                if (eEl && eEl.value) endStr = eEl.value;
+            }
+
+            return raw.filter(function (e) {
+                if (typeFilter !== 'all' && e.type !== typeFilter) return false;
+                if (startStr && e.date < startStr) return false;
+                if (endStr && e.date > endStr) return false;
+                return true;
+            });
+        }
+
+        function renderExEntriesList(filtered) {
+            var btn = document.getElementById('exEntriesToggleBtn');
+            var drawer = document.getElementById('exEntriesDrawer');
+            if (btn) btn.textContent = 'Entries (' + filtered.length + ')';
+            if (!drawer) return;
+
+            if (filtered.length === 0) {
+                drawer.innerHTML = '<div style="padding:14px; text-align:center; color:var(--text-muted); font-size:13px;">No workouts in this timeframe.</div>';
+                return;
+            }
+
+            var htmlOut = '';
+            filtered.slice().reverse().forEach(function (s) {
+                var meta = getExerciseTypeMeta(s.type);
+                var dObj = new Date(s.date + 'T00:00:00');
+                var niceDate = dObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                var exLbl = s.exertion ? (s.exertion.charAt(0).toUpperCase() + s.exertion.slice(1)) : 'Moderate';
+                var hrTxt = s.hr ? (' · ' + Math.round(s.hr) + ' BPM') : '';
+                htmlOut += '<div class="wt-entry-row">' +
+                    '<div style="cursor:pointer; flex:1; min-width:0;" onclick="editExerciseSession(\'' + s.id + '\')">' +
+                        '<div style="display:flex; align-items:center; gap:6px; font-weight:700; color:var(--text-main);">' +
+                            '<span class="ex-dot" style="background:' + meta.color + ';"></span>' +
+                            '<span>' + escapeHtml(s.label || meta.label) + '</span>' +
+                            '<span style="font-weight:600; color:var(--text-muted); font-size:12px;">' + s.duration + ' min</span>' +
+                        '</div>' +
+                        '<div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">' + niceDate + ' · ' + exLbl + hrTxt + ' · <strong style="color:var(--emp-color);">+' + Number(s.points || 0).toFixed(1) + ' pts</strong></div>' +
+                    '</div>' +
+                    '<div style="display:flex; gap:6px; flex-shrink:0;">' +
+                        '<button type="button" class="icon-pill-btn neutral" style="height:28px; font-size:11.5px; padding:0 9px;" onclick="editExerciseSession(\'' + s.id + '\')">Edit</button>' +
+                        '<button type="button" class="icon-pill-btn danger" style="height:28px; font-size:11.5px; padding:0 9px;" onclick="deleteExerciseSession(\'' + s.id + '\')">Del</button>' +
+                    '</div>' +
+                '</div>';
+            });
+            drawer.innerHTML = htmlOut;
+        }
+
+        function renderExerciseChart() {
+            var canvas = document.getElementById('exerciseChart');
+            if (!canvas) return;
+
+            if (exerciseChartInstance) {
+                exerciseChartInstance.destroy();
+                exerciseChartInstance = null;
+            }
+
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var tickColor = isDark ? '#94a3b8' : '#475569';
+            var gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)';
+
+            var filtered = getFilteredExerciseHistory();
+            renderExEntriesList(filtered);
+
+            var statSess = document.getElementById('exStatSessions');
+            var statMin = document.getElementById('exStatMinutes');
+            var statAvg = document.getElementById('exStatAvgWk');
+            var scrollHint = document.getElementById('exScrollHint');
+            var canvasWrap = document.getElementById('exChartCanvasWrap');
+            var scrollEl = document.getElementById('exChartScroll');
+
+            if (filtered.length === 0) {
+                if (statSess) statSess.textContent = '0';
+                if (statMin) statMin.textContent = '0 min';
+                if (statAvg) statAvg.textContent = '0.0';
+                if (scrollHint) scrollHint.style.display = 'none';
+                if (canvasWrap) canvasWrap.style.width = '100%';
+
+                var emptyCtx = canvas.getContext('2d');
+                emptyCtx.clearRect(0, 0, canvas.width, canvas.height);
+                emptyCtx.fillStyle = tickColor;
+                emptyCtx.font = '600 13px Inter, -apple-system, sans-serif';
+                emptyCtx.textAlign = 'center';
+                var emptyMsg = (appData.exerciseHistory && appData.exerciseHistory.length > 0)
+                    ? 'No workouts match this filter. Try "All Dates" or "All Exercise Types".'
+                    : 'No workouts logged yet. Log an exercise above or via Pro Pts!';
+                emptyCtx.fillText(emptyMsg, canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            var totalMin = 0;
+            filtered.forEach(function (s) { totalMin += parseFloat(s.duration) || 0; });
+            var firstD = new Date(filtered[0].date + 'T00:00:00');
+            var lastD = new Date(filtered[filtered.length - 1].date + 'T00:00:00');
+            var spanWeeks = Math.max(1, ((lastD - firstD) / (1000 * 60 * 60 * 24) + 1) / 7);
+            if (statSess) statSess.textContent = String(filtered.length);
+            if (statMin) statMin.textContent = Math.round(totalMin) + ' min';
+            if (statAvg) statAvg.textContent = (filtered.length / spanWeeks).toFixed(1) + ' / wk';
+
+            // Bucket by Week (Sunday-start) or by Day
+            var bucketMap = {};
+            var bucketOrder = [];
+            var activeTypeKeys = {};
+            var spansMultipleYears = filtered[0].date.slice(0, 4) !== filtered[filtered.length - 1].date.slice(0, 4);
+
+            filtered.forEach(function (s) {
+                var key = s.date;
+                if (exViewState.aggregation === 'weekly') {
+                    var d = new Date(s.date + 'T00:00:00');
+                    var ws = new Date(d);
+                    ws.setDate(d.getDate() - d.getDay());
+                    key = formatIsoLocal(ws);
+                }
+                if (!bucketMap[key]) {
+                    bucketMap[key] = { key: key, byType: {}, totalSessions: 0, totalMin: 0, totalPts: 0 };
+                    bucketOrder.push(key);
+                }
+                var b = bucketMap[key];
+                if (!b.byType[s.type]) b.byType[s.type] = { sessions: 0, minutes: 0, points: 0 };
+                b.byType[s.type].sessions += 1;
+                b.byType[s.type].minutes += parseFloat(s.duration) || 0;
+                b.byType[s.type].points += parseFloat(s.points) || 0;
+                b.totalSessions += 1;
+                b.totalMin += parseFloat(s.duration) || 0;
+                b.totalPts += parseFloat(s.points) || 0;
+                activeTypeKeys[s.type] = true;
+            });
+
+            bucketOrder.sort();
+
+            var labels = bucketOrder.map(function (k) {
+                var d = new Date(k + 'T00:00:00');
+                return spansMultipleYears
+                    ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' })
+                    : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            });
+
+            // Horizontal scrolling when Expanded with many buckets
+            if (canvasWrap && scrollEl) {
+                var needsScroll = exViewState.expanded && bucketOrder.length > 14;
+                if (needsScroll) {
+                    var desiredW = Math.max(scrollEl.clientWidth || 340, bucketOrder.length * 36);
+                    canvasWrap.style.width = desiredW + 'px';
+                    if (scrollHint) scrollHint.style.display = 'block';
+                } else {
+                    canvasWrap.style.width = '100%';
+                    if (scrollHint) scrollHint.style.display = 'none';
+                }
+            }
+
+            // Build stacked bar datasets per active exercise type
+            var typeKeysArr = Object.keys(activeTypeKeys);
+            var datasets = typeKeysArr.map(function (tk) {
+                var meta = getExerciseTypeMeta(tk);
+                var data = bucketOrder.map(function (bk) {
+                    var cell = bucketMap[bk].byType[tk];
+                    if (!cell) return 0;
+                    if (exViewState.metric === 'minutes') return Math.round(cell.minutes);
+                    if (exViewState.metric === 'points') return Math.round(cell.points * 10) / 10;
+                    return cell.sessions;
+                });
+                return {
+                    label: meta.label,
+                    data: data,
+                    backgroundColor: meta.color,
+                    borderRadius: 5,
+                    maxBarThickness: 34
+                };
+            });
+
+            // Determine Weekly Session Goal Line value (applicable in Weekly + Sessions mode)
+            var typeFilterEl = document.getElementById('exFilterType');
+            var typeFilter = typeFilterEl ? typeFilterEl.value : 'all';
+            var goalTargetLine = 0;
+            if (exViewState.showGoalLine && exViewState.aggregation === 'weekly' && exViewState.metric === 'sessions') {
+                var goals = (appData && appData.exerciseGoals) ? appData.exerciseGoals : {};
+                if (typeFilter === 'all') {
+                    Object.keys(goals).forEach(function (k) { goalTargetLine += (parseInt(goals[k], 10) || 0); });
+                } else {
+                    goalTargetLine = parseInt(goals[typeFilter], 10) || 0;
+                }
+            }
+
+            var maxBucketVal = 0;
+            bucketOrder.forEach(function (bk) {
+                var b = bucketMap[bk];
+                var v = (exViewState.metric === 'minutes') ? b.totalMin : ((exViewState.metric === 'points') ? b.totalPts : b.totalSessions);
+                if (v > maxBucketVal) maxBucketVal = v;
+            });
+            var suggestedMax = Math.max(maxBucketVal, goalTargetLine) * 1.18;
+            if (suggestedMax < 2) suggestedMax = 2;
+
+            var goalLinePlugin = {
+                id: 'exWeeklyGoalLine',
+                afterDraw: function (chart) {
+                    if (!goalTargetLine || goalTargetLine <= 0) return;
+                    var yScale = chart.scales.y;
+                    var chartArea = chart.chartArea;
+                    if (!yScale || !chartArea) return;
+                    var yPos = yScale.getPixelForValue(goalTargetLine);
+                    if (yPos < chartArea.top - 1 || yPos > chartArea.bottom + 1) return;
+
+                    var dCtx = chart.ctx;
+                    dCtx.save();
+                    dCtx.strokeStyle = '#10b981';
+                    dCtx.lineWidth = 2;
+                    dCtx.setLineDash([6, 4]);
+                    dCtx.beginPath();
+                    dCtx.moveTo(chartArea.left, yPos);
+                    dCtx.lineTo(chartArea.right, yPos);
+                    dCtx.stroke();
+
+                    dCtx.setLineDash([]);
+                    dCtx.fillStyle = isDark ? '#34d399' : '#059669';
+                    dCtx.font = '700 11px Inter, -apple-system, sans-serif';
+                    dCtx.textAlign = 'right';
+                    var lblY = (yPos - chartArea.top < 18) ? (yPos + 14) : (yPos - 6);
+                    dCtx.fillText('Weekly Goal: ' + goalTargetLine, chartArea.right - 4, lblY);
+                    dCtx.restore();
+                }
+            };
+
+            var ctx = canvas.getContext('2d');
+            exerciseChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: datasets.length > 1,
+                            position: 'top',
+                            labels: { color: tickColor, boxWidth: 11, padding: 10, font: { size: 11, weight: '600' } }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(20, 23, 31, 0.96)' : 'rgba(15, 23, 42, 0.92)',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#e2e8f0',
+                            padding: 10,
+                            cornerRadius: 10,
+                            callbacks: {
+                                title: function (items) {
+                                    if (!items || !items.length) return '';
+                                    var bk = bucketOrder[items[0].dataIndex];
+                                    var dObj = new Date(bk + 'T00:00:00');
+                                    var nice = dObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                                    return exViewState.aggregation === 'weekly' ? ('Week of ' + nice) : nice;
+                                },
+                                label: function (c) {
+                                    var val = Number(c.raw || 0);
+                                    if (val <= 0) return null;
+                                    var unit = (exViewState.metric === 'minutes') ? ' min' : ((exViewState.metric === 'points') ? ' pts' : (val === 1 ? ' session' : ' sessions'));
+                                    return ' ' + c.dataset.label + ': ' + val + unit;
+                                },
+                                footer: function (items) {
+                                    if (!items || !items.length) return '';
+                                    var b = bucketMap[bucketOrder[items[0].dataIndex]];
+                                    if (!b) return '';
+                                    return 'Total: ' + b.totalSessions + ' sess · ' + Math.round(b.totalMin) + ' min · ' + b.totalPts.toFixed(1) + ' pts';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: {
+                                color: tickColor,
+                                autoSkip: true,
+                                maxTicksLimit: exViewState.expanded ? 12 : 6,
+                                maxRotation: 0,
+                                font: { size: 11, weight: '600' }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            suggestedMax: suggestedMax,
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: tickColor,
+                                precision: exViewState.metric === 'points' ? 1 : 0,
+                                font: { size: 11, weight: '600' }
+                            }
+                        }
+                    }
+                },
+                plugins: [goalLinePlugin]
+            });
+
+            if (exViewState.expanded && scrollEl && scrollEl.scrollWidth > scrollEl.clientWidth) {
+                setTimeout(function () { scrollEl.scrollLeft = scrollEl.scrollWidth; }, 40);
+            }
+        }
+
         // ---- Re-initialize v10.0 view state after all overrides are attached ----
         (function() {
             applyThemePreference();
             syncV10HeaderDate();
+            refreshAllExerciseTypeSelects();
             renderBarometers();
             renderLog();
             renderRecentFoodsQuickList();
+            renderV10ExerciseSummaryCards();
             switchTab('today');
         })();
     </script>
