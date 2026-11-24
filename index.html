@@ -824,6 +824,27 @@
             gap: 8px;
         }
 
+        .v10-collapse-chevron {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.18s ease, background 0.15s ease;
+        }
+
+        .v10-collapse-chevron.collapsed {
+            transform: rotate(-90deg);
+            color: var(--accent-text);
+            background: var(--accent-soft);
+            border-color: transparent;
+        }
+
         .log-row {
             display: flex;
             align-items: center;
@@ -2046,14 +2067,14 @@
             <div class="v10-date-bar" id="v10DateBar">
                 <div class="date-stepper">
                     <button type="button" class="date-arrow" onclick="shiftDayStep(-1)" aria-label="Previous day">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                     <button type="button" class="date-center-btn" onclick="openV10DayPickerSheet()" title="Pick day of week">
                         <span id="v10DateMainLabel">Monday</span>
                         <span class="date-center-sub" id="v10DateSubLabel">--/--/--</span>
                     </button>
                     <button type="button" class="date-arrow" onclick="shiftDayStep(1)" aria-label="Next day">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
                 <button type="button" class="today-pill" id="v10JumpTodayBtn" onclick="jumpToTodayDay()">Today</button>
@@ -2088,7 +2109,7 @@
                     <button type="button" class="tool-tile" style="flex-direction:column; align-items:flex-start; gap:5px;" onclick="showWeightTrackerModal()">
                         <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
                             <span style="font-size:12px; font-weight:700; color:var(--success);">Weight Tracker</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </div>
                         <div style="font-size:21px; font-weight:800; letter-spacing:-0.03em;" id="v10ProfileWeightReadout">-- lbs</div>
                         <div style="font-size:11px; color:var(--text-muted);" id="v10ProfileGoalReadout">Tap for chart &amp; history</div>
@@ -2097,7 +2118,7 @@
                     <button type="button" id="recall-week-btn" class="tool-tile" style="flex-direction:column; align-items:flex-start; gap:5px;" onclick="showRecallWeekModal()">
                         <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
                             <span style="font-size:12px; font-weight:700; color:var(--accent);">Weekly History</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </div>
                         <div style="font-size:16px; font-weight:800; letter-spacing:-0.02em; margin-top:4px;">Recall a Week</div>
                         <div style="font-size:11px; color:var(--text-muted);">Browse saved weeks</div>
@@ -2180,7 +2201,7 @@
                         </div>
                         <div class="ios-row-right">
                             <span id="vmProfileCountBadge" class="pill-badge">0 items</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </div>
                     </button>
                 </div>
@@ -2207,7 +2228,7 @@
                             </div>
                             <div class="ios-row-title">Export App Data</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
 
                     <button type="button" class="ios-row" onclick="event.preventDefault(); document.getElementById('importAppDataInput').click()">
@@ -2217,7 +2238,7 @@
                             </div>
                             <div class="ios-row-title">Import App Data</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
                     <input type="file" id="importAppDataInput" accept=".json,application/json,text/plain" style="display:none;" onchange="importAppData(event)">
 
@@ -2228,7 +2249,7 @@
                             </div>
                             <div class="ios-row-title">View Archive File</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
                     <input type="file" id="viewArchiveInput" accept=".json,application/json,text/plain" style="display:none;" onchange="loadArchiveData(event)">
 
@@ -2239,7 +2260,7 @@
                             </div>
                             <div class="ios-row-title">Manage Storage</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
 
                     <button type="button" class="ios-row" onclick="event.preventDefault(); showUsdaApiKeyModal()">
@@ -2251,7 +2272,7 @@
                         </div>
                         <div class="ios-row-right">
                             <span id="apiKeyStatus" style="font-size:12px;"></span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                         </div>
                     </button>
 
@@ -2262,7 +2283,7 @@
                             </div>
                             <div class="ios-row-title">Food Databases &amp; Priority</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
 
                     <button type="button" class="ios-row" onclick="event.preventDefault(); showAiKeySetupModal()">
@@ -2272,7 +2293,7 @@
                             </div>
                             <div class="ios-row-title">AI Key Setup (Gemini)</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
 
                     <button type="button" class="ios-row" onclick="document.getElementById('disclaimerModal').style.display='flex'">
@@ -2280,7 +2301,7 @@
                             <div class="ios-row-icon" style="background:var(--danger-soft); color:var(--danger); font-weight:800;">!</div>
                             <div class="ios-row-title">Medical &amp; Liability Disclaimer</div>
                         </div>
-                        <div class="ios-row-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+                        <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
                 </div>
 
@@ -3350,7 +3371,7 @@
                 </div>
                 <div id="v10BuilderManualWrap" style="display:none; background:var(--surface-subtle); padding:12px; border-radius:12px; margin-bottom:12px;">
                     <h4 style="display:none; margin-top:0;" onclick="toggleMealInput('builderManualBody')">
-                        Add Items Manually <span id="builderManualBody-icon">▼</span>
+                        Add Items Manually <span id="builderManualBody-icon" style="font-size:16px; display:inline-block; margin-left:4px;">▼</span>
                     </h4>
                     <div id="builderManualBody">
                         <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Type items separated by commas
@@ -3369,7 +3390,7 @@
 
             <div id="v10BuilderAiWrap" style="background:var(--surface-subtle); padding:12px; border-radius:12px; margin-bottom:12px;">
                 <h4 style="display:none; margin-top:0;" onclick="toggleMealInput('builderAiBody')">
-                    AI Parse Meal <span id="builderAiBody-icon">▼</span>
+                    AI Parse Meal <span id="builderAiBody-icon" style="font-size:16px; display:inline-block; margin-left:4px;">▼</span>
                 </h4>
                 <div id="builderAiBody">
                     <p style="font-size:0.85em; color:#6b7280; margin-bottom:10px;">Upload a photo or describe what you
@@ -13601,7 +13622,7 @@
             hdr.innerHTML = '<div class="meal-title">Vitamins &amp; Medicines</div>' +
                 '<div class="meal-totals">' +
                     '<span class="pill-badge ' + (takenDoses === totalDoses && totalDoses > 0 ? 'success' : '') + '">' + takenDoses + '/' + totalDoses + ' taken</span>' +
-                    '<span>' + (isCollapsed ? '&#9656;' : '&#9662;') + '</span>' +
+                    '<span class="v10-collapse-chevron' + (isCollapsed ? ' collapsed' : '') + '" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>' +
                 '</div>';
             hdr.onclick = function() {
                 window.logMealCollapseState = window.logMealCollapseState || {};
@@ -13691,7 +13712,7 @@
                 var hdr = document.createElement('div');
                 hdr.className = 'meal-header';
                 hdr.innerHTML = '<div class="meal-title">' + displayMeal + '</div>' +
-                    '<div class="meal-totals">' + Math.round(mCal) + ' cal &middot; ' + mPts.toFixed(1) + ' pts <span>' + (isCollapsed ? '&#9656;' : '&#9662;') + '</span></div>';
+                    '<div class="meal-totals">' + Math.round(mCal) + ' cal &middot; ' + mPts.toFixed(1) + ' pts <span class="v10-collapse-chevron' + (isCollapsed ? ' collapsed' : '') + '" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></div>';
                 hdr.onclick = function() {
                     window.logMealCollapseState = window.logMealCollapseState || {};
                     window.logMealCollapseState[meal] = !isCollapsed;
@@ -13825,7 +13846,7 @@
                     '</div>' +
                     '<div style="display:flex; gap:8px; align-items:center;">' +
                         '<input type="number" inputmode="decimal" id="servingInput_' + idx + '" value="" placeholder="Servings" min="0.1" step="0.1" onchange="updatePreview(' + idx + ')" style="width:94px; flex-shrink:0;">' +
-                        '<button type="button" id="waterfallExpandBtn_' + idx + '" class="waterfall-expand-btn" onclick="toggleWaterfallSlotDetails(' + idx + ')" aria-expanded="' + (slot.expanded ? 'true' : 'false') + '">' + (slot.expanded ? 'Hide' : 'Details') + '</button>' +
+                        '<button type="button" id="waterfallExpandBtn_' + idx + '" class="waterfall-expand-btn" style="display:inline-flex; align-items:center; gap:4px;" onclick="toggleWaterfallSlotDetails(' + idx + ')" aria-expanded="' + (slot.expanded ? 'true' : 'false') + '"><span>' + (slot.expanded ? 'Hide' : 'Details') + '</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.15s ease;' + (slot.expanded ? 'transform:rotate(180deg);' : '') + '"><polyline points="6 9 12 15 18 9"/></svg></button>' +
                         '<button type="button" class="v10-btn" style="flex:1; height:44px;" onclick="showLogFoodModal(' + idx + ')">Log Food</button>' +
                     '</div>' +
                     '<div id="searchLoadingIndicator_' + idx + '" style="display:none; font-size:12px; color:var(--text-muted); margin-top:6px;"></div>' +
@@ -13876,7 +13897,7 @@
             var btn = document.getElementById('waterfallExpandBtn_' + slotIdx);
             if (drawer) drawer.style.display = slot.expanded ? 'block' : 'none';
             if (btn) {
-                btn.textContent = slot.expanded ? 'Hide' : 'Details';
+                btn.innerHTML = '<span>' + (slot.expanded ? 'Hide' : 'Details') + '</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.15s ease;' + (slot.expanded ? 'transform:rotate(180deg);' : '') + '"><polyline points="6 9 12 15 18 9"/></svg>';
                 btn.setAttribute('aria-expanded', slot.expanded ? 'true' : 'false');
             }
         };
@@ -14230,7 +14251,7 @@
                 var safeBrand = brand.replace(/'/g, "\\'");
                 html += '<button type="button" class="ios-row" onclick="viewRestaurantItems(\'' + safeBrand + '\')">' +
                     '<div class="ios-row-left"><div class="ios-row-title">' + escapeHtml(brand) + '</div></div>' +
-                    '<div class="ios-row-right"><span class="pill-badge">' + restaurants[brand] + ' items</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>' +
+                    '<div class="ios-row-right"><span class="pill-badge">' + restaurants[brand] + ' items</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>' +
                 '</button>';
             });
             html += '</div>';
