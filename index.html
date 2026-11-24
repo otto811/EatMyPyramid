@@ -179,6 +179,13 @@
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
+        input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            display: block;
+            overflow: hidden;
+        }
+
         input:focus, select:focus, textarea:focus {
             border-color: var(--accent);
             box-shadow: var(--focus-ring);
@@ -419,6 +426,21 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
             color: var(--text-muted);
+        }
+
+        .section-collapse-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            padding: 4px 2px;
+            margin: 0;
+            cursor: pointer;
+            color: inherit;
+            min-height: 32px;
+            text-align: left;
+            box-shadow: none !important;
         }
 
         /* Buttons & Pills */
@@ -2171,7 +2193,12 @@
                 setTimeout(function () {
                     splash.style.visibility = 'hidden';
                     splash.style.display = 'none';
+                    if (window._v10AppInitialized && typeof checkDisclaimerPromptOnStartup === 'function') {
+                        checkDisclaimerPromptOnStartup();
+                    }
                 }, 360);
+            } else if (window._v10AppInitialized && typeof checkDisclaimerPromptOnStartup === 'function') {
+                checkDisclaimerPromptOnStartup();
             }
         }
         window.addEventListener('load', function () {
@@ -2450,7 +2477,7 @@
                         <div class="ios-row-right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
                     </button>
 
-                    <button type="button" class="ios-row" onclick="document.getElementById('disclaimerModal').style.display='flex'">
+                    <button type="button" class="ios-row" onclick="openDisclaimerModal()">
                         <div class="ios-row-left">
                             <div class="ios-row-icon" style="background:var(--danger-soft); color:var(--danger); font-weight:800;">!</div>
                             <div class="ios-row-title">Medical &amp; Liability Disclaimer</div>
@@ -2519,7 +2546,10 @@
                         <!-- Recent & Frequent My Foods (shown when search box is idle) -->
                         <div id="v10RecentFoodsSection">
                             <div class="section-heading">
-                                <span class="section-label">Recent &amp; Frequent My Foods</span>
+                                <button type="button" id="v10RecentFoodsToggleBtn" class="section-collapse-btn" onclick="toggleRecentFoodsSection()" aria-expanded="true" aria-controls="v10RecentFoodsList">
+                                    <span class="section-label">Recent &amp; Frequent My Foods</span>
+                                    <span id="v10RecentFoodsChevron" class="v10-collapse-chevron" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                                </button>
                                 <button type="button" class="icon-pill-btn" style="height:28px; font-size:12px;" onclick="showNewFoodEntryModal()">+ New Food</button>
                             </div>
                             <div class="ios-card tight" id="v10RecentFoodsList"></div>
@@ -2873,8 +2903,8 @@
             </div>
 
             <div style="margin-top:20px; text-align:right;">
-                <button onclick="document.getElementById('disclaimerModal').style.display='none'"
-                    style="background:var(--primary); color:white; border:none; padding:12px 24px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 1em;">I
+                <button type="button" id="disclaimerAcknowledgeBtn" onclick="acknowledgeDisclaimer()"
+                    style="background:var(--primary); color:white; border:none; padding:12px 24px; min-height:44px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 1em;">I
                     Acknowledge</button>
             </div>
         </div>
@@ -4422,14 +4452,14 @@
                     <div style="font-size:12.5px; font-weight:700; color:var(--text-main);" id="exFormTitle">Log Exercise Session</div>
                     <button type="button" id="exCancelEditBtn" style="display:none; background:none; border:none; color:var(--danger); font-size:12px; font-weight:700; padding:0; cursor:pointer;" onclick="cancelEditExerciseSession()">Cancel Edit</button>
                 </div>
-                <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap:8px; margin-bottom:8px;">
-                    <div style="min-width:0;">
+                <div style="display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap:10px; margin-bottom:8px;">
+                    <div style="min-width:0; overflow:hidden;">
                         <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Date</label>
-                        <input type="date" id="exLogDate" style="width:100%; min-width:0; padding:8px; font-size:13.5px;">
+                        <input type="date" id="exLogDate" style="width:100%; max-width:100%; min-width:0; padding:8px; font-size:13.5px;">
                     </div>
-                    <div style="min-width:0;">
+                    <div style="min-width:0; overflow:hidden;">
                         <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:3px;">Exercise Type</label>
-                        <select id="exLogType" style="width:100%; min-width:0; padding:8px; font-size:13.5px;"></select>
+                        <select id="exLogType" style="width:100%; max-width:100%; min-width:0; padding:8px; font-size:13.5px;"></select>
                     </div>
                 </div>
                 <div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) auto; gap:8px; align-items:end;">
@@ -4756,7 +4786,8 @@
             history: {},
             myFoods: [],
             myRecipes: [],
-            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true }
+            visibility: { profile: true, search: true, macros: true, foodgroups: true, log: true, wwTracker: true },
+            disclaimerAcknowledged: false
         };
 
         let state = {
@@ -4944,6 +4975,9 @@
             if (!appData.weightHistory || !Array.isArray(appData.weightHistory)) {
                 appData.weightHistory = [];
             }
+
+            // Ensure Medical & Liability Disclaimer acknowledgement flag defaults strictly to false
+            appData.disclaimerAcknowledged = appData.disclaimerAcknowledged === true;
 
             // Migration 9: Add bodyWeight to every day's current data for independent daily weight tracking (non-breaking)
             const defaultBodyWeight = appData.weight || 0;
@@ -5147,6 +5181,13 @@
             if (mainUnit) mainUnit.value = appData.preferredUnit || 'oz';
             const recUnit = document.getElementById('recipeUnitSelect');
             if (recUnit) recUnit.value = appData.preferredUnit || 'oz';
+
+            window._v10AppInitialized = true;
+            const splashEl = document.getElementById('splashScreen');
+            const splashDone = _v10SplashDismissed || !splashEl || getComputedStyle(splashEl).display === 'none';
+            if (splashDone && typeof checkDisclaimerPromptOnStartup === 'function') {
+                checkDisclaimerPromptOnStartup();
+            }
         }
 
         function changeDay() {
@@ -14379,9 +14420,39 @@
             }
         };
 
+        function isRecentFoodsCollapsed() {
+            if (typeof window.v10RecentFoodsCollapsed === 'boolean') return window.v10RecentFoodsCollapsed;
+            try {
+                window.v10RecentFoodsCollapsed = localStorage.getItem('v10RecentFoodsCollapsed') === 'true';
+            } catch (e) {
+                window.v10RecentFoodsCollapsed = false;
+            }
+            return window.v10RecentFoodsCollapsed;
+        }
+
+        function applyRecentFoodsCollapseUI() {
+            var collapsed = isRecentFoodsCollapsed();
+            var listEl = document.getElementById('v10RecentFoodsList');
+            var chevronEl = document.getElementById('v10RecentFoodsChevron');
+            var toggleBtn = document.getElementById('v10RecentFoodsToggleBtn');
+            if (listEl) listEl.style.display = collapsed ? 'none' : 'block';
+            if (chevronEl) chevronEl.classList.toggle('collapsed', collapsed);
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+
+        function toggleRecentFoodsSection() {
+            var next = !isRecentFoodsCollapsed();
+            window.v10RecentFoodsCollapsed = next;
+            try {
+                localStorage.setItem('v10RecentFoodsCollapsed', next ? 'true' : 'false');
+            } catch (e) {}
+            applyRecentFoodsCollapseUI();
+        }
+
         function renderRecentFoodsQuickList() {
             var listEl = document.getElementById('v10RecentFoodsList');
             if (!listEl) return;
+            applyRecentFoodsCollapseUI();
             var foods = (appData && Array.isArray(appData.myFoods)) ? appData.myFoods : [];
             var customFoods = [];
             foods.forEach(function(f, idx) {
@@ -14785,9 +14856,23 @@
 
         // ---- Ensure all modal close buttons & live library refreshes work cleanly ----
         function closeCopyModal() { closeCopyToDayModal(); }
+        function openDisclaimerModal() {
+            var m = document.getElementById('disclaimerModal');
+            if (m) m.style.display = 'flex';
+        }
         function closeDisclaimerModal() {
             var m = document.getElementById('disclaimerModal');
             if (m) m.style.display = 'none';
+        }
+        function acknowledgeDisclaimer() {
+            appData.disclaimerAcknowledged = true;
+            saveData();
+            closeDisclaimerModal();
+        }
+        function checkDisclaimerPromptOnStartup() {
+            if (appData && appData.disclaimerAcknowledged !== true) {
+                openDisclaimerModal();
+            }
         }
         function closeEditLoggedModal() { closeEditModal(); }
         function closeSetupModal() { closeAiKeySetupModal(); }
