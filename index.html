@@ -205,7 +205,7 @@
             position: sticky;
             top: 0;
             z-index: 500;
-            padding-top: max(8px, env(safe-area-inset-top, 0px));
+            padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
             background: var(--surface-glass);
             backdrop-filter: blur(22px);
             -webkit-backdrop-filter: blur(22px);
@@ -1855,7 +1855,7 @@
             max-height: 100dvh !important;
             margin: 0 !important;
             border-radius: 0 !important;
-            padding: calc(max(12px, env(safe-area-inset-top, 0px)) + 6px) 14px calc(max(12px, env(safe-area-inset-bottom, 0px)) + 6px) !important;
+            padding: calc(env(safe-area-inset-top, 0px) + 18px) 14px calc(max(12px, env(safe-area-inset-bottom, 0px)) + 6px) !important;
             display: flex;
             flex-direction: column;
         }
