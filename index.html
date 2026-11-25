@@ -6678,8 +6678,15 @@
 
             if (currentEditContext === 'pending') {
                 const item = pendingMealItems[currentEditIndex];
+                const prevUnit = String(item.parsed.unit || 'serving').toLowerCase();
+                const nextUnit = (selUnit === 'servings') ? (val === 1 ? 'serving' : 'servings') : selUnit;
+                if (nextUnit.toLowerCase() !== prevUnit) {
+                    item.parsed.estimatedGrams = 0;
+                    item.parsed._aiBaseAmount = 0;
+                    item.parsed._aiBaseUnit = '';
+                }
                 item.parsed.amount = val;
-                item.parsed.unit = (selUnit === 'servings') ? (val === 1 ? 'serving' : 'servings') : selUnit;
+                item.parsed.unit = nextUnit;
                 if (newName) item.parsed.description = newName;
                 item.groupOverride = newCat;
                 renderPendingMealItems();
@@ -7273,6 +7280,100 @@
             }
         }
 
+        // Shared food-density & unit gram conversion for Enter Meal Builder preview and commit
+        function computeBuilderItemGrams(parsed, food) {
+            const safeParsed = parsed || {};
+            let amount = parseFloat(safeParsed.amount);
+            if (isNaN(amount) || amount <= 0) amount = 1;
+
+            const unit = String(safeParsed.unit || 'serving').trim() || 'serving';
+            const uLow = unit.toLowerCase();
+            const servingSize = parseFloat(food && food.servingSize) || 100;
+
+            let totalGrams = amount * servingSize;
+            let gramsPerUnit = servingSize;
+            let usingAiGrams = false;
+
+            const isWeightG = (uLow === 'g' || uLow === 'gram' || uLow === 'grams');
+            const isWeightOz = (uLow === 'oz' || uLow === 'ounce' || uLow === 'ounces' || uLow.includes('oz'));
+            const isWeightLb = (uLow === 'lb' || uLow === 'lbs' || uLow.includes('pound'));
+
+            if (isWeightG) {
+                gramsPerUnit = 1;
+                totalGrams = amount;
+            } else if (isWeightOz) {
+                gramsPerUnit = 28.3495;
+                totalGrams = amount * 28.3495;
+            } else if (isWeightLb) {
+                gramsPerUnit = 453.592;
+                totalGrams = amount * 453.592;
+            } else if (food && food.source === 'AI Estimate') {
+                gramsPerUnit = servingSize;
+                totalGrams = amount * servingSize;
+            } else if (uLow === 'serving' || uLow === 'servings') {
+                gramsPerUnit = servingSize;
+                totalGrams = amount * servingSize;
+            } else {
+                const aiGrams = parseFloat(safeParsed.estimatedGrams);
+                const aiBaseAmt = parseFloat(safeParsed._aiBaseAmount);
+                const aiBaseUnit = String(safeParsed._aiBaseUnit || '').trim().toLowerCase();
+                if (!isNaN(aiGrams) && aiGrams > 0 && (!aiBaseUnit || aiBaseUnit === uLow)) {
+                    const baseAmt = (!isNaN(aiBaseAmt) && aiBaseAmt > 0) ? aiBaseAmt : amount;
+                    totalGrams = aiGrams * (amount / baseAmt);
+                    gramsPerUnit = totalGrams / amount;
+                    usingAiGrams = true;
+                } else {
+                    const household = String((food && food.householdServingFullText) || '').toLowerCase();
+                    const householdKeywords = ['cup', 'slice', 'tbsp', 'tsp', 'piece', 'patty', 'link', 'egg', 'bar', 'scoop'];
+                    const matchesHousehold = household && (
+                        household.includes(uLow) ||
+                        householdKeywords.some(k => uLow.includes(k) && household.includes(k))
+                    );
+                    if (matchesHousehold) {
+                        gramsPerUnit = servingSize;
+                        totalGrams = amount * servingSize;
+                    } else if (uLow.includes('tbsp') || uLow.includes('tablespoon')) {
+                        gramsPerUnit = 15;
+                        totalGrams = amount * 15;
+                    } else if (uLow.includes('tsp') || uLow.includes('teaspoon')) {
+                        gramsPerUnit = 5;
+                        totalGrams = amount * 5;
+                    } else if (uLow.includes('cup')) {
+                        gramsPerUnit = 240;
+                        totalGrams = amount * 240;
+                    } else {
+                        gramsPerUnit = servingSize;
+                        totalGrams = amount * servingSize;
+                    }
+                }
+            }
+
+            if (isNaN(totalGrams) || totalGrams <= 0) {
+                totalGrams = amount * servingSize;
+                gramsPerUnit = servingSize;
+            }
+
+            return {
+                amount: amount,
+                unit: unit,
+                servingSize: servingSize,
+                gramsPerUnit: gramsPerUnit,
+                totalGrams: totalGrams,
+                foodGroupAmount: totalGrams / servingSize,
+                multiplier: totalGrams / 100,
+                usingAiGrams: usingAiGrams
+            };
+        }
+
+        function builderShowMoreMatches(index) {
+            const item = pendingMealItems[index];
+            if (!item || !Array.isArray(item.results)) return;
+            const step = (typeof SEARCH_MORE_STEP === 'number' && SEARCH_MORE_STEP > 0) ? SEARCH_MORE_STEP : 10;
+            const initCount = (typeof SEARCH_INITIAL_COUNT === 'number' && SEARCH_INITIAL_COUNT > 0) ? SEARCH_INITIAL_COUNT : 10;
+            item.visibleCount = Math.min(item.results.length, (item.visibleCount || initCount) + step);
+            renderPendingMealItems();
+        }
+
         function renderPendingMealItems() {
             const container = document.getElementById('builderPendingItemsList');
             container.innerHTML = '';
@@ -7294,65 +7395,104 @@
                 if (aiBody) { aiBody.style.display = 'none'; aiIcon.textContent = '▶'; }
             }
 
+            const initCount = (typeof SEARCH_INITIAL_COUNT === 'number' && SEARCH_INITIAL_COUNT > 0) ? SEARCH_INITIAL_COUNT : 10;
+            const stepCount = (typeof SEARCH_MORE_STEP === 'number' && SEARCH_MORE_STEP > 0) ? SEARCH_MORE_STEP : 10;
+
             pendingMealItems.forEach((item, index) => {
-                const parsed = item.parsed;
-                const match = item.food;
+                const parsed = item.parsed || {};
+                const results = Array.isArray(item.results) ? item.results : [];
+                let selectedIdx = (typeof item.selectedIdx === 'number' && item.selectedIdx >= 0 && item.selectedIdx < results.length)
+                    ? item.selectedIdx
+                    : 0;
+                if (results.length > 0 && item.food && results[selectedIdx] !== item.food) {
+                    const foundIdx = results.indexOf(item.food);
+                    if (foundIdx >= 0) selectedIdx = foundIdx;
+                }
+                item.selectedIdx = selectedIdx;
+                const match = results.length > 0 ? results[selectedIdx] : item.food;
+                if (match && item.food !== match) item.food = match;
+
+                const visible = Math.min(Math.max(item.visibleCount || initCount, selectedIdx + 1), results.length);
+                item.visibleCount = visible;
+                const remaining = Math.max(0, results.length - visible);
 
                 let selectHtml = '';
-                if (item.results && item.results.length > 0) {
-                    selectHtml = `<select id="pendingResultSelect_${index}" onchange="builderChangePendingMatch(${index})" style="margin-top:5px; padding:4px; border-radius:4px; border:1px solid #cbd5e1; font-size:0.9em; width:100%; max-width:300px;">`;
-                    item.results.forEach((r, rIdx) => {
+                let paginationHtml = '';
+                if (results.length > 0) {
+                    selectHtml = `<select id="pendingResultSelect_${index}" onchange="builderChangePendingMatch(${index})" style="margin-top:6px; padding:8px; border-radius:6px; border:1px solid #cbd5e1; font-size:16px; width:100%; max-width:100%; min-width:0; min-height:40px;">`;
+                    for (let rIdx = 0; rIdx < visible; rIdx++) {
+                        const r = results[rIdx];
                         const brand = r.brandOwner ? ` (${r.brandOwner})` : '';
                         const nut = getAllNutrients(r);
+                        const conv = computeBuilderItemGrams(parsed, r);
+                        const displayCals = Math.round(nut.calories * conv.multiplier);
 
-                        const logAmount = parseFloat(parsed.amount) || 1;
-                        const logUnit = parsed.unit || "serving";
-                        const servingSize = parseFloat(r.servingSize) || 100;
-                        let gramsPerUnit = servingSize;
-                        if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
-                        else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
-                        const rMultiplier = (logAmount * gramsPerUnit) / 100;
-                        const displayCals = (nut.calories * rMultiplier).toFixed(0);
-
-                        const isSelected = (match && r.description === match.description) ? 'selected' : '';
-                        const sourceIndicator = r.source === 'My Foods' ? '★ ' : '';
-                        selectHtml += `<option value="${rIdx}" ${isSelected}>${sourceIndicator}${r.description}${brand} - ${displayCals} kcal</option>`;
-                    });
+                        const isSelected = (rIdx === selectedIdx) ? 'selected' : '';
+                        let sourceIndicator = '';
+                        if (r.source === 'My Foods') sourceIndicator = '★ ';
+                        else if (r.source === 'AI Estimate') sourceIndicator = '✨ [AI Estimate] ';
+                        else if (r.source) sourceIndicator = `[${r.source}] `;
+                        selectHtml += `<option value="${rIdx}" ${isSelected}>${escapeHtml(sourceIndicator + (r.description || 'Unknown') + brand)} - ${displayCals} kcal</option>`;
+                    }
                     selectHtml += `</select>`;
+
+                    const moreBtnHtml = remaining > 0
+                        ? `<button type="button" onclick="builderShowMoreMatches(${index})" style="background:none; color:#3b82f6; border:none; padding:2px 6px; font-size:12.5px; cursor:pointer; font-weight:600; text-decoration:underline; box-shadow:none !important;">${Math.min(stepCount, remaining)} more ▼</button>`
+                        : '';
+                    paginationHtml = `<div id="pendingShowMoreRow_${index}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; font-size:12px; color:#64748b;"><span>Showing ${visible} of ${results.length}</span>${moreBtnHtml}</div>`;
                 } else {
-                    selectHtml = `<div style="font-size:0.85em; color:#ef4444;">No results found.</div>`;
+                    selectHtml = `<div style="font-size:0.85em; color:#ef4444; margin-top:4px;">No results found.</div>`;
                 }
+
+                let metaBadgesHtml = '';
+                const convMatch = match ? computeBuilderItemGrams(parsed, match) : computeBuilderItemGrams(parsed, null);
+                metaBadgesHtml += `<span style="background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; font-size:0.78em; font-weight:600;">~${Math.round(convMatch.totalGrams)}g</span>`;
+
+                const confRaw = String(parsed.confidence || '').toLowerCase();
+                if (confRaw === 'high' || confRaw === 'medium' || confRaw === 'low') {
+                    const confStyles = confRaw === 'high'
+                        ? 'background:#dcfce7; color:#166534;'
+                        : (confRaw === 'medium' ? 'background:#fef3c7; color:#92400e;' : 'background:#fee2e2; color:#991b1b;');
+                    const confLabel = confRaw === 'high' ? 'High' : (confRaw === 'medium' ? 'Med' : 'Low');
+                    metaBadgesHtml += `<span style="${confStyles} padding:2px 6px; border-radius:4px; font-size:0.78em; font-weight:700;">${confLabel} conf</span>`;
+                }
+
+                const prepStr = [parsed.preparation, parsed.hiddenNotes].filter(Boolean).join(' · ');
+                const prepHtml = prepStr
+                    ? `<div style="font-size:0.78em; color:#64748b; margin-top:3px; line-height:1.3;">${escapeHtml(prepStr)}</div>`
+                    : '';
 
                 let nutHtml = '';
                 if (match) {
                     const nut = getAllNutrients(match);
-                    const logAmount = parseFloat(parsed.amount) || 1;
-                    const logUnit = parsed.unit || "serving";
-                    const servingSize = parseFloat(match.servingSize) || 100;
-                    let gramsPerUnit = servingSize;
-                    if (logUnit.toLowerCase().includes('oz')) gramsPerUnit = 28.3495;
-                    else if (logUnit.toLowerCase().includes('cup')) gramsPerUnit = 240;
+                    const cals = (nut.calories || 0) * convMatch.multiplier;
+                    const prot = (nut.protein || 0) * convMatch.multiplier;
+                    const fat = (nut.fat || 0) * convMatch.multiplier;
+                    const carbs = (nut.carbs || 0) * convMatch.multiplier;
+                    const fib = (nut.fiber || 0) * convMatch.multiplier;
+                    const pts = calculateWWPoints(cals, fat, fib);
 
-                    const customMultiplier = (logAmount * gramsPerUnit) / 100;
-
-                    nutHtml = `<div style="font-size:0.85em; color:#6b7280; margin-top:4px;">
-                        🔥 ${(nut.calories * customMultiplier).toFixed(0)} kcal | 🥩 ${(nut.protein * customMultiplier).toFixed(1)}g P | 🧈 ${(nut.fat * customMultiplier).toFixed(1)}g F | 🍞 ${(nut.carbs * customMultiplier).toFixed(1)}g C
+                    nutHtml = `<div style="font-size:0.83em; color:#475569; margin-top:5px; line-height:1.35;">
+                        ${cals.toFixed(0)} kcal &middot; ${prot.toFixed(1)}g P &middot; ${fat.toFixed(1)}g F &middot; ${carbs.toFixed(1)}g C &middot; ${fib.toFixed(1)}g Fib &middot; <strong>${pts.toFixed(1)} pts</strong>
                     </div>`;
                 }
 
                 container.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px; border-bottom:1px solid #e5e7eb; background:white; border-radius:4px; margin-bottom:5px;">
-                        <div style="flex:1;">
-                            <div style="font-size:0.95em; margin-bottom:3px;">
-                                <span style="background:#e0e7ff; color:#4f46e5; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.85em; margin-right:5px;">${parsed.amount || 1} ${parsed.unit || 'serving'}</span>
-                                <span style="color:#4b5563; font-weight:bold;">${parsed.description}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px; border:1px solid #e5e7eb; background:white; border-radius:8px; margin-bottom:8px;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:5px; font-size:0.95em; margin-bottom:3px;">
+                                <span style="background:#e0e7ff; color:#4f46e5; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.85em;">${parsed.amount || 1} ${escapeHtml(parsed.unit || 'serving')}</span>
+                                <span style="color:#1e293b; font-weight:bold;">${escapeHtml(parsed.description || '')}</span>
+                                ${metaBadgesHtml}
                             </div>
+                            ${prepHtml}
                             ${selectHtml}
+                            ${paginationHtml}
                             ${nutHtml}
                         </div>
-                        <div style="display:flex; gap:5px; margin-left:10px; align-items:center;">
-                            <button onclick="openBuilderItemEditModal(${index}, 'pending')" style="background:none; border:none; padding:0; cursor:pointer;" title="Edit">${ICON_EDIT}</button>
-                            <button onclick="builderRemoveItem(${index})" style="background:none; border:none; padding:0; cursor:pointer;" title="Delete">${ICON_DELETE}</button>
+                        <div style="display:flex; gap:5px; margin-left:8px; align-items:center; flex-shrink:0;">
+                            <button type="button" onclick="openBuilderItemEditModal(${index}, 'pending')" style="background:none; border:none; padding:4px; cursor:pointer; box-shadow:none !important;" title="Edit">${ICON_EDIT}</button>
+                            <button type="button" onclick="builderRemoveItem(${index})" style="background:none; border:none; padding:4px; cursor:pointer; box-shadow:none !important;" title="Delete">${ICON_DELETE}</button>
                         </div>
                     </div>
                 `;
@@ -7363,7 +7503,8 @@
             const select = document.getElementById(`pendingResultSelect_${index}`);
             const matchIdx = parseInt(select.value, 10);
             const item = pendingMealItems[index];
-            if (item.results && item.results[matchIdx]) {
+            if (item && item.results && item.results[matchIdx]) {
+                item.selectedIdx = matchIdx;
                 item.food = item.results[matchIdx];
             }
             renderPendingMealItems();
@@ -7460,15 +7601,20 @@
             btn.textContent = 'Parsing...';
 
             try {
-                // Try modern fast model first
-                let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+                const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'];
 
-                let textContext = text ? `from this meal description/image context: "${text}".` : `from the attached image of the meal.`;
-                const prompt = `Extract the food items and their quantities ${textContext} 
-                Respond ONLY with a JSON array of objects. Do not include markdown formatting or any other text. Each object must have: 
-                "description" (string, the name of the food), 
-                "amount" (number, the quantity), 
-                "unit" (string, the unit like 'slice', 'cup', 'oz', 'item', 'serving').`;
+                let textContext = text ? `from this meal description/image context: "${text}".` : `from the attached photo of the meal.`;
+                const prompt = `Analyze the meal ${textContext}
+Identify each distinct food item (plus visible sauces, dressings, or cooking oils if clearly present), estimate portion size using plate/bowl/utensil visual scale and typical food density, and note preparation style and hidden fat/oil caveats.
+Respond ONLY with a valid JSON array of objects (no markdown fences, no commentary). Each object must have:
+- "description" (string, clean searchable food name without prep adjectives if possible, e.g. "Chicken Breast", "White Rice", "Broccoli", "Caesar Salad")
+- "amount" (number, portion quantity in the chosen unit)
+- "unit" (string, e.g. "oz", "g", "cup", "tbsp", "slice", "piece", "serving")
+- "estimatedGrams" (number, realistic total gram weight for that entire item portion)
+- "preparation" (string, e.g. "grilled", "pan-fried", "steamed", "raw", or "")
+- "confidence" (string, one of "high", "medium", "low")
+- "hiddenNotes" (string, brief caveat on likely cooking oil/butter/sauce if applicable, else "")
+- "aiEstimate" (object with nutrition totals for the ENTIRE estimatedGrams portion: { "calories": number, "protein": number, "fat": number, "carbs": number, "fiber": number, "category": "Fruit"|"Vegetable"|"Proteins"|"Dairy"|"Grain"|"Water"|"Other" }).`;
 
                 const parts = [{ text: prompt }];
                 if (currentAiImageBase64) {
@@ -7484,24 +7630,21 @@
                     contents: [{ parts: parts }]
                 };
 
-                let response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(reqBody)
-                });
-
-                if (!response.ok && response.status === 404) {
-                    // Fall back to the legacy model alias that is known to work for this account
-                    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-latest:generateContent?key=${apiKey}`;
+                let response = null;
+                for (let mIdx = 0; mIdx < geminiModels.length; mIdx++) {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModels[mIdx]}:generateContent?key=${apiKey}`;
                     response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(reqBody)
                     });
+                    if (response.ok || (response.status !== 404 && response.status !== 400)) {
+                        break;
+                    }
                 }
 
-                if (!response.ok) {
-                    let errMsg = "API Error " + response.status;
+                if (!response || !response.ok) {
+                    let errMsg = "API Error " + (response ? response.status : 'Network');
                     try {
                         const errData = await response.json();
                         errMsg = (errData.error && errData.error.message) || errMsg;
@@ -7510,19 +7653,58 @@
                 }
 
                 const data = await response.json();
-                let jsonText = data.candidates[0].content.parts[0].text;
+                let jsonText = data.candidates[0].content.parts[0].text || '[]';
                 jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const arrMatch = jsonText.match(/\[[\s\S]*\]/);
+                if (arrMatch) jsonText = arrMatch[0];
                 const parsedItems = JSON.parse(jsonText);
 
                 btn.textContent = 'Looking up foods...';
 
                 const restModeCheckbox = document.getElementById('builderRestaurantMode');
                 const isRestMode = restModeCheckbox ? restModeCheckbox.checked : false;
+                const initCount = (typeof SEARCH_INITIAL_COUNT === 'number' && SEARCH_INITIAL_COUNT > 0) ? SEARCH_INITIAL_COUNT : 10;
 
-                const promises = parsedItems.map(async (parsed) => {
-                    let matches = await searchFoodMatches(parsed.description, { restaurantMode: isRestMode });
+                const promises = parsedItems.map(async (rawParsed) => {
+                    const parsed = Object.assign({}, rawParsed);
+                    parsed.amount = parseFloat(parsed.amount) || 1;
+                    parsed.unit = parsed.unit || 'serving';
+                    parsed.estimatedGrams = parseFloat(parsed.estimatedGrams) || 0;
+                    parsed._aiBaseAmount = parsed.amount;
+                    parsed._aiBaseUnit = parsed.unit;
+
+                    const matches = await searchFoodMatches(parsed.description, {
+                        restaurantMode: isRestMode,
+                        preparation: parsed.preparation || ''
+                    });
+
+                    if (parsed.aiEstimate && !isNaN(parseFloat(parsed.aiEstimate.calories))) {
+                        const estGramsTotal = parsed.estimatedGrams > 0 ? parsed.estimatedGrams : 100;
+                        const perUnitGrams = estGramsTotal / parsed.amount;
+                        const scale100 = 100 / estGramsTotal;
+                        const aiEst = parsed.aiEstimate;
+                        matches.push({
+                            description: parsed.description || 'AI Estimated Item',
+                            brandOwner: parsed.preparation ? `AI Vision (${parsed.preparation})` : 'AI Vision',
+                            foodCategory: aiEst.category || 'Other',
+                            servingSize: perUnitGrams,
+                            householdServingFullText: `${parsed.unit} (~${Math.round(perUnitGrams)}g)`,
+                            upc: '',
+                            source: 'AI Estimate',
+                            foodNutrients: [
+                                { nutrientId: 1008, value: (parseFloat(aiEst.calories) || 0) * scale100 },
+                                { nutrientId: 1003, value: (parseFloat(aiEst.protein) || 0) * scale100 },
+                                { nutrientId: 1004, value: (parseFloat(aiEst.fat) || 0) * scale100 },
+                                { nutrientId: 1005, value: (parseFloat(aiEst.carbs) || 0) * scale100 },
+                                { nutrientId: 1079, value: (parseFloat(aiEst.fiber) || 0) * scale100 }
+                            ]
+                        });
+                    }
+
                     return {
                         parsed: parsed,
+                        selectedIdx: 0,
+                        visibleCount: initCount,
                         food: matches.length > 0 ? matches[0] : null,
                         results: matches
                     };
@@ -7566,27 +7748,17 @@
                 }
 
                 const nut = getAllNutrients(food);
-                const cat = getFoodCategory(food);
+                const cat = (itemMatch.groupOverride && itemMatch.groupOverride !== 'Other')
+                    ? itemMatch.groupOverride
+                    : (itemMatch.groupOverride === 'Other' ? 'Other' : getFoodCategory(food));
 
-                let logAmount = parseFloat(parsed.amount);
-                if (isNaN(logAmount) || logAmount <= 0) logAmount = 1;
-
-                let logUnit = parsed.unit || "serving";
-                const servingSize = parseFloat(food.servingSize) || 100;
-                let gramsPerUnit = servingSize;
-
-                if (logUnit.toLowerCase().includes('oz')) {
-                    gramsPerUnit = 28.3495;
-                } else if (logUnit.toLowerCase().includes('cup')) {
-                    gramsPerUnit = 240;
-                } else if (logUnit.toLowerCase().includes('serving')) {
-                    gramsPerUnit = servingSize;
-                } else {
-                    gramsPerUnit = servingSize;
-                }
-
-                const foodGroupAmount = (logAmount * gramsPerUnit) / servingSize;
-                const customMultiplier = (logAmount * gramsPerUnit) / 100;
+                const conv = computeBuilderItemGrams(parsed, food);
+                const logAmount = conv.amount;
+                const logUnit = conv.unit;
+                const servingSize = conv.servingSize;
+                const gramsPerUnit = conv.gramsPerUnit;
+                const foodGroupAmount = conv.foodGroupAmount;
+                const customMultiplier = conv.multiplier;
                 const upcCode = food.gtinUpc || food.upc || null;
 
                 const safeCalories = (parseFloat(nut.calories) || 0) * customMultiplier;
@@ -12753,6 +12925,8 @@
                         fat: bestMatch.fat || getAllNutrients(bestMatch).fat || 0,
                         carbs: bestMatch.carbs || getAllNutrients(bestMatch).carbs || 0,
                         group: getFoodCategory(bestMatch) || 'Other',
+                        selectedIdx: 0,
+                        visibleCount: (typeof SEARCH_INITIAL_COUNT === 'number' && SEARCH_INITIAL_COUNT > 0) ? SEARCH_INITIAL_COUNT : 10,
                         food: bestMatch,
                         parsed: { description: queryStr, amount: amount, unit: unit },
                         loading: false,
@@ -12783,40 +12957,58 @@
             renderPendingMealItems();
         }
 
+        const AI_PREP_STOPWORDS = new Set([
+            'grilled', 'roasted', 'baked', 'steamed', 'fried', 'sauteed', 'boiled',
+            'raw', 'fresh', 'cooked', 'sliced', 'chopped', 'diced', 'shredded',
+            'homemade', 'plain', 'whole', 'large', 'medium', 'small', 'mini',
+            'warm', 'hot', 'cold', 'iced', 'crispy', 'toasted', 'seasoned'
+        ]);
+
         async function searchFoodMatches(query, options = { restaurantMode: false }) {
             query = String(query || '').trim().toLowerCase();
             if (!query) return [];
 
+            // Only strip an explicit leading quantity/unit (never strip a plain food word)
+            let cleanedQuery = query.replace(/^[\d./]+\s*(?:oz|ounces?|g|grams?|lbs?|pounds?|cups?|tbsp|tablespoons?|tsp|teaspoons?|slices?|pieces?|items?|servings?)?\s+/i, '').trim();
+            if (!cleanedQuery) cleanedQuery = query;
+
+            const normQuery = normalizeSearchText(cleanedQuery);
+            const rawTokens = getSearchTokens(cleanedQuery);
+            const coreTokenList = rawTokens.filter(t => !AI_PREP_STOPWORDS.has(t));
+            const coreQuery = (coreTokenList.length > 0 ? coreTokenList.join(' ') : normQuery).trim();
+            const coreTokens = getSearchTokens(coreQuery);
+
+            const isPhraseContained = (haystack, needle) => {
+                if (!needle || needle.length < 3 || !haystack) return false;
+                return (` ${haystack} `).includes(` ${needle} `);
+            };
+
             let localMatches = [];
             try {
-                // To allow '1 apple' to match 'Apple', strip out numbers/quantities
-                let cleanedQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim();
-                if (!cleanedQuery) cleanedQuery = query;
-
-                const queryWords = cleanedQuery.split(/\s+/).filter(w => w.length > 2);
-
                 localMatches = appData.myFoods.filter(f => {
                     const desc = String(f.description || '').toLowerCase();
-                    const brand = String(f.brandOwner || '').toLowerCase();
+                    const normDesc = normalizeSearchText(f.description);
+                    const normBrand = normalizeSearchText(f.brandOwner);
+                    const combinedNorm = `${normDesc} ${normBrand}`.trim();
                     const upcMatch = f.upc && String(f.upc) === query;
 
                     if (upcMatch) return true;
-                    if (desc.includes(cleanedQuery) || brand.includes(cleanedQuery)) return true;
-                    if (desc.length > 2 && cleanedQuery.includes(desc)) return true;
+                    if (normDesc && (normDesc.includes(normQuery) || (coreQuery && normDesc.includes(coreQuery)))) return true;
+                    if (normBrand && (normBrand.includes(normQuery) || (coreQuery && normBrand.includes(coreQuery)))) return true;
+                    if (normDesc.length >= 3 && (isPhraseContained(normQuery, normDesc) || isPhraseContained(coreQuery, normDesc))) return true;
+                    if (myFoodMatchesAllTokens(f, cleanedQuery) || (coreQuery && myFoodMatchesAllTokens(f, coreQuery))) return true;
 
-                    for (const word of queryWords) {
-                        if (desc.includes(word)) return true;
+                    if (coreTokens.length > 0) {
+                        const words = combinedNorm.split(' ').filter(Boolean);
+                        let matchedCount = 0;
+                        for (const tok of coreTokens) {
+                            const singular = (tok.length > 3 && tok.endsWith('s')) ? tok.slice(0, -1) : tok;
+                            if (words.some(w => w.startsWith(tok) || w.startsWith(singular))) matchedCount++;
+                        }
+                        if (matchedCount >= Math.ceil(coreTokens.length * 0.5)) return true;
                     }
-
                     return false;
                 }).map(f => ({ ...f, source: 'My Foods' }));
-
-                localMatches.sort((a, b) => {
-                    const aScore = scoreMatch(a.description, query);
-                    const bScore = scoreMatch(b.description, query);
-                    if (aScore !== bScore) return aScore - bScore;
-                    return String(a.description || '').localeCompare(String(b.description || ''));
-                });
 
                 localMatches = localMatches.filter(food => guessCategory(food) === 'Water' || getAllNutrients(food).calories > 0);
             } catch (e) {
@@ -12829,13 +13021,14 @@
             const runApiNinjas = appData.dbApiNinjasEnabled && appData.apiNinjasApiKey;
             const runNutritionix = appData.dbNutritionixEnabled && appData.nutritionixAppId && appData.nutritionixApiKey;
 
-            const usdaLimit = options.restaurantMode ? 50 : 20;
-            const offLimit = options.restaurantMode ? 50 : 20;
+            const usdaLimit = options.restaurantMode ? 50 : 35;
+            const offLimit = options.restaurantMode ? 50 : 35;
             const usdaDataType = options.restaurantMode ? '&dataType=Branded' : '';
+            const apiQuery = coreQuery && coreQuery.length >= 3 ? cleanedQuery : query;
 
-            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=${usdaLimit}${usdaDataType}`;
-            const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&size=${offLimit}`;
-            const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(query)}`;
+            const usdaUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${API_KEY}&query=${encodeURIComponent(apiQuery)}&pageSize=${usdaLimit}${usdaDataType}`;
+            const searchALUrl = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(apiQuery)}&size=${offLimit}`;
+            const apiNinjasUrl = `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(apiQuery)}`;
             const nutritionixUrl = `https://trackapi.nutritionix.com/v2/natural/nutrients`;
 
             const fetchOptionsApiNinjas = { headers: { 'X-Api-Key': appData.apiNinjasApiKey } };
@@ -12846,15 +13039,15 @@
                     'x-app-key': appData.nutritionixApiKey,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ query: query })
+                body: JSON.stringify({ query: apiQuery })
             };
 
-            const fetchJSON = async (url, options = {}) => {
+            const fetchJSON = async (url, fetchOpts = {}) => {
                 try {
                     const controller = new AbortController();
-                    const id = setTimeout(() => controller.abort(), 3000); // 3-second timeout for quick search
-                    options.signal = controller.signal;
-                    const res = await fetch(url, options);
+                    const id = setTimeout(() => controller.abort(), 4500);
+                    fetchOpts.signal = controller.signal;
+                    const res = await fetch(url, fetchOpts);
                     if (!res.ok) { clearTimeout(id); return null; }
                     const data = await res.json();
                     clearTimeout(id);
@@ -12862,13 +13055,12 @@
                 } catch (e) { return null; }
             };
 
-            const fetchPromises = [];
-            fetchPromises.push(runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null));
-            fetchPromises.push(runOff ? fetchJSON(searchALUrl) : Promise.resolve(null));
-            fetchPromises.push(runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null));
-            fetchPromises.push(runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null));
-
-            const [usdaData, searchALData, apiNinjasData, nutritionixData] = await Promise.all(fetchPromises);
+            const [usdaData, searchALData, apiNinjasData, nutritionixData] = await Promise.all([
+                runUsda ? fetchJSON(usdaUrl) : Promise.resolve(null),
+                runOff ? fetchJSON(searchALUrl) : Promise.resolve(null),
+                runApiNinjas ? fetchJSON(apiNinjasUrl, fetchOptionsApiNinjas) : Promise.resolve(null),
+                runNutritionix ? fetchJSON(nutritionixUrl, fetchOptionsNutritionix) : Promise.resolve(null)
+            ]);
 
             let apiFoods = [];
 
@@ -12883,12 +13075,11 @@
                         { nutrientId: 1008, value: parseFloat(p.calories) || 0 },
                         { nutrientId: 1003, value: parseFloat(p.protein_g) || 0 },
                         { nutrientId: 1004, value: parseFloat(p.fat_total_g) || 0 },
-                        { nutrientId: 1005, value: parseFloat(p.carbohydrates_total_g) || 0 }
+                        { nutrientId: 1005, value: parseFloat(p.carbohydrates_total_g) || 0 },
+                        { nutrientId: 1079, value: parseFloat(p.fiber_g) || 0 }
                     ]
                 })));
             }
-
-
 
             if (usdaData && usdaData.foods) {
                 usdaData.foods.forEach(f => {
@@ -12910,47 +13101,82 @@
                             { nutrientId: 1008, value: getNut(['energy-kcal', 'energy_kcal', 'energy-kcal_100g']) },
                             { nutrientId: 1003, value: getNut(['proteins', 'proteins_100g']) },
                             { nutrientId: 1004, value: getNut(['fat', 'fat_100g']) },
-                            { nutrientId: 1005, value: getNut(['carbohydrates', 'carbohydrates_100g']) }
+                            { nutrientId: 1005, value: getNut(['carbohydrates', 'carbohydrates_100g']) },
+                            { nutrientId: 1079, value: getNut(['fiber', 'fiber_100g', 'fibers', 'fibers_100g']) }
                         ]
                     };
                 }));
             }
 
-            // My Foods items that contain the full phrase or EVERY query word are pinned to the top
-            const pinQuery = query.replace(/^[\d.]+\s*[a-zA-Z]*\s+/, '').trim() || query;
-            const pinnedLocal = localMatches.filter(f =>
-                String(f.description || '').toLowerCase().includes(pinQuery) || myFoodMatchesAllTokens(f, pinQuery)
-            );
-            pinnedLocal.sort((a, b) => compareMyFoodMatches(a, b, query));
+            // Tiered My Foods pinning: exact/all-token on full query OR core query OR My Foods phrase inside query
+            const getPinTier = (f) => {
+                const normDesc = normalizeSearchText(f.description);
+                const normCombined = normalizeSearchText(`${f.description || ''} ${f.brandOwner || ''}`);
+                if (f.upc && String(f.upc) === query) return 0;
+                if (normDesc === normQuery || (coreQuery && normDesc === coreQuery)) return 1;
+                if (normDesc.includes(normQuery) || myFoodMatchesAllTokens(f, cleanedQuery)) return 2;
+                if ((coreQuery && normDesc.includes(coreQuery)) || (coreQuery && myFoodMatchesAllTokens(f, coreQuery))) return 3;
+                if (normDesc.length >= 3 && (isPhraseContained(normQuery, normDesc) || isPhraseContained(coreQuery, normDesc))) return 4;
+                if (normCombined.includes(normQuery) || (coreQuery && normCombined.includes(coreQuery))) return 5;
+                return 99;
+            };
+
+            const pinnedLocal = localMatches.filter(f => getPinTier(f) < 99);
+            pinnedLocal.sort((a, b) => {
+                const ta = getPinTier(a);
+                const tb = getPinTier(b);
+                if (ta !== tb) return ta - tb;
+                return compareMyFoodMatches(a, b, coreQuery || cleanedQuery);
+            });
             const pinnedSet = new Set(pinnedLocal);
 
-            // Everything else (partial My Foods hits + API results) is sorted by relevance as before
-            let combined = [...localMatches.filter(f => !pinnedSet.has(f)), ...apiFoods];
+            // Filter zero-relevance external noise when core/cleaned hits exist
+            const hasAnyCoreToken = (food) => {
+                if (coreTokens.length === 0) return true;
+                const hay = normalizeSearchText(`${food.description || ''} ${food.brandOwner || ''}`);
+                return coreTokens.some(tok => {
+                    const singular = (tok.length > 3 && tok.endsWith('s')) ? tok.slice(0, -1) : tok;
+                    return hay.includes(tok) || hay.includes(singular);
+                });
+            };
+            const relevantApiFoods = apiFoods.filter(f => {
+                const sFull = scoreMatch(f.description, cleanedQuery);
+                const sCore = scoreMatch(f.description, coreQuery);
+                return sFull < 5 || sCore < 5 || hasAnyCoreToken(f);
+            });
+            const apiPool = (relevantApiFoods.length > 0 || pinnedLocal.length > 0) ? relevantApiFoods : apiFoods;
+
+            // Partial My Foods hits + API results sorted by best relevance across cleaned/core query
+            const combined = [...localMatches.filter(f => !pinnedSet.has(f)), ...apiPool];
+            const scoreBest = (item) => {
+                const desc = item.description;
+                const sFull = scoreMatch(desc, cleanedQuery);
+                const sCore = coreQuery && coreQuery !== cleanedQuery ? scoreMatch(desc, coreQuery) + 0.15 : sFull;
+                return Math.min(sFull, sCore);
+            };
+
+            const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
+            const getPriority = (source) => {
+                if (source === 'My Foods') return -1;
+                if (source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
+                if (source === 'USDA') source = 'USDA Generic';
+                const idx = priorities.indexOf(source);
+                return idx === -1 ? 99 : idx;
+            };
 
             combined.sort((a, b) => {
-                const aScore = scoreMatch(a.description, query);
-                const bScore = scoreMatch(b.description, query);
-                if (aScore !== bScore) return aScore - bScore;
-
-                // Priority ranking if scores tie
-                const priorities = appData.dbPriorities || ["USDA Branded", "USDA Generic", "Open Food Facts", "API Ninjas", "Nutritionix"];
-                const getPriority = (source) => {
-                    if (source === 'My Foods') return -1; // Always first
-                    if (source === 'Search-a-licious' || source === 'OFF (legacy)') source = 'Open Food Facts';
-                    if (source === 'USDA') source = 'USDA Generic';
-                    const idx = priorities.indexOf(source);
-                    return idx === -1 ? 99 : idx;
-                };
+                const aScore = scoreBest(a);
+                const bScore = scoreBest(b);
+                if (Math.abs(aScore - bScore) > 0.001) return aScore - bScore;
 
                 const aPrio = getPriority(a.source);
                 const bPrio = getPriority(b.source);
-
                 if (aPrio !== bPrio) return aPrio - bPrio;
 
                 return String(a.description || '').localeCompare(String(b.description || ''));
             });
 
-            return [...pinnedLocal, ...combined].slice(0, 50);
+            return [...pinnedLocal, ...combined].slice(0, 100);
         }
 
         async function searchBestFoodMatch(query) {
